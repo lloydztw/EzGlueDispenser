@@ -782,6 +782,10 @@ namespace Eazy_Project_III.UISpace.MainSpace
             {
                 if (!check_coretronic_version())
                 {
+                    // 此處異常檢查
+                    // 可放入 ResetProcess 內部處理
+                    // Buzzer and m_mainprocess.Stop()
+                    // 就不用 流出到 GUI 這一層了
                     m_BuzzerProcess.Start(1);   // 叫一聲
                     m_mainprocess.Stop();       // 中斷主流程
                     return;
@@ -800,15 +804,30 @@ namespace Eazy_Project_III.UISpace.MainSpace
         }
         private void calibrateProcess_OnMessage(object sender, ProcessEventArgs e)
         {
-            if (e.Message == "Image.Captured" && e.Tag != null && e.Tag is Bitmap)
+            if (string.IsNullOrEmpty(e.Message))
+                return;
+
+            if (e.Message == "Image.Captured") 
             {
-                // 由於 DispUI 內部會複製 bmp
-                // 所以 需要調用 bmp.Dispose() !!!
-                // 有發現 舊碼有時忘記 bmp.Dispose()
-                // 有空需要 review ...
-                var bmp = (Bitmap)e.Tag;
-                m_DispUI.SetDisplayImage(bmp);
-                bmp.Dispose();
+                if (e.Tag != null && e.Tag is Bitmap)
+                {
+                    //@LETIAN: 2022/09/19
+                    // bmp 改由 sender 自己 Dispose().
+                    // 由於 DispUI 內部會另行複製 bmp
+                    // 所以 在此 Handler Function 內不用 Dispose()
+                    var bmp = (Bitmap)e.Tag;
+                    m_DispUI.SetDisplayImage(bmp);
+                }
+            }
+            else if(e.Message.StartsWith("NG"))
+            {
+                // 中心點偏移量過大
+                string err = e.Message;
+                CommonLogClass.Instance.LogMessage(err, Color.Red);
+            }
+            else
+            {
+
             }
         }
         private bool check_coretronic_version()
@@ -818,7 +837,6 @@ namespace Eazy_Project_III.UISpace.MainSpace
             CommonLogClass.Instance.LogMessage("中光電 DLL Version = " + version, Color.Blue);
 
             bool ok = GdxCore.UpdateParams();
-            ok = false;
             string msg = "中光電 DLL UpdateParams() = " + ok;
             CommonLogClass.Instance.LogMessage(msg, ok ? Color.Green : Color.Red);
             if (!ok)

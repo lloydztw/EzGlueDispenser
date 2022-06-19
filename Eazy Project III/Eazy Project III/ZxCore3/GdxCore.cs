@@ -35,7 +35,12 @@ namespace JetEazy.GdxCore3
         }
         public static bool UpdateParams()
         {
-            return CoretronicsAPI.updateParams();
+            bool ok = CoretronicsAPI.updateParams();
+
+            if (GdxGlobal.Facade.IsSimPLC())
+                ok = false; // 故意報錯測試
+
+            return ok;
         }
         public static bool CheckCompensate(object process, Bitmap bmp, string mirrorPutPosStr, PointF recipePoint, float tolerane)
         {

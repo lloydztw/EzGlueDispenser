@@ -95,6 +95,7 @@ namespace Eazy_Project_III.ProcessSpace
                                 Process.Stop();
                                 CommonLogClass.Instance.LogMessage("所有轴复位完成", Color.Black);
                                 SetNormalLight();
+                                FireCompleted();
                             }
                         }
                         break;

@@ -125,9 +125,11 @@ namespace Eazy_Project_III.ProcessSpace
 
                             //> ==============================================
                             //> 使用 event 通知 GUI 更新 Bitmap
-                            //> Receiver 必須負責 Bitmap 的 LifeCycle !!!
+                            //> ----------------------------------------------
+                            //> @LETIAN:20220619 修改
+                            //> MirrorCalibProcess 會負責 Bitmap 的 LifeCycle.
+                            //> EventHandler 無需 Dispose()
                             //> ==============================================
-                            //> m_DispUI.SetDisplayImage(bmp);
                             var e = new ProcessEventArgs()
                             {
                                 Message = "Image.Captured",
@@ -178,21 +180,26 @@ namespace Eazy_Project_III.ProcessSpace
 #endif
 
                             GdxCore.Trace("MirrorCalibration.Compensate", Process, bmp, mirrorPutPos, ptfOffset);
-                            bool go = GdxCore.CheckCompensate(Process, bmp, mirrorPutPos, ptfOffset, 20f);
-                            if (!go)
-                            {
-
-                            }
+                            float tolerance = 20f; // um
+                            bool go = GdxCore.CheckCompensate(Process, bmp, mirrorPutPos, ptfOffset, tolerance);
                             bmp.Dispose();
 
+                            if (!go)
+                            {
+                                // 就地停止 Process, 發異常通知 Event Message.
+                                Stop();
+                                m_mainprocess.Stop();
 
+                                string errMsg = string.Format("NG. 中心偏移量超過 {0:0.0} um", tolerance);
+                                FireMessage(errMsg);
+                                return;
+                            }
+                            
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 3, posPutAdjust);
-
                             MACHINE.PLCIO.ADR_SMALL_LIGHT = false;
 
                             Process.NextDuriation = NextDurtimeTmp;
                             Process.ID = 3010;
-
                         }
                         break;
 
