@@ -788,9 +788,15 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 }
             }
 
-            // Do whatever message you want to show to the operators.
-            string msg = "程序 " + ((BaseProcess)sender).Name + "\n\r已完成!";
-            CommonLogClass.Instance.LogMessage(msg, Color.Black);
+            try
+            {
+                // Do whatever message you want to show to the operators.
+                string msg = "程序 " + ((BaseProcess)sender).Name + "\n\r已完成!";
+                CommonLogClass.Instance.LogMessage(msg, Color.Black);
+            }
+            catch
+            {
+            }
         }
         private void calibrateProcess_OnMessage(object sender, ProcessEventArgs e)
         {

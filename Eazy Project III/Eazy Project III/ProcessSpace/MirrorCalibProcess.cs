@@ -131,7 +131,7 @@ namespace Eazy_Project_III.ProcessSpace
                             var e = new ProcessEventArgs()
                             {
                                 Message = "Image.Captured",
-                                Tag = bmp
+                                Tag = bmp.Clone(),
                             };
                             FireMessage(e);
 
@@ -183,6 +183,7 @@ namespace Eazy_Project_III.ProcessSpace
                             {
 
                             }
+                            bmp.Dispose();
 
 
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 3, posPutAdjust);
@@ -254,6 +255,7 @@ namespace Eazy_Project_III.ProcessSpace
                                 Process.Stop();
                                 CommonLogClass.Instance.LogMessage("校正完成", Color.Black);
                                 GdxCore.Trace("MirrorCalibration.Completed", Process);
+                                FireCompleted();
                             }
                         }
                         break;

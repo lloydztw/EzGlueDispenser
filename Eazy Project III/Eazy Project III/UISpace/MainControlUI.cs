@@ -18,7 +18,7 @@ namespace Eazy_Project_III.UISpace
         VersionEnum VERSION;
         OptionEnum OPTION;
 
-        MainX3UI mainX3;
+        MainGdx3UI mainX3;
         MainX1UI mainX1;
 
         public MainControlUI()
@@ -45,7 +45,7 @@ namespace Eazy_Project_III.UISpace
                     {
                         case OptionEnum.DISPENSING:
 
-                            mainX3 = new MainX3UI();
+                            mainX3 = new MainGdx3UI();
                             mainX3.Init();
                             mainX3.Location = new Point(0, 0);
                             this.Controls.Add(mainX3);

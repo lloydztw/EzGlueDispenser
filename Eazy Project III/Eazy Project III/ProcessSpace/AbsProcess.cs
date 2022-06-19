@@ -54,7 +54,7 @@ namespace JetEazy.ProcessSpace
         public new virtual void Stop()
         {
             base.Stop();
-            FireCompleted();
+            //FireCompleted();
         }
         public abstract void Tick();
 
