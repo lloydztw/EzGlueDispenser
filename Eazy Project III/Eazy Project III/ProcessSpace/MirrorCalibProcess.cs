@@ -135,7 +135,7 @@ namespace Eazy_Project_III.ProcessSpace
                             var e = new ProcessEventArgs()
                             {
                                 Message = "Image.Captured",
-                                Tag = bmp.Clone(),
+                                Tag = bmp,
                             };
                             FireMessage(e);
 

@@ -56,6 +56,7 @@ namespace JetEazy.GdxCore3
                 var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                 var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
                 CoretronicsAPI.setCenterCompImg(rect.Width, rect.Height, 3, bmpd.Scan0);
+                bmp.UnlockBits(bmpd);
             }
             
             CoretronicsAPI.CenterCompProcess();
