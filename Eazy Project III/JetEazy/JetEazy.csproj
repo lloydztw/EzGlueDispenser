@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="BasicSpace\JzAHBlob.cs" />
     <Compile Include="BasicSpace\JzFindObjectClass.cs" />
+    <Compile Include="BasicSpace\JzLangKernel32.cs" />
     <Compile Include="BasicSpace\JzLanguageClass.cs" />
     <Compile Include="BasicSpace\JzLogClass.cs" />
     <Compile Include="BasicSpace\JzPlaneClass.cs" />

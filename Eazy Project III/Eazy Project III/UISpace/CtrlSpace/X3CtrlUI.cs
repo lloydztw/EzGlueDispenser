@@ -41,39 +41,36 @@ namespace Eazy_Project_III.UISpace.CtrlSpace
         public X3CtrlUI()
         {
             InitializeComponent();
-
             InitlabelUI();
         }
 
-        string[] myText = new string[(int)DispensingUI.UICOUNT]
-       {
-            "UV上",
-"UV下",
-"散热上",
-"散热下",
-"真空",
-"料座",
-"UV",
-"点胶阀",
-"日光灯",
-"刹车",
-"红灯",
-"黄灯",
-"绿灯",
-"蜂鸣器",
-"电磁铁",
-"风扇",
-"小灯条",
-"手柄",
-"POGO",
 
-       };
+        string[] myText = new string[(int)DispensingUI.UICOUNT]
+        {
+            "UV上",
+            "UV下",
+            "散热上",
+            "散热下",
+            "真空",
+            "料座",
+            "UV",
+            "点胶阀",
+            "日光灯",
+            "刹车",
+            "红灯",
+            "黄灯",
+            "绿灯",
+            "蜂鸣器",
+            "电磁铁",
+            "风扇",
+            "小灯条",
+            "手柄",
+            "POGO",
+        };
 
 
         void InitlabelUI()
         {
-
-
             int i = 0;
             int k = 0;
             int l = 0;
@@ -218,6 +215,11 @@ namespace Eazy_Project_III.UISpace.CtrlSpace
             myTime.Cut();
 
             SetEnable(false);
+
+#if OPT_LETIAN_DEBUG
+            groupBox2.Dock = DockStyle.Fill;
+            lblAXIS.Dock = DockStyle.Bottom;
+#endif
         }
 
         frmAXISSetup mMotorFrom = null;

@@ -66,7 +66,8 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
             {
                 PLCCollection[i] = new VsCommPLC();
 
-                if (!isnouseio)
+                //@LETIAN: for off-line simulation
+                if (true || !isnouseio)
                     ret &= PLCCollection[i].Open(WORKPATH + "\\" + myMachineEA.ToString() + "\\PLCCONTROL" + i.ToString() + ".INI", isnouseio);
 
                 PLCCollection[i].Name = "PLC" + i.ToString();

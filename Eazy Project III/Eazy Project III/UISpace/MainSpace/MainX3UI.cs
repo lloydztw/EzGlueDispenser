@@ -35,6 +35,9 @@ using VsCommon.ControlSpace.IOSpace;
 using Eazy_Project_Measure;
 using Eazy_Project_III.FormSpace;
 using Eazy_Project_III.UISpace.IOSpace;
+using JetEazy.GdxCore3;
+
+
 
 namespace Eazy_Project_III.UISpace.MainSpace
 {
@@ -114,7 +117,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
         DispUI m_DispUI;
         //IO_INPUTUI _INPUTUI;
-        
+
         X3INPUTUI _X3INPUTUI;
 
 
@@ -131,12 +134,15 @@ namespace Eazy_Project_III.UISpace.MainSpace
             get { return (DispensingMachineClass)Universal.MACHINECollection.MACHINE; }
         }
 
+#if OPT_OLD_LASER_THREAD
         System.Threading.Thread m_thread_LE = null;
         bool m_LE_Running = false;
+#endif
 
         public MainX3UI()
         {
             InitializeComponent();
+            SizeChanged += MainX3UI_SizeChanged;
         }
 
         public void Init()
@@ -195,24 +201,25 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     switch (OPTION)
                     {
                         case OptionEnum.DISPENSING:
-
-                            m_LE_Running = true;
-                            m_thread_LE = new System.Threading.Thread(new System.Threading.ThreadStart(GetLE));
-                            m_thread_LE.Start();
-
+                            //////m_LE_Running = true;
+                            //////m_thread_LE = new System.Threading.Thread(new System.Threading.ThreadStart(GetLE));
+                            //////m_thread_LE.Start();
+                            GdxCore.Init();
+                            var laser = GdxCore.GetLaser();
+                            laser.OnScanned += Laser_OnScanned;
+                            laser.StartAutoScan();
                             break;
                     }
 
                     break;
             }
 
-
-
             SetNormalLight();
 
             StopAllProcess("INIT");
-
         }
+
+
         public void Close()
         {
             switch (VERSION)
@@ -222,14 +229,13 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     switch (OPTION)
                     {
                         case OptionEnum.DISPENSING:
-
-                            m_LE_Running = false;
-                            if (m_thread_LE != null)
-                            {
-                                m_LE_Running = false;
-                                m_thread_LE.Abort();
-                            }
-
+                            //////m_LE_Running = false;
+                            //////if (m_thread_LE != null)
+                            //////{
+                            //////    m_LE_Running = false;
+                            //////    m_thread_LE.Abort();
+                            //////}
+                            GdxCore.GetLaser().StopAutoScan();
                             break;
                     }
 
@@ -240,7 +246,6 @@ namespace Eazy_Project_III.UISpace.MainSpace
         }
         public void Tick()
         {
-
             //_INPUTUI.Tick();
             _X3INPUTUI.Tick();
 
@@ -266,9 +271,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
             AlarmUITick();
         }
 
+#if OPT_OLD_LASER_THREAD
         private void GetLE()
         {
-
             while (m_LE_Running)
             {
 
@@ -286,6 +291,27 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 {
 
                 }
+            }
+        }
+#endif
+
+        private void MainX3UI_SizeChanged(object sender, EventArgs e)
+        {
+            _auto_layout();
+        }
+
+        private void Laser_OnScanned(object sender, double e)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() =>
+                {
+                    Laser_OnScanned(sender, e);
+                }));
+            }
+            else
+            {
+                lblLEText.Text = "LE : " + e.ToString("0.000") + " mm";
             }
         }
 
@@ -976,6 +1002,12 @@ namespace Eazy_Project_III.UISpace.MainSpace
                                 Process.Stop();
                                 CommonLogClass.Instance.LogMessage("所有轴复位完成", Color.Black);
                                 SetNormalLight();
+
+                                bool ok = check_coretronic_version();
+                                if (!ok)
+                                {
+                                    // Do what ever you wants ...
+                                }
                             }
                         }
                         break;
@@ -1017,11 +1049,13 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
         int m_PlaneIndex = 0;
         /// <summary>
-        /// 缓存平面度需要到达的位置
+        /// 缓存平面度需要到达的位置 <br/>
+        /// (will be load from INI)
         /// </summary>
         List<string> m_PlaneRunList = new List<string>();
         /// <summary>
-        /// 缓存平面度量测的高度
+        /// 缓存平面度量测的高度 <br/>
+        /// (z coordinate will be measured by laser)
         /// </summary>
         List<string> m_PlaneRunDataList = new List<string>();
 
@@ -1052,6 +1086,8 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
                         bool bInitOK = true;
 
+                        // 指定 m_PlaneRunList 來自 INI.Instance.Mirror<i+1>PlanePosList
+                        // 檢查 MainGroupIndex 是否在 INI.Instance.Mirror<i+1>PosList.Count 範圍內.
                         switch (Process.RelateString)
                         {
                             case "0":
@@ -1162,7 +1198,6 @@ namespace Eazy_Project_III.UISpace.MainSpace
                             }
                             else
                             {
-
                                 //计算平面度
 
                                 bool bOK = true;
@@ -1336,12 +1371,12 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
             if (Process.IsOn)
             {
+                //> GdxCore.Trace("MirrorCalibration.Tick", Process, 0);
+
                 switch (Process.ID)
                 {
                     case 5:
-
                         Process.NextDuriation = NextDurtimeTmp;
-
                         switch (Process.RelateString)
                         {
                             case "0":
@@ -1350,6 +1385,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
                                 Process.ID = 10;
                                 MACHINE.PLCIO.ADR_SMALL_LIGHT = true;
                                 CommonLogClass.Instance.LogMessage("校正启动Mirror0", Color.Black);
+                                GdxCore.Trace("MirrorCalibration.Start", Process, 0);
                                 break;
                             case "1":
                                 Mirror_CalibrateProcessIndex = 1;
@@ -1357,6 +1393,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
                                 Process.ID = 10;
                                 MACHINE.PLCIO.ADR_SMALL_LIGHT = true;
                                 CommonLogClass.Instance.LogMessage("校正启动Mirror1", Color.Black);
+                                GdxCore.Trace("MirrorCalibration.Start", Process, 1);
                                 break;
                             default:
                                 m_mainprocess.Stop();
@@ -1364,8 +1401,8 @@ namespace Eazy_Project_III.UISpace.MainSpace
                                 CommonLogClass.Instance.LogMessage("校正 未定义Mirror的值停止流程", Color.Red);
                                 break;
                         }
-
                         break;
+
                     case 10:
                         if (Process.IsTimeup)
                         {
@@ -1381,15 +1418,17 @@ namespace Eazy_Project_III.UISpace.MainSpace
                             }
                         }
                         break;
+
                     case 20:
                         if (Process.IsTimeup)
                         {
+                            CommonLogClass.Instance.LogMessage("擷取影像", Color.Black);
+
                             ICamForCali.Snap();
                             Bitmap bmp = new Bitmap(ICamForCali.GetSnap());
                             bmp.Save("image0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 
                             m_DispUI.SetDisplayImage(bmp);
-
 
 
                             //计算偏移值
@@ -1399,22 +1438,46 @@ namespace Eazy_Project_III.UISpace.MainSpace
                             //计算两个中心位置之差
                             //补偿的是吸嘴模组的y和z轴 相当于画面中的 x和y 
                             //画面中向左为正 向下为正
-
                             PointF ptfOffset = new PointF(0, 0);
                             ptfOffset.X -= RecipeCHClass.Instance.CaliPicCenter.X;
                             ptfOffset.Y -= RecipeCHClass.Instance.CaliPicCenter.Y;
 
                             //补偿放入的位置
+#if (false)
                             string posPutAdjust = string.Empty;
+                            string mirrorPutPos = string.Empty;
                             switch (Mirror_CalibrateProcessIndex)
                             {
                                 case 0:
+                                    mirrorPutPos = INI.Instance.Mirror1PutPos;
                                     posPutAdjust = ToolAdjustData(INI.Instance.Mirror1PutPos, ptfOffset.X, ptfOffset.Y);
                                     break;
                                 case 1:
+                                    mirrorPutPos = INI.Instance.Mirror2PutPos;
                                     posPutAdjust = ToolAdjustData(INI.Instance.Mirror2PutPos, ptfOffset.X, ptfOffset.Y);
                                     break;
                             }
+#else
+                            string mirrorPutPos = string.Empty;
+                            switch (Mirror_CalibrateProcessIndex)
+                            {
+                                case 0:
+                                    mirrorPutPos = INI.Instance.Mirror1PutPos;
+                                    break;
+                                case 1:
+                                    mirrorPutPos = INI.Instance.Mirror2PutPos;
+                                    break;
+                            }
+                            string posPutAdjust = ToolAdjustData(mirrorPutPos, ptfOffset.X, ptfOffset.Y);
+#endif
+
+                            GdxCore.Trace("MirrorCalibration.Compensate", Process, bmp, mirrorPutPos, ptfOffset);
+                            bool go = GdxCore.CheckCompensate(Process, bmp, mirrorPutPos, ptfOffset, 20f);
+                            if (!go)
+                            {
+
+                            }
+
 
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 3, posPutAdjust);
 
@@ -1439,12 +1502,13 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     case 30:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorCalibration.IO.Wait", Process, "QB1543", false);
+
                             if (!MACHINE.PLCIO.GetIO(IOConstClass.QB1543))
                             {
-
                                 //微調模組到達 0的位置 方便下面 微調
-
                                 CommonLogClass.Instance.LogMessage("吸嘴模组到达位置", Color.Black);
+
                                 switch (Mirror_CalibrateProcessIndex)
                                 {
                                     case 0:
@@ -1466,16 +1530,15 @@ namespace Eazy_Project_III.UISpace.MainSpace
                                 //}
 
 
-
                                 //MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 1, INI.Instance.sMirrorPutAdjDeep1Length + ",0,0");
                                 MACHINE.PLCIO.ModulePositionGO(ModuleName.MODULE_ADJUST, 1);
 
                                 Process.NextDuriation = NextDurtimeTmp;
                                 Process.ID = 40;
-
                             }
                         }
                         break;
+
                     case 40:
                         if (Process.IsTimeup)
                         {
@@ -1484,12 +1547,14 @@ namespace Eazy_Project_III.UISpace.MainSpace
                                 CommonLogClass.Instance.LogMessage("微调模组到达位置", Color.Black);
                                 Process.Stop();
                                 CommonLogClass.Instance.LogMessage("校正完成", Color.Black);
+                                GdxCore.Trace("MirrorCalibration.Completed", Process);
                             }
                         }
                         break;
                 }
             }
         }
+
         ProcessClass m_blackboxprocess = new ProcessClass();
         void BlackboxTick()
         {
@@ -1939,5 +2004,93 @@ namespace Eazy_Project_III.UISpace.MainSpace
             m_DispUI.Refresh();
             m_DispUI.DefaultView();
         }
+
+        bool check_coretronic_version()
+        {
+            string version = GdxCore.GetDllVersion();
+            CommonLogClass.Instance.LogMessage("中光電 DLL Version = " + version, Color.Blue);
+
+            bool ok = GdxCore.UpdateParams();
+            ok = false;
+            string msg = "中光電 DLL UpdateParams() = " + ok;
+            CommonLogClass.Instance.LogMessage(msg, ok ? Color.Green : Color.Red);
+            if (!ok)
+            {
+                VsMSG.Instance.Warning(msg.Replace("=", "\n\r"));
+            }
+            return ok;
+        }
+
+        #region AUTO_LAYOUT_FUNCTIONS
+        void _auto_layout()
+        {
+#if !OPT_LETIAN_DEBUG
+            return;
+#endif
+            //@LETIAN: auto layout gui component's location and size
+            //  暫時可以塞到我的小螢幕.
+            //  以後再細改.
+            if (FindForm().WindowState == FormWindowState.Minimized)
+                return;
+
+            //@LETAIN: 自動調整下方 panels
+            _auto_adjust_bottom_panels();
+
+            //@LETIAN: 自動調整 DispUI
+            _auto_adjust_disp_ui();
+        }
+        void _auto_adjust_bottom_panels()
+        {
+            //@LETAIN: 自動調整下方 panels
+            _auto_align_to_parent_bottom(0, tabControl1);
+            _auto_align_to_parent_bottom(0, groupBox1, groupBox2);
+            _auto_align_to_parent_bottom(5, richTextBox1, label5);
+            tabControl1.Width = ClientRectangle.Width;
+            //@LETIAN: 自動調整下方 六按鈕
+            //_auto_adjust_six_major_buttons();
+        }
+        void _auto_adjust_six_major_buttons()
+        {
+            //@LETIAN: 自動調整下方 六按鈕
+            var header = label11;
+            var btns1 = new Control[] { button6, button4, button7 };
+            var btns2 = new Control[] { button8, button9, button1 };
+            var parent = header.Parent;
+            var rcc = parent.ClientRectangle;
+            int padding = 2;
+            var h = (rcc.Height - header.Bottom - padding * 3) / 2;
+            var y = header.Bottom + padding;
+            foreach (var btn in btns1)
+            {
+                btn.Top = y;
+                btn.Height = h;
+            }
+            y += (h + padding);
+            foreach (var btn in btns2)
+            {
+                btn.Top = y;
+                btn.Height = h;
+            }
+        }
+        void _auto_adjust_disp_ui()
+        {
+            var rcc = ClientRectangle;
+            dispUI1.Height = rcc.Height - tabControl1.Height;
+            dispUI1.Width = tabControl1.Width;
+        }
+        void _auto_align_to_parent_bottom(int padding, params Control[] panels)
+        {
+            foreach (var panel in panels)
+            {
+                if (panel != null)
+                {
+                    var parent = panel.Parent;
+                    var rcc = parent.ClientRectangle;
+                    //panel.Height = rcc.Height - panel.Top - padding;
+                    panel.Top = rcc.Bottom - panel.Height;
+                }
+            }
+        }
+        #endregion
     }
 }

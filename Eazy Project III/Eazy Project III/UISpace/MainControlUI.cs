@@ -53,7 +53,7 @@ namespace Eazy_Project_III.UISpace
                             //X3INPUT.Initial(VERSION, OPTION, (DispensingMachineClass)machine);
                             //X3INPUT.Location = new Point(0, 0);
                             //this.Controls.Add(X3INPUT);
-
+                            mainX3.Dock = DockStyle.Fill;
                             break;
                         case OptionEnum.DISPENSINGX1:
 
@@ -65,7 +65,7 @@ namespace Eazy_Project_III.UISpace
                             //X3INPUT.Initial(VERSION, OPTION, (DispensingMachineClass)machine);
                             //X3INPUT.Location = new Point(0, 0);
                             //this.Controls.Add(X3INPUT);
-
+                            mainX1.Dock = DockStyle.Fill;
                             break;
 
 

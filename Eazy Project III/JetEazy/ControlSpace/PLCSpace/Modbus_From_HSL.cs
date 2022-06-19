@@ -49,9 +49,12 @@ namespace JetEazy.ControlSpace.PLCSpace
 
         #endregion
 
+        #region MAYBE_NOT_USED_MEMBERS
         protected char STX = '\x02';
         protected char ETX = '\x03';
+        #endregion
 
+        #region PRIVATE_DATA_MEMBERS
         //public int SerialCount = 0;
         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
 
@@ -66,9 +69,24 @@ namespace JetEazy.ControlSpace.PLCSpace
         int PORT = 502;
         byte STATIONID = 1;
 
+        //@LETIAN:20220613:SIMULATION
+        bool _isSimulation
+        {
+            get { return base.IsSimulater; }
+            set { base.IsSimulater = value; }
+        }
+        public bool IsSimulation()
+        {
+            return _isSimulation;
+        }
+        #endregion
+
 
         public override bool Open(string FileName, bool issimulator)
         {
+            //@LETIAN:20220613:SIMULATION
+            _isSimulation = issimulator;
+
             IP = ReadINIValue("Communication", "IP", IP, FileName);
             PORT = int.Parse(ReadINIValue("Communication", "PORT", PORT.ToString(), FileName));
             STATIONID = byte.Parse(ReadINIValue("Communication", "STATIONID", STATIONID.ToString(), FileName));
@@ -114,14 +132,16 @@ namespace JetEazy.ControlSpace.PLCSpace
 
             IsConnectionFail = !bOK;
 
-            if (issimulator)
+            if (_isSimulation)
+            {
                 bOK = true;
+                IsConnectionFail = false;
+            }
             else
             {
                 if (m_Thread_Hsl == null)
                 {
                     m_Running = true;
-
                     m_Thread_Hsl = new System.Threading.Thread(new System.Threading.ThreadStart(Hsl_BK_Running));
                     m_Thread_Hsl.Priority = System.Threading.ThreadPriority.Normal;
                     m_Thread_Hsl.IsBackground = true;
@@ -157,12 +177,15 @@ namespace JetEazy.ControlSpace.PLCSpace
             //base.Close();
         }
 
-
         public IODataClass IOData
         {
             get { return IODataBase; }
         }
 
+
+        /// <summary>
+        /// Polling Function in background thread.
+        /// </summary>
         private void Hsl_BK_Running()
         {
             while (m_Running)
@@ -209,6 +232,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                         continue;
                     }
 
+                    //QX  ReadBool : 0*8 (+1024)
                     int iQXAdress = 0;
                     OperateResult<bool[]> _results = modbusTcpClient.ReadBool((iQXAdress * 8).ToString(), 1024);
                     if (_results.IsSuccess)
@@ -225,6 +249,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                         RetryIndex++;
                     }
 
+                    //QX: ReadBool : 1016*8 (+1024)
                     if (_results.IsSuccess)
                     {
                         iQXAdress = 1016;
@@ -240,7 +265,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                             OnReadList(myRead, "Get QX" + iQXAdress.ToString(), Name);
                         }
                     }
-
+                    //QX: ReadBool : 1144*8 (+1024)
                     if (_results.IsSuccess)
                     {
                         iQXAdress = 1144;
@@ -256,6 +281,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                             OnReadList(myRead, "Get QX" + iQXAdress.ToString(), Name);
                         }
                     }
+                    //QX: ReadBool : 1272*8 (+1024)
                     if (_results.IsSuccess)
                     {
                         iQXAdress = 1272;
@@ -271,6 +297,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                             OnReadList(myRead, "Get QX" + iQXAdress.ToString(), Name);
                         }
                     }
+                    //QX: ReadBool : 1400*8 (+1024)
                     if (_results.IsSuccess)
                     {
                         iQXAdress = 1400;
@@ -286,6 +313,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                             OnReadList(myRead, "Get QX" + iQXAdress.ToString(), Name);
                         }
                     }
+                    //QX: ReadBool : 1528*8 (+1024)
                     if (_results.IsSuccess)
                     {
                         iQXAdress = 1528;
@@ -301,6 +329,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                             OnReadList(myRead, "Get QX" + iQXAdress.ToString(), Name);
                         }
                     }
+                    //QX: ReadBool : 1656*8 (+1024)
                     if (_results.IsSuccess)
                     {
                         iQXAdress = 1656;
@@ -316,6 +345,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                             OnReadList(myRead, "Get QX" + iQXAdress.ToString(), Name);
                         }
                     }
+                    //QX: ReadBool : 1784*8 (+1024)
                     if (_results.IsSuccess)
                     {
                         iQXAdress = 1784;
@@ -332,8 +362,8 @@ namespace JetEazy.ControlSpace.PLCSpace
                         }
                     }
 
+                    //读取所有位置  (MW 1000 ~ 1099)
                     int iMWAddress = 1000;
-                    //读取所有位置
                     if (_results.IsSuccess)
                     {
                         //if (isNormalTempNO)
@@ -352,7 +382,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                         }
                     }
 
-                    //当前位置 & 当前速度
+                    //当前位置 & 当前速度 (MW 1300 ~ 1329)
                     iMWAddress = 1300;
                     if (_results.IsSuccess)
                     {
@@ -369,7 +399,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                         }
                     }
 
-                    //当前位置 & 当前速度
+                    //当前位置 & 当前速度 (MW 0000 ~ 0004)
                     iMWAddress = 0;
                     if (_results.IsSuccess)
                     {
@@ -386,6 +416,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                         }
                     }
 
+                    //IX: ReadDiscrete: 0 ~ 32
                     int iIXAdress = 0;
                     if (_results.IsSuccess)
                     {
@@ -427,6 +458,7 @@ namespace JetEazy.ControlSpace.PLCSpace
         }
 
 
+        #region PROTECTED_FUNCTION_NOT_USED
         protected override void COMPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             //try
@@ -515,39 +547,52 @@ namespace JetEazy.ControlSpace.PLCSpace
 
             return ret;
         }
+        #endregion
+
+
         public void SetIO(bool IsOn, string ioname)
         {
             if (string.IsNullOrEmpty(ioname))
                 return;
 
+            if (_isSimulation)
+            {
+                //@LETIAN:20220613:SIMULATION
+                //暫時利用 event notification 
+                //來更新上層的 cache data
+                var buf = new bool[] { IsOn };
+                OnReadList(buf, "SIM_" + ioname, this.Name);
+                return;
+            }
+
             switch (ioname.Substring(0, 2))
             {
                 case "QX":
                 case "QB":
-
                     if (modbusTcpClient != null)
                     {
                         if (IsConnectionFail || m_error_comm)
                         {
-
                         }
                         else
                         {
-                            OperateResult operateResult = modbusTcpClient.Write(GetHC_Q1_1300D_Address(ioname), IsOn);
+                            string addr = GetHC_Q1_1300D_Address(ioname);
+                            OperateResult operateResult = modbusTcpClient.Write(addr, IsOn);
                         }
                     }
-
+                    else
+                    {
+                    }
                     break;
-            }
-
+            }          
             
-
             //if (IsOn)
             //    Command("Set Bit On", ioname);
             //else
             //    Command("Set Bit Off", ioname);
         }
 
+        #region PRIVATE_ADDR_CONVERT_FUNCTIONS
         string GetHC_Q1_1300D_Address(string bitstr)
         {
             //if (string.IsNullOrEmpty(bitstr))
@@ -566,30 +611,43 @@ namespace JetEazy.ControlSpace.PLCSpace
 
             return ret;
         }
+        #endregion
 
         public void SetData(string data, string ioname)
         {
-
             if (string.IsNullOrEmpty(ioname))
                 return;
+
+            if (_isSimulation)
+            {
+                //@LETIAN:20220613:SIMULATION
+                //暫時利用 event notification 
+                //來更新上層的 cache data
+                UInt16 value = HEX16(data);
+                var buf = new Int16[] { (Int16)value };
+                OnReadList(buf, "SIM_" + ioname, this.Name);
+                return;
+            }
 
             switch (ioname.Substring(0, 2))
             {
                 case "MW":
-
                     if (modbusTcpClient != null)
                     {
                         if (IsConnectionFail || m_error_comm)
                         {
-
                         }
                         else
                         {
-                            UInt16 intv = HEX16(data);
-                            OperateResult operateResult = modbusTcpClient.Write(GetHC_Q1_1300D_AddressMW(ioname), intv);
+                            string addr = GetHC_Q1_1300D_AddressMW(ioname);
+                            UInt16 value = HEX16(data);
+                            OperateResult operateResult = modbusTcpClient.Write(addr, value);
                         }
                     }
+                    else
+                    {
 
+                    }
                     break;
             }
 
@@ -600,9 +658,9 @@ namespace JetEazy.ControlSpace.PLCSpace
 
             //    OperateResult operateResult = modbusTcpClient.Write(ioname, intv);
             //}
-
-
         }
+
+        #region PRIVATE_ADDR_CONVERT_FUNCTIONS
         string GetHC_Q1_1300D_AddressMW(string bitstr)
         {
             //if (string.IsNullOrEmpty(bitstr))
@@ -618,11 +676,17 @@ namespace JetEazy.ControlSpace.PLCSpace
 
             return ret;
         }
+        #endregion
 
+
+        #region NOT_USED_FUNCTIONS
         public void SetData(string data, string ioname, string iocount)
         {
             //Command("Set Data N", iocount + ioname + data);
         }
+        #endregion
+
+        #region PROTECTED_FUNCTIONS
         protected override void WriteCommand()
         {
             //if (IsSimulater)
@@ -631,7 +695,6 @@ namespace JetEazy.ControlSpace.PLCSpace
             //string Str = LastCommad.GetSite() + Checksum(LastCommad.GetPLCCommad());
             //COMPort.Write(STX + Str + ETX);
         }
-
         protected UInt16 HEX16(string HexStr)
         {
             return System.Convert.ToUInt16(HexStr, 16);
@@ -640,7 +703,6 @@ namespace JetEazy.ControlSpace.PLCSpace
         {
             return System.Convert.ToUInt32(HexStr, 16);
         }
-
         protected override string Checksum(string OrgString)
         {
             int j = 0;
@@ -651,12 +713,16 @@ namespace JetEazy.ControlSpace.PLCSpace
                 j = j + ichar;
             return OrgString + ("00" + j.ToString("X")).Substring(("00" + j.ToString("X")).Length - 2, 2);
         }
+        #endregion
+
 
         public override void Tick()
         {
             base.Tick();
         }
 
+
+        #region EVENT_NOTIFICATIONS_NOT_USED
         //當有Input Trigger時，產生OnTrigger
         public delegate void TriggerHandler(string OperationString);
         public event TriggerHandler TriggerAction;
@@ -667,7 +733,9 @@ namespace JetEazy.ControlSpace.PLCSpace
                 TriggerAction(OperationString);
             }
         }
+        #endregion
 
+        #region EVENT_NOTIFICATIONS_NOT_LAUNCHED
         ////當有Input Read
         //public delegate void ReadHandler(char[] readbuffer, string operationstring, string myname);
         //public event ReadHandler ReadAction;
@@ -689,8 +757,12 @@ namespace JetEazy.ControlSpace.PLCSpace
                 ReadAction(readbuffer, operationstring, myname);
             }
         }
+        #endregion
 
-        //當有Input Read
+
+        //-----------------------------------------------------------------
+        // Event Notifications for 1-bit points in background polling.
+        //-----------------------------------------------------------------
         public delegate void ReadListHandler(bool[] readbuffer, string operationstring, string myname);
         public event ReadListHandler ReadListAction;
         public void OnReadList(bool[] readbuffer, string operationstring, string myname)
@@ -701,6 +773,9 @@ namespace JetEazy.ControlSpace.PLCSpace
             }
         }
 
+        //-----------------------------------------------------------------
+        // Event Notifications for 16-bit registers in background polling.
+        //-----------------------------------------------------------------
         public delegate void ReadListUintHandler(short[] readbuffer, string operationstring, string myname);
         public event ReadListUintHandler ReadListUintAction;
         public void OnReadList(short[] readbuffer, string operationstring, string myname)

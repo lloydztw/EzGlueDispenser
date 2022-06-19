@@ -49,7 +49,7 @@ namespace PhotoMachine.UISpace
                             X1Ctrl.Initial(VERSION, OPTION, (DispensingX1MachineClass)machine);
                             X1Ctrl.Location = new Point(0, 0);
                             this.Controls.Add(X1Ctrl);
-
+                            X1Ctrl.Dock = DockStyle.Fill;
                             break;
 
                         case OptionEnum.DISPENSING:
@@ -58,7 +58,7 @@ namespace PhotoMachine.UISpace
                             X3Ctrl.Initial(VERSION, OPTION, (DispensingMachineClass)machine);
                             X3Ctrl.Location = new Point(0, 0);
                             this.Controls.Add(X3Ctrl);
-
+                            X3Ctrl.Dock = DockStyle.Fill;
                             break;
                       
                        

@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;OPT_LETIAN_DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -42,8 +42,19 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\JzDisplay\bin\Debug\MoveGraphLibrary.dll</HintPath>
     </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.7.12\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.Windows.Forms.4.6.0\lib\net35\NLog.Windows.Forms.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -133,6 +144,33 @@
     <Compile Include="FormSpace\frmGetSingleAxis.Designer.cs">
       <DependentUpon>frmGetSingleAxis.cs</DependentUpon>
     </Compile>
+    <Compile Include="ProcessSpace\AbsProcess.cs" />
+    <Compile Include="ProcessSpace\BaseProcess.cs" />
+    <Compile Include="ProcessSpace\MirrorBlackboxProcess.cs" />
+    <Compile Include="ProcessSpace\MirrorDispenseProcess.cs" />
+    <Compile Include="ProcessSpace\MirrorCalibProcess.cs" />
+    <Compile Include="ProcessSpace\MirrorPickProcess.cs" />
+    <Compile Include="ProcessSpace\ResetProcess.cs" />
+    <Compile Include="ProcessSpace\BuzzerProcess.cs" />
+    <Compile Include="ProcessSpace\MainProcess.cs" />
+    <Compile Include="UISpace\MainSpace\MainGdx3UI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UISpace\MainSpace\MainGdx3UI.Designer.cs">
+      <DependentUpon>MainGdx3UI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ZxCore3\CoretronicsAPI.cs" />
+    <Compile Include="ZxCore3\Drivers\IO\Interface\IoAddress.cs" />
+    <Compile Include="ZxCore3\Drivers\IO\Vender_HCFA\GxIoAddress.cs" />
+    <Compile Include="ZxCore3\Drivers\IO\Victor_Gaara_Bridges\GdxIoAddressConvertor.cs" />
+    <Compile Include="ZxCore3\Drivers\Laser\Interface\IxLaser.cs" />
+    <Compile Include="ZxCore3\Drivers\Laser\Victor_Gaara_Bridges\GdxLaser.cs" />
+    <Compile Include="ZxCore3\GdxCore.cs" />
+    <Compile Include="ZxCore3\Model\GdxGlobal.cs" />
+    <Compile Include="ZxCore3\Model\Victor_Gaara_Bridges\GdxFacade.cs" />
+    <Compile Include="ZxCore3\Model\Victor_Gaara_Bridges\GdxFacadeIO.cs" />
+    <Compile Include="ZxCore3\Utils\QVector.cs" />
+    <Compile Include="ZxCore3\Utils\QxConvert.cs" />
     <Compile Include="GlobalSpace\Enums.cs" />
     <Compile Include="GlobalSpace\INI.cs" />
     <Compile Include="GlobalSpace\Universal.cs" />
@@ -299,6 +337,9 @@
     <EmbeddedResource Include="UISpace\MainSpace\MainX1UI.resx">
       <DependentUpon>MainX1UI.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UISpace\MainSpace\MainGdx3UI.resx">
+      <DependentUpon>MainGdx3UI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UISpace\MainSpace\MainX3UI.resx">
       <DependentUpon>MainX3UI.cs</DependentUpon>
     </EmbeddedResource>
@@ -309,6 +350,8 @@
       <DependentUpon>RunUI.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="NLog.config" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -343,7 +386,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="coconut3_01_fPz_icon.ico" />
+    <Content Include="ZxCore3\Drivers\IO\Vender_Fatek\To_be_continued.txt" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(ProjectDir)NLog.config" "$(TargetDir)"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

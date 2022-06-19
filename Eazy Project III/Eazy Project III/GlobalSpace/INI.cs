@@ -347,6 +347,7 @@ namespace Eazy_Project_III
         /// Mirror1平面资料集合
         /// </summary>
         public List<string> Mirror1PlanePosList = new List<string>();
+
         [CategoryAttribute(Cat2), DescriptionAttribute("第二個 Mirror 取得平面資料的位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
         [DisplayName("Mirror2平面资料集合")]

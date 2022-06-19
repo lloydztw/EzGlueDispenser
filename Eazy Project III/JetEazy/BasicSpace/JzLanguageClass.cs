@@ -586,8 +586,9 @@ namespace JetEazy.BasicSpace
         /// <returns></returns>
         public string ToTraditionalChinese(string strSimple)
         {
-            string strTraditional = Microsoft.VisualBasic.Strings.StrConv(strSimple, Microsoft.VisualBasic.VbStrConv.TraditionalChinese, 0);
-            return strTraditional;
+            ////string strTraditional = Microsoft.VisualBasic.Strings.StrConv(strSimple, Microsoft.VisualBasic.VbStrConv.TraditionalChinese, 0);
+            ////return strTraditional;
+            return JzLangKernel32.ToTraditional(strSimple);
         }
 
         /// <summary>

@@ -61,8 +61,17 @@ namespace VsCommon.ControlSpace.IOSpace
 
         public GeoIOClass()
         {
-
-
+        }
+        
+        public AddressClass GetGaAddress(string in_out, int index)
+        {
+            //@LETIAN: for integration
+            if (in_out == "INPUT")
+                return ADDRESSARRAY_INPUT[index];
+            else if (in_out == "OUTPUT")
+                return ADDRESSARRAY_OUTPUT[index];
+            else
+                return null;
         }
 
         public abstract void LoadData();

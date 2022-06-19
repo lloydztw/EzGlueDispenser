@@ -1,6 +1,6 @@
 ﻿namespace Eazy_Project_III.UISpace.MainSpace
 {
-    partial class MainX3UI
+    partial class MainGdx3UI
     {
         /// <summary> 
         /// 必需的设计器变量。

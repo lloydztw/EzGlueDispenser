@@ -356,6 +356,8 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
        /// <param name="ePosString">格式X,Y,Z 数据</param>
         public void ModulePositionSet(ModuleName eModuleIndex,int eIndex,string ePosString)
         {
+            JetEazy.GdxCore3.GdxCore.Trace("ModulePosition.Set", null, eModuleIndex, eIndex, ePosString);
+
             switch (eModuleIndex)
             {
                 case ModuleName.MODULE_PICK:
@@ -376,6 +378,8 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
         /// <param name="eIndex">0-9个位置</param>
         public void ModulePositionGO(ModuleName eModuleIndex, int eIndex)
         {
+            JetEazy.GdxCore3.GdxCore.Trace("ModulePosition.GO", null, eModuleIndex, eIndex);
+
             switch (eModuleIndex)
             {
                 case ModuleName.MODULE_PICK:
@@ -397,6 +401,8 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
         /// <returns>完成信号true </returns>
         public bool ModulePositionIsComplete(ModuleName eModuleIndex, int eIndex)
         {
+            JetEazy.GdxCore3.GdxCore.Trace("ModulePosition.IsComplete.Wait", null, eModuleIndex, eIndex);
+
             bool ret = false;
             switch (eModuleIndex)
             {
@@ -417,6 +423,8 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
 
         public void ModulePositionReady(ModuleName eModuleIndex, int eIndex)
         {
+            JetEazy.GdxCore3.GdxCore.Trace("ModulePosition.Ready", null, eModuleIndex, eIndex);
+
             switch (eModuleIndex)
             {
                 case ModuleName.MODULE_PICK:
@@ -432,6 +440,8 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
         }
         public bool ModulePositionIsReadyComplete(ModuleName eModuleIndex, int eIndex)
         {
+            JetEazy.GdxCore3.GdxCore.Trace("ModulePosition.ReadyComplete.Wait", null, eModuleIndex, eIndex);
+
             bool ret = false;
             switch (eModuleIndex)
             {
@@ -512,6 +522,7 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             int iaddress = 1420 + eindex;
             AddressClass address = new AddressClass("0:QB" + iaddress.ToString() + ".0");
             //PLC[address.SiteNo].SetIO(true, address.Address0);
+            JetEazy.GdxCore3.GdxCore.Trace("Motor.Pick.Complete.IO.Wait", null, address.Address0);
             return PLC[address.SiteNo].IOData.GetBit(address.Address0);
         }
 
@@ -526,6 +537,7 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             int iaddress = 1640 + eindex;
             AddressClass address = new AddressClass("0:QB" + iaddress.ToString() + ".0");
             //PLC[address.SiteNo].SetIO(true, address.Address0);
+            JetEazy.GdxCore3.GdxCore.Trace("Motor.Pick.Home.Complete.IO.Wait", null, address.Address0);
             return PLC[address.SiteNo].IOData.GetBit(address.Address0);
         }
 
@@ -590,6 +602,7 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             int iaddress = 1460 + eindex;
             AddressClass address = new AddressClass("0:QB" + iaddress.ToString() + ".0");
             //PLC[address.SiteNo].SetIO(true, address.Address0);
+            JetEazy.GdxCore3.GdxCore.Trace("Motor.Dispensing.Complete.IO.Wait", null, address.Address0);
             return PLC[address.SiteNo].IOData.GetBit(address.Address0);
         }
 
@@ -604,6 +617,7 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             int iaddress = 1680 + eindex;
             AddressClass address = new AddressClass("0:QB" + iaddress.ToString() + ".0");
             //PLC[address.SiteNo].SetIO(true, address.Address0);
+            JetEazy.GdxCore3.GdxCore.Trace("Motor.Dispensing.Home.Complete.IO.Wait", null, address.Address0);
             return PLC[address.SiteNo].IOData.GetBit(address.Address0);
         }
 
@@ -668,6 +682,7 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             int iaddress = 1500 + eindex;
             AddressClass address = new AddressClass("0:QB" + iaddress.ToString() + ".0");
             //PLC[address.SiteNo].SetIO(true, address.Address0);
+            JetEazy.GdxCore3.GdxCore.Trace("Motor.PickCali.Complete.IO.Wait", null, address.Address0);
             return PLC[address.SiteNo].IOData.GetBit(address.Address0);
         }
 
@@ -682,6 +697,7 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             int iaddress = 1720 + eindex;
             AddressClass address = new AddressClass("0:QB" + iaddress.ToString() + ".0");
             //PLC[address.SiteNo].SetIO(true, address.Address0);
+            JetEazy.GdxCore3.GdxCore.Trace("Motor.PickCali.Home.Complete.IO.Wait", null, address.Address0);
             return PLC[address.SiteNo].IOData.GetBit(address.Address0);
         }
 

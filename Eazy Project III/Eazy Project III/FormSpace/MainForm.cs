@@ -25,6 +25,7 @@ using VsCommon.ControlSpace.IOSpace;
 using Eazy_Project_Measure;
 using Eazy_Project_III.FormSpace;
 using Eazy_Project_III.UISpace;
+using JetEazy.GdxCore3;
 
 namespace Eazy_Project_III
 {
@@ -112,23 +113,45 @@ namespace Eazy_Project_III
             InitializeComponent();
 
             this.Load += MainForm_Load;
+            this.FormClosed += MainForm_FormClosed;
+            this.SizeChanged += MainForm_SizeChanged;
+
         }
+
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-
             BANNERFORM = new BannerForm();
             BANNERFORM.Show();
             BANNERFORM.Refresh();
 
             Init();
 
-
             BANNERFORM.Close();
             BANNERFORM.Dispose();
 
             Universal.MainFormLocation = new Point(this.Location.X, this.Location.Y);
+
+#if OPT_LETIAN_DEBUG
+            // To fit into my screen for debug.
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.WindowState = FormWindowState.Maximized;
+#endif
         }
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            //@LETIAN:
+            //  最後補漏:
+            //  有時候程式退出時
+            //      ESSStatusEnum.EXIT 不會被觸發!
+            GdxCore.Dispose();
+        }
+        private void MainForm_SizeChanged(object sender, EventArgs e)
+        {
+            //@LETIAN
+            _auto_layout();
+        }
+
 
         void Init()
         {
@@ -187,8 +210,10 @@ namespace Eazy_Project_III
             mMainTick.Enabled = true;
             mMainTick.Tick += MMainTick_Tick;
 
+#if !OPT_LETIAN_DEBUG
+            // 很慢
             LanguageExClass.Instance.EnumControls(this);
-
+#endif
         }
 
         void InitialESSUI()
@@ -429,5 +454,17 @@ namespace Eazy_Project_III
                                  MACHINECollection.PLCFps());
         }
 
+
+        private void _auto_layout()
+        {
+#if OPT_LETIAN_DEBUG
+            // 暫時, 自動調整 layout
+            // To be continued.
+            var rcc = ClientRectangle;
+            mainControlUI1.Width = rcc.Width - essUI1.Width;
+            mainControlUI1.Height = rcc.Height;
+            ctrlUI1.Height = rcc.Bottom - ctrlUI1.Top;
+#endif
+        }
     }
 }
