@@ -1,6 +1,7 @@
 ﻿using Eazy_Project_III.ControlSpace.IOSpace;
 using Eazy_Project_III.OPSpace;
 using JetEazy.BasicSpace;
+using JetEazy.GdxCore3;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -98,6 +99,7 @@ namespace Eazy_Project_III.ProcessSpace
                                 Process.ID = 10;
 
                                 CommonLogClass.Instance.LogMessage("点胶启动Mirror0", Color.Black);
+                                GdxCore.Trace("MirrorDispenser.Start", Process, 0);
                                 break;
                             case "1":
                                 Mirror_DispensingProcessIndex = 1;
@@ -108,6 +110,7 @@ namespace Eazy_Project_III.ProcessSpace
                                 Process.ID = 10;
 
                                 CommonLogClass.Instance.LogMessage("点胶启动Mirror1", Color.Black);
+                                GdxCore.Trace("MirrorDispenser.Start", Process, 1);
                                 break;
                             default:
                                 bOK = false;
@@ -160,6 +163,8 @@ namespace Eazy_Project_III.ProcessSpace
                     case 30:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorDispenser.IO.Wait", Process, IOConstClass.QB1541, false);
+
                             if (!MACHINE.PLCIO.GetIO(IOConstClass.QB1541))
                             {
                                 //单个点胶完成
@@ -213,6 +218,8 @@ namespace Eazy_Project_III.ProcessSpace
                     case 50:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorDispenser.IO.Wait", Process, IOConstClass.QB1550, false);
+
                             if (!MACHINE.PLCIO.GetIO(IOConstClass.QB1550) || Universal.IsNoUseIO)
                             {
                                 CommonLogClass.Instance.LogMessage("運動至避光槽完成", Color.Black);
@@ -267,6 +274,8 @@ namespace Eazy_Project_III.ProcessSpace
                     case 4010:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorDispenser.Actuator.Wait", Process, UVCylinder.Instance);
+
                             if (UVCylinder.Instance.GetFrontOK())
                             {
                                 UV.Instance.Seton();
@@ -280,6 +289,8 @@ namespace Eazy_Project_III.ProcessSpace
                     case 4020:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorDispenser.Actuator.Wait", Process, UVCylinder.Instance);
+
                             if (UVCylinder.Instance.GetFrontOK())
                             {
                                 UV.Instance.Setoff();
@@ -294,6 +305,8 @@ namespace Eazy_Project_III.ProcessSpace
                     case 4030:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorDispenser.Actuator.Wait", Process, UVCylinder.Instance, false);
+
                             if (UVCylinder.Instance.GetBackOK())
                             {
                                 Process.NextDuriation = NextDurtimeTmp;
@@ -310,6 +323,8 @@ namespace Eazy_Project_III.ProcessSpace
                     case 403000:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorDispenser.IO.Wait", Process, MACHINE.PLCIO.GetGaAddress("INPUT",6), false);
+
                             if (!MACHINE.PLCIO.GetInputIndex(6))
                             {
                                 Process.NextDuriation = NextDurtimeTmp;
@@ -326,6 +341,8 @@ namespace Eazy_Project_III.ProcessSpace
                     case 403001:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorDispenser.Actuator.Wait", Process, UVCylinder.Instance, false);
+
                             if (UVCylinder.Instance.GetBackOK())
                             {
                                 Process.NextDuriation = NextDurtimeTmp;
@@ -371,6 +388,7 @@ namespace Eazy_Project_III.ProcessSpace
                             }
                         }
                         break;
+
                     case 4050:
                         if (Process.IsTimeup)
                         {
@@ -382,9 +400,6 @@ namespace Eazy_Project_III.ProcessSpace
                             }
                         }
                         break;
-
-
-
                 }
             }
         }

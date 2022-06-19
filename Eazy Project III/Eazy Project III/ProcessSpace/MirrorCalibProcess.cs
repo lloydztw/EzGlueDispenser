@@ -6,6 +6,8 @@ using JetEazy.ProcessSpace;
 using System.Drawing;
 using System.Linq;
 
+
+
 namespace Eazy_Project_III.ProcessSpace
 {
     /// <summary>
@@ -189,7 +191,7 @@ namespace Eazy_Project_III.ProcessSpace
                                 // 就地停止 Process, 發異常通知 Event Message.
                                 Stop();
                                 m_mainprocess.Stop();
-
+                                
                                 string errMsg = string.Format("NG. 中心偏移量超過 {0:0.0} um", tolerance);
                                 FireMessage(errMsg);
                                 return;

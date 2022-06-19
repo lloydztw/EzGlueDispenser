@@ -7,9 +7,21 @@ using System.Text;
 namespace Eazy_Project_Interface
 {
     /// <summary>
+    /// 單點 On/Off 型態的制動器, 之統一接口 <br/>
+    /// @LETIAN: 20220619 creation
+    /// </summary>
+    public interface IxActuator
+    {
+        string Name { get; }
+        void Set(bool on);
+        bool IsOn();
+        bool IsOff();
+    }
+
+    /// <summary>
     /// 真空接口
     /// </summary>
-    public interface IVac
+    public interface IVac : IxActuator
     {
         /// <summary>
         /// 开启真空，无停止
@@ -26,36 +38,36 @@ namespace Eazy_Project_Interface
         bool GetVacOK();
     }
 
-    public interface ICylinder
+    public interface ICylinder : IxActuator
     {
         void SetFront();
         void SetBack();
         bool GetFrontOK();
         bool GetBackOK();
     }
-    public interface IDispensing
+    public interface IDispensing : IxActuator
     {
         void Seton();
         void Seton(int msec);
         void Setoff();
     }
-    public interface IUV
+    public interface IUV : IxActuator
     {
         void Seton();
         void Seton(int msec);
         void Setoff();
     }
-    public interface IProjector
+    public interface IProjector : IxActuator
     {
         void Seton();
         void Setoff();
     }
-    public interface ILight
+    public interface ILight : IxActuator
     {
         void Seton();
         void Setoff();
     }
-    public interface IKeyence
+    public interface IKeyence : IxActuator
     {
         void Seton();
         void Setoff();

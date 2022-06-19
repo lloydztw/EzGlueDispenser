@@ -765,13 +765,17 @@ namespace Eazy_Project_III.UISpace.MainSpace
         void InitAllProcesses()
         {
             m_mainprocess.OnCompleted += process_OnCompleted;
-            m_BuzzerProcess.OnCompleted += process_OnCompleted;
+            // Buzzer 的 結束 似乎不需要特別關注.
+            // m_BuzzerProcess.OnCompleted += process_OnCompleted;
             m_resetprocess.OnCompleted += process_OnCompleted;
             m_pickprocess.OnCompleted += process_OnCompleted;
             m_calibrateprocess.OnCompleted += process_OnCompleted;
             m_blackboxprocess.OnCompleted += process_OnCompleted;
             m_dispensingprocess.OnCompleted += process_OnCompleted;
+
+            // 目前只有 
             m_calibrateprocess.OnMessage += calibrateProcess_OnMessage;
+            m_blackboxprocess.OnMessage += blackboxProcess_OnMessage;
         }
 
 
@@ -783,7 +787,8 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 if (!check_coretronic_version())
                 {
                     // 此處異常檢查
-                    // 可放入 ResetProcess 內部處理
+                    // 可考慮放入 ResetProcess 內部處理
+                    // 或設計一個 AlarmManager 集中管理.
                     // Buzzer and m_mainprocess.Stop()
                     // 就不用 流出到 GUI 這一層了
                     m_BuzzerProcess.Start(1);   // 叫一聲
@@ -824,6 +829,35 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 // 中心點偏移量過大
                 string err = e.Message;
                 CommonLogClass.Instance.LogMessage(err, Color.Red);
+                m_BuzzerProcess.Start(1);   // 叫一聲
+            }
+            else
+            {
+
+            }
+        }
+        private void blackboxProcess_OnMessage(object sender, ProcessEventArgs e)
+        {
+            if (string.IsNullOrEmpty(e.Message))
+                return;
+
+            if (e.Message == "Image.Captured")
+            {
+                if (e.Tag != null && e.Tag is Bitmap)
+                {
+                    //@LETIAN: 2022/09/19
+                    // the life cycle of bitmap is maintained by
+                    // the sender.
+                    var bmp = (Bitmap)e.Tag;
+                    m_DispUI.SetDisplayImage(bmp);
+                }
+            }
+            else if (e.Message.StartsWith("NG"))
+            {
+                // 投影補償失敗
+                string err = e.Message;
+                CommonLogClass.Instance.LogMessage(err, Color.Red);
+                m_BuzzerProcess.Start(1);   // 叫一聲
             }
             else
             {
@@ -832,13 +866,17 @@ namespace Eazy_Project_III.UISpace.MainSpace
         }
         private bool check_coretronic_version()
         {
-            /// 檢查中光電 Version and UpdateParams
+            // 檢查中光電 Version and UpdateParams
+            // 將來看, 此檢查 是否歸屬於 ResetProcess
+            // 再將此段程序 移入.
+            // 用 event 通知 GUI 顯示異常.
             string version = GdxCore.GetDllVersion();
             CommonLogClass.Instance.LogMessage("中光電 DLL Version = " + version, Color.Blue);
 
             bool ok = GdxCore.UpdateParams();
             string msg = "中光電 DLL UpdateParams() = " + ok;
             CommonLogClass.Instance.LogMessage(msg, ok ? Color.Green : Color.Red);
+
             if (!ok)
             {
                 VsMSG.Instance.Warning(msg.Replace("=", "\n\r"));

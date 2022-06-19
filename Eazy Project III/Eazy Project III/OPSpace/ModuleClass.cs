@@ -24,8 +24,14 @@ namespace Eazy_Project_III.OPSpace
         {
             MACHINE = eMachine;
         }
+
+        public virtual string Name
+        {
+            get { return GetType().Name; }
+        }
     }
-    public class Vac : ModuleClass, IVac
+
+    public class Vac : ModuleClass, IVac, IxActuator
     {
         private static readonly Vac _instance = new Vac();
         public static Vac Instance
@@ -59,6 +65,22 @@ namespace Eazy_Project_III.OPSpace
             MACHINE.PLCIO.GetInputIndex(6);
             return true;
         }
+
+        public void Set(bool on)
+        {
+            if (on)
+                Seton();
+            else
+                Setoff();
+        }
+        public bool IsOn()
+        {
+            return GetVacOK();
+        }
+        public bool IsOff()
+        {
+            return GetVacOK();
+        }
     }
 
     public class UVCylinder : ModuleClass, ICylinder
@@ -89,6 +111,23 @@ namespace Eazy_Project_III.OPSpace
         {
             return MACHINE.PLCIO.GetInputIndex(1);
         }
+
+        public void Set(bool on)
+        {
+            if (on)
+                SetFront();
+            else
+                SetBack();
+        }
+        public bool IsOn()
+        {
+            return GetFrontOK();
+        }
+        public bool IsOff()
+        {
+            return GetBackOK();
+        }
+
     }
     public class Dispensing : ModuleClass, IDispensing
     {
@@ -112,6 +151,29 @@ namespace Eazy_Project_III.OPSpace
         {
             MACHINE.PLCIO.SetOutputIndex(7, false);
         }
+
+        public void Set(bool on)
+        {
+            if (on)
+                Seton();
+            else
+                Setoff();
+        }
+        public bool IsOn()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
+        public bool IsOff()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
+
     }
     public class UV : ModuleClass, IUV
     {
@@ -135,6 +197,28 @@ namespace Eazy_Project_III.OPSpace
         {
             MACHINE.PLCIO.SetOutputIndex(6, false);
         }
+
+        public void Set(bool on)
+        {
+            if (on)
+                Seton();
+            else
+                Setoff();
+        }
+        public bool IsOn()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
+        public bool IsOff()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
     }
 
     public class Projector : ModuleClass, IProjector
@@ -155,6 +239,29 @@ namespace Eazy_Project_III.OPSpace
         {
 
         }
+
+        public void Set(bool on)
+        {
+            if (on)
+                Seton();
+            else
+                Setoff();
+        }
+        public bool IsOn()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
+        public bool IsOff()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
+
     }
     public class Light : ModuleClass, ILight
     {
@@ -174,6 +281,29 @@ namespace Eazy_Project_III.OPSpace
         {
             MACHINE.PLCIO.SetOutputIndex(16, false);
         }
+
+        public void Set(bool on)
+        {
+            if (on)
+                Seton();
+            else
+                Setoff();
+        }
+        public bool IsOn()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
+        public bool IsOff()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
+
     }
     public class Keyence : ModuleClass, IKeyence
     {
@@ -201,6 +331,27 @@ namespace Eazy_Project_III.OPSpace
         {
             return string.Empty;
         }
-    }
 
+        public void Set(bool on)
+        {
+            if (on)
+                Seton();
+            else
+                Setoff();
+        }
+        public bool IsOn()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
+        public bool IsOff()
+        {
+            // 有對應點位嗎?
+            // 沒有的話內建
+            // cache data 反映最後一次的 Set On/Off
+            return false;
+        }
+    }
 }

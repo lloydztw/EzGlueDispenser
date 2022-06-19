@@ -1,9 +1,11 @@
 ﻿
 using Eazy_Project_III;
+using Eazy_Project_Interface;
 using JetEazy.BasicSpace;
 using JetEazy.Drivers.Laser;
 using JetEazy.GdxCore3.Model;
 using JetEazy.QMath;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Text;
@@ -72,29 +74,45 @@ namespace JetEazy.GdxCore3
         }       
         public static void Trace(string tag, object process, params object[] args)
         {
-            string[] strs = tag.Split('.');
-            switch (strs[0])
+            //> 略過 NLog Trace.
+            //> return;
+
+            try
             {
-                case "MirrorCalibration":
-                    trace_MirrorCalibration(tag, strs, process, args);
-                    break;
-                case "ModulePosition":
-                    trace_Module_Motion(tag, strs, args);
-                    break;
-                case "Motor":
-                    trace_Motors_Motion(tag, strs, args);
-                    break;
+                string[] strs = tag.Split('.');
+                switch (strs[0])
+                {
+                    case "MirrorCalibration":
+                    case "MirrorDispenser":
+                        trace_MirrorOperations(tag, strs, process, args);
+                        break;
+                    case "ModulePosition":
+                        trace_Module_Motion(tag, strs, args);
+                        break;
+                    case "Motor":
+                        trace_Motors_Motion(tag, strs, args);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                GdxGlobal.LOG.Error(ex, "Trace Error");
             }
         }
 
 
         #region PRIVATE_FUNCTION
-        static string _last_process_wait = null;
-        static string _last_module_wait = null;
-        static string _last_motors_wait = null;
-        static void trace_MirrorCalibration(string tag, string[] strs, object ps, params object[] args)
+        class XWait
         {
-            if (check_if_the_same_wait(ref _last_process_wait, tag, strs))
+            public string Name;
+            public int Count = 0;
+        }
+        static XWait _last_process_wait = new XWait();
+        static XWait _last_module_wait = new XWait();
+        static XWait _last_motors_wait = new XWait();
+        static void trace_MirrorOperations(string tag, string[] strs, object ps, params object[] args)
+        {
+            if (check_wait_count(_last_process_wait, tag, strs) > 2)
                 return;
 
             var LOG = GdxGlobal.LOG;
@@ -110,6 +128,7 @@ namespace JetEazy.GdxCore3
                             LOG.Trace("{0}, ps={1}, mirror={2}", tag, ps_state, args[0]);
                             break;
                         }
+
                     case "Compensate":
                         {
                             var bmp = (Bitmap)args[0];
@@ -118,6 +137,7 @@ namespace JetEazy.GdxCore3
                             LOG.Trace("{0}, ps={1}, centerPt={2}, modulePos={3}", tag, ps_state, centerPt, modulePos);
                         }
                         break;
+
                     case "IO":
                         {
                             string ioname = (string)args[0];
@@ -130,6 +150,20 @@ namespace JetEazy.GdxCore3
                             }
                             break;
                         }
+
+                    case "Actuator":
+                        {
+                            IxActuator driver = (IxActuator)args[0];
+                            bool targetValue = args.Length > 1 ? (bool)args[1] : true;
+                            LOG.Trace("{0}, ps={1}, {2}, {3}", tag, ps_state, driver.Name, targetValue);
+
+                            if (GdxGlobal.Facade.IsSimPLC())
+                            {
+                                driver.Set(targetValue);
+                            }
+                            break;
+                        }
+
                     default:
                         {
                             LOG.Trace("{0}, ps={1}", tag, ps_state);
@@ -140,7 +174,7 @@ namespace JetEazy.GdxCore3
         }
         static void trace_Module_Motion(string tag, string[] strs, params object[] args)
         {
-            if (check_if_the_same_wait(ref _last_module_wait, tag, strs))
+            if (check_wait_count(_last_module_wait, tag, strs) > 1)
                 return;
 
             var LOG = GdxGlobal.LOG;
@@ -166,7 +200,7 @@ namespace JetEazy.GdxCore3
         }
         static void trace_Motors_Motion(string tag, string[] strs, params object[] args)
         {
-            if (check_if_the_same_wait(ref _last_motors_wait, tag, strs))
+            if (check_wait_count(_last_motors_wait, tag, strs) > 1)
                 return;
 
             var LOG = GdxGlobal.LOG;
@@ -209,15 +243,15 @@ namespace JetEazy.GdxCore3
                 //motor.SetManualSpeed(0);
             }
         }
-        static bool check_if_the_same_wait(ref string last_wait, string tag, string[] strs)
+        static int check_wait_count(XWait last_wait, string tag, string[] strs)
         {
-            if (last_wait == tag)
-                return true;
+            if (last_wait.Name == tag)
+                return ++last_wait.Count;
             if (is_wait(strs))
-                last_wait = tag;
+                last_wait.Name = tag;
             else
-                last_wait = null;
-            return false;
+                last_wait.Name = null;
+            return 0;
         }
         static bool is_wait(string[] strs)
         {
