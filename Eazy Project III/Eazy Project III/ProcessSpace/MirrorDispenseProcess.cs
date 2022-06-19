@@ -1,42 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-using Eazy_Project_Interface;
-using Eazy_Project_III.ControlSpace.MachineSpace;
-using JetEazy;
-using JetEazy.BasicSpace;
-using JetEazy.DBSpace;
-using JetEazy.UISpace;
-using JzDisplay;
-using JzDisplay.UISpace;
-using PhotoMachine.UISpace;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using VsCommon.ControlSpace;
+﻿using Eazy_Project_III.ControlSpace.IOSpace;
 using Eazy_Project_III.OPSpace;
-using Eazy_Project_III.UISpace;
-using Eazy_Project_III.ControlSpace.IOSpace;
-using JetEazy.ControlSpace.MotionSpace;
-using JetEazy.ControlSpace;
-using VsCommon.ControlSpace.IOSpace;
-using Eazy_Project_Measure;
-using Eazy_Project_III.FormSpace;
-using Eazy_Project_III.UISpace.IOSpace;
-using JetEazy.GdxCore3;
-using JetEazy.ProcessSpace;
+using JetEazy.BasicSpace;
+using System.Collections.Generic;
+using System.Drawing;
 
 namespace Eazy_Project_III.ProcessSpace
 {
