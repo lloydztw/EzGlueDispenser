@@ -22,8 +22,8 @@ namespace Eazy_Project_III
     public class Universal : JetEazy.Universal
     {
         public static bool IsNoUseCCD = false;
-        public static bool IsNoUseIO = false;
-        public static bool IsNoUseMotor = false;
+        public static bool IsNoUseIO = true;
+        public static bool IsNoUseMotor = true;
 
         public static string VersionDate = "2022/06/21";
 

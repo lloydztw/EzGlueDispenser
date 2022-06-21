@@ -64,7 +64,7 @@ namespace Eazy_Project_III.ProcessSpace
             base.Start(args[0]);
         }
 
-        public override void Tick() 
+        public override void Tick()
         {
             var Process = this;
 
@@ -180,21 +180,20 @@ namespace Eazy_Project_III.ProcessSpace
 #endif
 
                             GdxCore.Trace("MirrorCalibration.Compensate", Process, bmp, mirrorPutPos, ptfOffset);
-                            float tolerance = 20f; // um
-                            bool go = GdxCore.CheckCompensate(bmp, mirrorPutPos, ptfOffset, tolerance);
+                            bool go = GdxCore.CheckCompensate(bmp);
                             bmp.Dispose();
-
                             if (!go)
                             {
-                                // 就地停止 Process, 發異常通知 Event Message.
+                                // 就地停止 Process
                                 Stop();
                                 m_mainprocess.Stop();
-                                
-                                string errMsg = string.Format("NG. 中心偏移量超過 {0:0.0} um", tolerance);
-                                FireMessage(errMsg);
+                                // Event And Log
+                                _LOG("中光電 dll 回報 No GO!");
+                                FireMessage("NG. 中光電 dll 回報 No GO!");
                                 return;
                             }
-                            
+
+
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 3, posPutAdjust);
                             MACHINE.PLCIO.ADR_SMALL_LIGHT = false;
 

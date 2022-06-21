@@ -774,6 +774,8 @@ namespace Eazy_Project_III.UISpace.MainSpace
             m_blackboxprocess.OnCompleted += process_OnCompleted;
             m_dispensingprocess.OnCompleted += process_OnCompleted;
             // Calib and BlackBox
+            m_calibrateprocess.OnMessage += calibrateProcess_OnMessage;
+            m_blackboxprocess.OnMessage += blackboxProcess_OnMessage;
             ((MirrorCalibProcess)m_calibrateprocess).OnLiveImage += process_OnLiveImage;
             ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveImage += process_OnLiveImage;
             ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveCompensating += blackBoxProcess_OnLiveCompensating;

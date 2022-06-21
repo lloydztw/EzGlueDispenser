@@ -31,59 +31,88 @@ namespace JetEazy.GdxCore3
 
         public static string GetDllVersion()
         {
-            StringBuilder version = new StringBuilder(20);
-            CoretronicsAPI.getVersion(version);
-            return version.ToString();
+            try
+            {
+                StringBuilder version = new StringBuilder(20);
+                CoretronicsAPI.getVersion(version);
+                return version.ToString();
+            }
+            catch (Exception ex)
+            {
+                GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
+                return "unknown";
+            }
         }
         public static bool UpdateParams()
         {
-            bool ok = CoretronicsAPI.updateParams();
-
-            if (GdxGlobal.Facade.IsSimPLC())
+            try
             {
-                //> ok = false; // 故意報錯測試
-            }
+                bool ok = CoretronicsAPI.updateParams();
 
-            return ok;
+                if (GdxGlobal.Facade.IsSimPLC())
+                {
+                    //> ok = false; // 故意報錯測試
+                }
+
+                return ok;
+            }
+            catch (Exception ex)
+            {
+                GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
+                return false;
+            }
         }
-        public static bool CheckCompensate(Bitmap bmp, string mirrorPutPosStr, PointF recipePoint, float tolerane)
+        public static bool CheckCompensate(Bitmap bmp)
         {
-            bool go = true;
-
-            int[] motorParam = new int[6];
-            CoretronicsAPI.setCenterCompInitial();
-
-            // unsafe
+            try
             {
-                var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
-                var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-                CoretronicsAPI.setCenterCompImg(rect.Width, rect.Height, 3, bmpd.Scan0);
-                bmp.UnlockBits(bmpd);
+                bool go = false;
+
+                int[] motorParam = new int[6];
+                CoretronicsAPI.setCenterCompInitial();
+
+                // unsafe
+                {
+                    var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+                    var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+                    CoretronicsAPI.setCenterCompImg(rect.Width, rect.Height, 3, bmpd.Scan0);
+                    bmp.UnlockBits(bmpd);
+                }
+
+                CoretronicsAPI.CenterCompProcess();
+                go = CoretronicsAPI.getCenterCompInfo();
+
+                go = true;
+
+                return go;
             }
-
-            CoretronicsAPI.CenterCompProcess();
-            go = CoretronicsAPI.getCenterCompInfo();
-
-            //var mirrorPutPos = QVector.Parse(mirrorPutPosStr);
-            //GdxGlobal.LOG.Debug("$$$ MirrorPutPos = {0}", mirrorPutPos);
-            //GdxGlobal.LOG.Debug("$$$ recipePoint = {0}", recipePoint);
-
-            return go;
+            catch (Exception ex)
+            {
+                GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
+                return false;
+            }
         }
         public static void CalcProjCompensation(Bitmap bmp, int[] motorParams, int lightColorID)
         {
-            CoretronicsAPI.setProjCompInitial();
-
-            // unsafe
+            try
             {
-                var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
-                var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-                CoretronicsAPI.setProjCompImg(rect.Width, rect.Height, 3, bmpd.Scan0, lightColorID);
-                bmp.UnlockBits(bmpd);
-            }
+                CoretronicsAPI.setProjCompInitial();
 
-            CoretronicsAPI.ProjCompProcess();
-            CoretronicsAPI.getProjCompInfo(lightColorID, motorParams);
+                // unsafe
+                {
+                    var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+                    var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+                    CoretronicsAPI.setProjCompImg(rect.Width, rect.Height, 3, bmpd.Scan0, lightColorID);
+                    bmp.UnlockBits(bmpd);
+                }
+
+                CoretronicsAPI.ProjCompProcess();
+                CoretronicsAPI.getProjCompInfo(lightColorID, motorParams);
+            }
+            catch(Exception ex)
+            {
+                GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
+            }
         }
 
         public static void Trace(string tag, object process, params object[] args)
