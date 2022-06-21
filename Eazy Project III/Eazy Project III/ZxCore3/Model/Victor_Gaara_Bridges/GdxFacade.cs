@@ -59,9 +59,14 @@ namespace JetEazy.GdxCore3.Model
             }
         }
 
-        public bool IsSimCamera()
+        public bool IsSimCamera(int camID)
         {
-            return Eazy_Project_III.Universal.IsNoUseCCD;
+            // Universal.IsNoUseCCD 無法反映 camera 是否為模擬
+            // 改用 ICam.IsSim()
+            var cam = camID == 0 ? CameraCali : CameraBlackBox;
+            if (cam == null)
+                return true;
+            return cam.IsSim();
         }
         public bool IsSimMotor()
         {

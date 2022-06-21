@@ -272,12 +272,6 @@
     <Compile Include="UISpace\MainSpace\MainX1UI.Designer.cs">
       <DependentUpon>MainX1UI.cs</DependentUpon>
     </Compile>
-    <Compile Include="UISpace\MainSpace\MainX3UI.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UISpace\MainSpace\MainX3UI.Designer.cs">
-      <DependentUpon>MainX3UI.cs</DependentUpon>
-    </Compile>
     <Compile Include="UISpace\RcpUI.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -368,9 +362,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UISpace\MainSpace\MainGdx3UI.resx">
       <DependentUpon>MainGdx3UI.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UISpace\MainSpace\MainX3UI.resx">
-      <DependentUpon>MainX3UI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UISpace\RcpUI.resx">
       <DependentUpon>RcpUI.cs</DependentUpon>

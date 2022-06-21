@@ -134,12 +134,11 @@ namespace Eazy_Project_III
 
 #if OPT_LETIAN_DEBUG
             // To fit into my screen for debug.
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = FormBorderStyle.Sizable;
             this.WindowState = FormWindowState.Maximized;
 #endif
 
-            if (Universal.IsNoUseIO)
-                CommonLogClass.Instance.LogMessage("模擬PLC", Color.OrangeRed);
+            _show_simulation_info_to_log();
         }
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
@@ -217,6 +216,7 @@ namespace Eazy_Project_III
             // 很慢
             LanguageExClass.Instance.EnumControls(this);
 #endif
+
         }
 
         void InitialESSUI()
@@ -457,16 +457,40 @@ namespace Eazy_Project_III
                                  MACHINECollection.PLCFps());
         }
 
-
+        private void _show_simulation_info_to_log()
+        {
+            //@ LETIAN:20220622
+            if (Universal.IsNoUseIO)
+                CommonLogClass.Instance.LogMessage("模擬 PLC", Color.OrangeRed);
+            if (Universal.IsNoUseMotor)
+                CommonLogClass.Instance.LogMessage("模擬 Motor", Color.OrangeRed);
+            for (int i = 0, N = Universal.CAMERAS.Length; i < N; i++)
+            {
+                if (Universal.CAMERAS[i].IsSim())
+                    CommonLogClass.Instance.LogMessage("模擬 Cam" + i, Color.OrangeRed);
+            }
+        }
         private void _auto_layout()
         {
 #if OPT_LETIAN_DEBUG
             // 暫時, 自動調整 layout
             // To be continued.
             var rcc = ClientRectangle;
-            mainControlUI1.Width = rcc.Width - essUI1.Width;
+            mainControlUI1.Width = rcc.Width - essUI1.Width - 2;
             mainControlUI1.Height = rcc.Height;
             ctrlUI1.Height = rcc.Bottom - ctrlUI1.Top;
+            var panels = new Control[]
+            {
+                essUI1,
+                runUI1,
+                rcpUI1,
+                iniUI1,
+                ctrlUI1,
+            };
+            foreach (var panel in panels)
+            {
+                panel.Left = rcc.Width - panel.Width;
+            }
 #endif
         }
     }

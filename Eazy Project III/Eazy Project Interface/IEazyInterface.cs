@@ -95,6 +95,7 @@ namespace Eazy_Project_Interface
 
     public interface ICam
     {
+        bool IsSim();
         void Initial(string inipara);
         void SetExposure(int val);
         void StartCapture();

@@ -413,7 +413,7 @@ namespace Eazy_Project_III.ProcessSpace
                 ax_start_move(m_nextMotorPos);
 
                 #region SIMULATION
-                if (!isCompleted && GdxGlobal.Facade.IsSimCamera())
+                if (!isCompleted && GdxGlobal.Facade.IsSimCamera(1))
                 {
                     isCompleted = (runCount >= 3);
                     if (isCompleted)

@@ -105,10 +105,14 @@ namespace Eazy_Project_III.OPSpace
         
         public bool GetFrontOK()
         {
+            if (Universal.IsNoUseIO)
+                return true;
             return MACHINE.PLCIO.GetInputIndex(2);
         }
         public bool GetBackOK()
         {
+            if (Universal.IsNoUseIO)
+                return true;
             return MACHINE.PLCIO.GetInputIndex(1);
         }
 
