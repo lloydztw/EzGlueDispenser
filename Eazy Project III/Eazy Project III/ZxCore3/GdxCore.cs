@@ -82,6 +82,7 @@ namespace JetEazy.GdxCore3
                 CoretronicsAPI.CenterCompProcess();
                 go = CoretronicsAPI.getCenterCompInfo();
 
+                //暫時跳過 no-go
                 go = true;
 
                 return go;
@@ -118,7 +119,7 @@ namespace JetEazy.GdxCore3
         public static void Trace(string tag, object process, params object[] args)
         {
             //> 略過 NLog Trace.
-            //> return;
+            return;
 
             try
             {

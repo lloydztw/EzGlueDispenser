@@ -137,6 +137,9 @@ namespace Eazy_Project_III
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.WindowState = FormWindowState.Maximized;
 #endif
+
+            if (Universal.IsNoUseIO)
+                CommonLogClass.Instance.LogMessage("模擬PLC", Color.OrangeRed);
         }
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {

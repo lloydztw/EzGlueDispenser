@@ -116,25 +116,26 @@ namespace JetEazy.ControlSpace.MotionSpace
         public abstract bool IsSVOn { get;}
         public abstract bool IsBreack { get;}
         public abstract bool IsError { get; }
-        public bool IsOK
-        {
-            get
-            {
-                bool ret = IsHome;
+        public abstract bool IsOK { get; }
+        //public bool IsOK
+        //{
+        //    get
+        //    {
+        //        bool ret = IsHome;
 
-                ret &= IsOnSite;
+        //        ret &= IsOnSite;
 
-                if (ret)
-                {
-                    if (!IsInitialOK)
-                    {
-                        IsInitialOK = true;
-                    }
-                }
+        //        if (ret)
+        //        {
+        //            if (!IsInitialOK)
+        //            {
+        //                IsInitialOK = true;
+        //            }
+        //        }
 
-                return ret;
-            }
-        }
+        //        return ret;
+        //    }
+        //}
         public abstract string PositionNowString { get;}
         public abstract float PositionNow { get; }
         public abstract string RulerPositionNowString { get; }

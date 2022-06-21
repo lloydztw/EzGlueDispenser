@@ -121,12 +121,21 @@ namespace Eazy_Project_III.ProcessSpace
                     case 20:
                         if (Process.IsTimeup)
                         {
-                            CommonLogClass.Instance.LogMessage("擷取影像", Color.Black);
+                            //CommonLogClass.Instance.LogMessage("擷取影像", Color.Black);
+                            _LOG("擷取影像");
 
-                            var cam = ICamForCali;
-                            cam.Snap();
-                            Bitmap bmp = new Bitmap(cam.GetSnap());
-                            bmp.Save("image0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                            Bitmap bmp = null;
+                            try
+                            {
+                                var cam = ICamForCali;
+                                cam.Snap();
+                                bmp = new Bitmap(cam.GetSnap());
+                                bmp.Save("image0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                            }
+                            catch(Exception ex)
+                            {
+                                _LOG(ex, "相機異常!");
+                            }
 
                             //> ==============================================
                             //> 使用 event 通知 GUI 更新 Bitmap
@@ -135,7 +144,14 @@ namespace Eazy_Project_III.ProcessSpace
                             //> MirrorCalibProcess 會負責 Bitmap 的 LifeCycle.
                             //> EventHandler 無需 Dispose()
                             //> ==============================================
-                            OnLiveImage?.Invoke(this, new ProcessEventArgs("live.Image", bmp));
+                            try
+                            {
+                                OnLiveImage?.Invoke(this, new ProcessEventArgs("live.Image", bmp));
+                            }
+                            catch(Exception ex)
+                            {
+                                _LOG(ex, "Fire Event 異常!");
+                            }
 
                             //> ==============================================
                             //计算偏移值
@@ -255,13 +271,20 @@ namespace Eazy_Project_III.ProcessSpace
                     case 40:
                         if (Process.IsTimeup)
                         {
-                            if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_ADJUST, 1))
+                            try
                             {
-                                CommonLogClass.Instance.LogMessage("微调模组到达位置", Color.Black);
-                                Process.Stop();
-                                CommonLogClass.Instance.LogMessage("校正完成", Color.Black);
-                                GdxCore.Trace("MirrorCalibration.Completed", Process);
-                                FireCompleted();
+                                if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_ADJUST, 1))
+                                {
+                                    CommonLogClass.Instance.LogMessage("微调模组到达位置", Color.Black);
+                                    Process.Stop();
+                                    CommonLogClass.Instance.LogMessage("校正完成", Color.Black);
+                                    GdxCore.Trace("MirrorCalibration.Completed", Process);
+                                    FireCompleted();
+                                }
+                            }
+                            catch(Exception ex)
+                            {
+                                _LOG(ex, "40");
                             }
                         }
                         break;

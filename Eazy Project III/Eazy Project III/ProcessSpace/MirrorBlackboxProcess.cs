@@ -127,10 +127,18 @@ namespace Eazy_Project_III.ProcessSpace
                     case 20:
                         if (Process.IsTimeup)
                         {
-                            _LOG("開始連續取像補償");
-                            cx_init_compensation();
-                            start_scan_thread();
-                            SetNexState(40, 500);
+                            if (!ax_is_ready())
+                            {
+                                _LOG("馬達沒有Ready", Color.OrangeRed);
+                                //Terminate();
+                            }
+                            else
+                            {
+                                _LOG("開始連續取像補償");
+                                cx_init_compensation();
+                                start_scan_thread();
+                                SetNexState(40, 500);
+                            }
                         }
                         break;
 

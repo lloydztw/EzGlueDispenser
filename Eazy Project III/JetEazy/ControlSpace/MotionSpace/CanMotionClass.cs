@@ -502,7 +502,15 @@ namespace JetEazy.ControlSpace.MotionSpace
         {
             return READYPOSITION;
         }
-
+        public override bool IsOK
+        {
+            get
+            {
+                bool ret = IsHome;
+                ret &= IsOnSite;
+                return ret;
+            }
+        }
     }
 }
 
