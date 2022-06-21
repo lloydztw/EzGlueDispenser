@@ -21,11 +21,11 @@ namespace Eazy_Project_III
 {
     public class Universal : JetEazy.Universal
     {
-        public static bool IsNoUseCCD = true;
-        public static bool IsNoUseIO = true;
-        public static bool IsNoUseMotor = true;
+        public static bool IsNoUseCCD = false;
+        public static bool IsNoUseIO = false;
+        public static bool IsNoUseMotor = false;
 
-        public static string VersionDate = "2022/06/17";
+        public static string VersionDate = "2022/06/21";
 
         public static VersionEnum VERSION = VersionEnum.PROJECT;
         public static OptionEnum OPTION = OptionEnum.DISPENSING;

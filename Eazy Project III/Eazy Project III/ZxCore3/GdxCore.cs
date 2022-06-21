@@ -70,7 +70,7 @@ namespace JetEazy.GdxCore3
 
             return go;
         }
-        public static void CalcProjCompensation(Bitmap bmp, int[] motorParams)
+        public static void CalcProjCompensation(Bitmap bmp, int[] motorParams, int lightColorID)
         {
             CoretronicsAPI.setProjCompInitial();
 
@@ -78,28 +78,18 @@ namespace JetEazy.GdxCore3
             {
                 var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                 var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-                CoretronicsAPI.setProjCompImg(rect.Width, rect.Height, 3, bmpd.Scan0, 0);
+                CoretronicsAPI.setProjCompImg(rect.Width, rect.Height, 3, bmpd.Scan0, lightColorID);
                 bmp.UnlockBits(bmpd);
             }
 
             CoretronicsAPI.ProjCompProcess();
-            CoretronicsAPI.getProjCompInfo(0, motorParams);
-
-            if (false)
-            {
-                GdxGlobal.LOG.Debug("CoretronicsAPI, ProjCompensate, ({0},{1},{2}), ({3},{4},{5})",
-                        motorParams[0], motorParams[1], motorParams[2],
-                        motorParams[3], motorParams[4], motorParams[5]
-                    );
-            }
+            CoretronicsAPI.getProjCompInfo(lightColorID, motorParams);
         }
 
         public static void Trace(string tag, object process, params object[] args)
         {
             //> 略過 NLog Trace.
-#if !OPT_LETIAN_DEBUG
-            return;
-#endif
+            //> return;
 
             try
             {
