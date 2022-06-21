@@ -75,8 +75,8 @@ namespace Eazy_Project_III.UISpace.IOSpace
             int j = 0;
             int k = 0;
             int l = 0;
-            int x = 2;
-            int y = 2;
+            int x = 0;
+            int y = 0;
             while (i < INPUT_COUNT)
             {
                 lblInput[i] = new Label();
@@ -97,7 +97,7 @@ namespace Eazy_Project_III.UISpace.IOSpace
 
                 lblInput[i].Name = "IX" + k.ToString() + "." + l.ToString();
 
-                if (i % 8 == 0 && i > 0)
+                if (i % 7 == 0 && i > 0)
                 {
                     k++;
                     l = 0;
@@ -107,22 +107,17 @@ namespace Eazy_Project_III.UISpace.IOSpace
                     l++;
                 }
 
-                lblInput[i].Location = new System.Drawing.Point(x, y);
-
-                if (i % 15 == 0 && (i > 0 && i != 30))
+                if (i % 8 == 0 && i > 0)
                 {
-                    x = 2;
-                    y = 2 + lblInput[i].Height + 4;
-                }
-                else
-                {
-                    x += 4 + lblInput[i].Width;
-                    //y = 2;
+                    x = 0;
+                    y++;
                 }
 
+                lblInput[i].Location = new System.Drawing.Point(x * 4 + x * lblInput[i].Width, y * 4 + y * lblInput[i].Height);
                 this.Controls.Add(lblInput[i]);
 
                 i++;
+                x++;
             }
 
 

@@ -301,7 +301,7 @@ namespace Eazy_Project_III.ProcessSpace
                             //开始启动
 
                             MACHINE.PLCIO.SetIO(IOConstClass.QB1542, true);
-
+                            MACHINE.PLCIO.ADR_SMALL_LIGHT = true;//測試偏移的燈 提前打開
                             CommonLogClass.Instance.LogMessage("拾取及到达测试位置 启动", Color.Black);
 
                             Process.NextDuriation = NextDurtimeTmp;

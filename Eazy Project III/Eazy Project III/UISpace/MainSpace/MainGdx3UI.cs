@@ -411,6 +411,14 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 return;
             }
 
+            //判断吸嘴是否有料
+            string IX0_6 = "0:IX0.6";
+            if (MACHINE.PLCIO.GetIO(IX0_6))
+            {
+                VsMSG.Instance.Warning("請先取走鏡片，再復位。");
+                return;
+            }
+
             string onStrMsg = "是否要进行复位？";
             string offStrMsg = "是否要停止复位流程？";
             string msg = (m_resetprocess.IsOn ? offStrMsg : onStrMsg);
