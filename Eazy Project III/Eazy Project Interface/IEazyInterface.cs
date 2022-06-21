@@ -77,6 +77,9 @@ namespace Eazy_Project_Interface
 
     public interface IAxis
     {
+        bool IsError { get; }
+        bool IsOK { get; }
+
         void Forward();
         void Backward();
         void Stop();

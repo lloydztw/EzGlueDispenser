@@ -52,6 +52,15 @@ namespace JetEazy.QMath
             //for (int i = 0; i < iSize; i++)
             //    m_VD[i] = src.m_VD[i];
         }
+        public QVector Slice(int start, int len = 0)
+        {
+            int end = len <= 0 ? Dimensions : Math.Min(start + len, Dimensions);
+            int n = end - start;
+            var v = new QVector(n);
+            for (int k = 0, i = start; i < end; i++, k++)
+                v[k] = this[i];
+            return v;
+        }
 
         /// <summary>
         /// ºû«×

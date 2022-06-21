@@ -15,6 +15,7 @@ using JzDisplay;
 using JzDisplay.UISpace;
 using System;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 using VsCommon.ControlSpace;
 using VsCommon.ControlSpace.IOSpace;
@@ -772,10 +773,10 @@ namespace Eazy_Project_III.UISpace.MainSpace
             m_calibrateprocess.OnCompleted += process_OnCompleted;
             m_blackboxprocess.OnCompleted += process_OnCompleted;
             m_dispensingprocess.OnCompleted += process_OnCompleted;
-
-            // 目前只有 
-            m_calibrateprocess.OnMessage += calibrateProcess_OnMessage;
-            m_blackboxprocess.OnMessage += blackboxProcess_OnMessage;
+            // Calib and BlackBox
+            ((MirrorCalibProcess)m_calibrateprocess).OnLiveImage += process_OnLiveImage;
+            ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveImage += process_OnLiveImage;
+            ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveCompensating += blackBoxProcess_OnLiveCompensating;
         }
 
 
@@ -807,24 +808,32 @@ namespace Eazy_Project_III.UISpace.MainSpace
             {
             }
         }
+        private void process_OnLiveImage(object sender, ProcessEventArgs e)
+        {
+            if (e.Tag != null && e.Tag is Bitmap)
+            {
+                //@LETIAN: 2022/06/20 (for backgroud thread)
+                // bmp 由 sender maintains life cycle.
+                // 由於 DispUI 內部會另行複製 bmp
+                // 所以 在此 Handler Function 內不用 Dispose()
+                if (InvokeRequired)
+                {
+                    EventHandler<ProcessEventArgs> h = process_OnLiveImage;
+                    this.Invoke(h, sender, e);
+                }
+                else
+                {
+                    var bmp = (Bitmap)e.Tag;
+                    m_DispUI.SetDisplayImage(bmp);
+                }
+            }
+        }
         private void calibrateProcess_OnMessage(object sender, ProcessEventArgs e)
         {
             if (string.IsNullOrEmpty(e.Message))
                 return;
 
-            if (e.Message == "Image.Captured") 
-            {
-                if (e.Tag != null && e.Tag is Bitmap)
-                {
-                    //@LETIAN: 2022/09/19
-                    // bmp 改由 sender 自己 Dispose().
-                    // 由於 DispUI 內部會另行複製 bmp
-                    // 所以 在此 Handler Function 內不用 Dispose()
-                    var bmp = (Bitmap)e.Tag;
-                    m_DispUI.SetDisplayImage(bmp);
-                }
-            }
-            else if(e.Message.StartsWith("NG"))
+            if(e.Message.StartsWith("NG"))
             {
                 // 中心點偏移量過大
                 string err = e.Message;
@@ -841,18 +850,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (string.IsNullOrEmpty(e.Message))
                 return;
 
-            if (e.Message == "Image.Captured")
-            {
-                if (e.Tag != null && e.Tag is Bitmap)
-                {
-                    //@LETIAN: 2022/09/19
-                    // the life cycle of bitmap is maintained by
-                    // the sender.
-                    var bmp = (Bitmap)e.Tag;
-                    m_DispUI.SetDisplayImage(bmp);
-                }
-            }
-            else if (e.Message.StartsWith("NG"))
+            if (e.Message.StartsWith("NG"))
             {
                 // 投影補償失敗
                 string err = e.Message;
@@ -862,6 +860,64 @@ namespace Eazy_Project_III.UISpace.MainSpace
             else
             {
 
+            }
+        }
+        private void blackBoxProcess_OnLiveCompensating(object sender, ProcessEventArgs e)
+        {
+            try
+            {
+                if (InvokeRequired)
+                {
+                    EventHandler<ProcessEventArgs> h = blackBoxProcess_OnLiveCompensating;
+                    this.Invoke(h, sender, e);
+                }
+                else
+                {
+                    // @LETIAN: 20220620 Compensation Step Tracer
+                    var args = (object[])e.Tag;
+                    var actor = (string)args[0];
+                    var nextMotorPos = (JetEazy.QMath.QVector)args[1];
+                    var delta = (JetEazy.QMath.QVector)args[2];
+                    var v1 = nextMotorPos.Slice(0, 4);
+                    var v2 = nextMotorPos.Slice(4);
+                    var incr1 = delta.Slice(0, 4);
+                    var incr2 = delta.Slice(4);
+
+                    string msg = actor + "補償, 即將移動馬達";
+                    msg += "\n XYZU 至 " + v1.ToString();
+                    msg += "\n theta 至 " + v2.ToString();
+                    msg += "\n相對量:";
+                    msg += "\n XYZU " + incr1.ToString();
+                    msg += "\n theta " + incr2.ToString();
+
+                    //// var ret = MessageBox.Show(msg, "BlackBox. DEBUG",
+                    ////            MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                    //// var ret = frm.ShowDialog();
+                    //// if (ret == DialogResult.Cancel)
+                    ////    e.Cancel = true;
+
+                    // @LETIAN: 20220620 Async GUI interaction
+                    e.GoControlByClient = new ManualResetEvent(false);
+                    var frm = new FormCompensationStepTracer(msg, "BlackBox.Debugger: " + actor)
+                    {
+                        TopMost = true,
+                        Tag = e,
+                    };
+                    frm.FormClosed += new FormClosedEventHandler((s2, e2) =>
+                    {
+                        DialogResult ret = ((Form)s2).DialogResult;
+                        var blackBoxEventArgs = (ProcessEventArgs)((Form)s2).Tag;
+                        blackBoxEventArgs.Cancel = (ret != DialogResult.OK);
+                        blackBoxEventArgs.GoControlByClient.Set();
+                        frm.Dispose();
+                    });
+                    frm.Show(this);
+                    this.tabControl1.SelectedIndex = 0;
+                }
+            }
+            catch(Exception ex)
+            {
+                e.Cancel = true;
             }
         }
         private bool check_coretronic_version()

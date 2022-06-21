@@ -16,8 +16,13 @@ namespace Eazy_Project_III
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             //Application.Run(new FormSpace.frmUserSelect());
+            //_test();
             Application.Run(new MainForm());
 
+        }
+        static void _test()
+        {
+            JetEazy.GdxCore3.Model.CoretronicsAPI.updateParams();
         }
     }
 }

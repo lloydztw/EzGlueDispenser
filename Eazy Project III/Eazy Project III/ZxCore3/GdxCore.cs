@@ -44,7 +44,7 @@ namespace JetEazy.GdxCore3
 
             return ok;
         }
-        public static bool CheckCompensate(object process, Bitmap bmp, string mirrorPutPosStr, PointF recipePoint, float tolerane)
+        public static bool CheckCompensate(Bitmap bmp, string mirrorPutPosStr, PointF recipePoint, float tolerane)
         {
             bool go = true;
 
@@ -58,25 +58,55 @@ namespace JetEazy.GdxCore3
                 CoretronicsAPI.setCenterCompImg(rect.Width, rect.Height, 3, bmpd.Scan0);
                 bmp.UnlockBits(bmpd);
             }
-            
+
             CoretronicsAPI.CenterCompProcess();
             CoretronicsAPI.getCenterCompInfo(motorParam);
-            
-            GdxGlobal.LOG.Trace("CoretronicsAPI, CenterCompensate, ({0},{1},{2}), ({3},{4},{5})",
+
+            var msg = string.Format("CoretronicsAPI, CenterCompensate, ({0},{1},{2}), ({3},{4},{5})",
                     motorParam[0], motorParam[1], motorParam[2],
                     motorParam[3], motorParam[4], motorParam[5]
                 );
+
+            CommonLogClass.Instance.LogMessage(msg, Color.Blue);
+            // 暫時不 go
+            go = false;
 
             var mirrorPutPos = QVector.Parse(mirrorPutPosStr);
             GdxGlobal.LOG.Debug("$$$ MirrorPutPos = {0}", mirrorPutPos);
             GdxGlobal.LOG.Debug("$$$ recipePoint = {0}", recipePoint);
 
             return go;
-        }       
+        }
+        public static void CalcProjCompensation(Bitmap bmp, int[] motorParams)
+        {
+            CoretronicsAPI.setProjCompInitial();
+
+            // unsafe
+            {
+                var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+                var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+                CoretronicsAPI.setProjCompImg(rect.Width, rect.Height, 3, bmpd.Scan0, 0);
+                bmp.UnlockBits(bmpd);
+            }
+
+            CoretronicsAPI.ProjCompProcess();
+            CoretronicsAPI.getProjCompInfo(0, motorParams);
+
+            if (false)
+            {
+                GdxGlobal.LOG.Debug("CoretronicsAPI, ProjCompensate, ({0},{1},{2}), ({3},{4},{5})",
+                        motorParams[0], motorParams[1], motorParams[2],
+                        motorParams[3], motorParams[4], motorParams[5]
+                    );
+            }
+        }
+
         public static void Trace(string tag, object process, params object[] args)
         {
             //> 略過 NLog Trace.
-            //> return;
+#if !OPT_LETIAN_DEBUG
+            return;
+#endif
 
             try
             {
@@ -223,13 +253,13 @@ namespace JetEazy.GdxCore3
         static void sim_motors(ModuleName module, int index, string posStr)
         {
             int axisID;
-            switch(module)
+            switch (module)
             {
-                case ModuleName.MODULE_PICK: 
+                case ModuleName.MODULE_PICK:
                     axisID = 0; break;
                 case ModuleName.MODULE_DISPENSING:
                     axisID = 3; break;
-                case ModuleName.MODULE_ADJUST: 
+                case ModuleName.MODULE_ADJUST:
                     axisID = 6; break;
                 default:
                     return;

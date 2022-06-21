@@ -3,6 +3,7 @@ using Eazy_Project_III.OPSpace;
 using JetEazy.BasicSpace;
 using JetEazy.GdxCore3;
 using JetEazy.ProcessSpace;
+using System;
 using System.Drawing;
 using System.Linq;
 
@@ -46,6 +47,7 @@ namespace Eazy_Project_III.ProcessSpace
                 return _singleton;
             }
         }
+        public event EventHandler<ProcessEventArgs> OnLiveImage;
 
         /// <summary>
         /// 第一個參數決定 Mirror_CalibrateProcessIndex
@@ -121,8 +123,9 @@ namespace Eazy_Project_III.ProcessSpace
                         {
                             CommonLogClass.Instance.LogMessage("擷取影像", Color.Black);
 
-                            ICamForCali.Snap();
-                            Bitmap bmp = new Bitmap(ICamForCali.GetSnap());
+                            var cam = ICamForCali;
+                            cam.Snap();
+                            Bitmap bmp = new Bitmap(cam.GetSnap());
                             bmp.Save("image0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 
                             //> ==============================================
@@ -132,12 +135,7 @@ namespace Eazy_Project_III.ProcessSpace
                             //> MirrorCalibProcess 會負責 Bitmap 的 LifeCycle.
                             //> EventHandler 無需 Dispose()
                             //> ==============================================
-                            var e = new ProcessEventArgs()
-                            {
-                                Message = "Image.Captured",
-                                Tag = bmp,
-                            };
-                            FireMessage(e);
+                            OnLiveImage?.Invoke(this, new ProcessEventArgs("live.Image", bmp));
 
                             //> ==============================================
                             //计算偏移值
@@ -183,7 +181,7 @@ namespace Eazy_Project_III.ProcessSpace
 
                             GdxCore.Trace("MirrorCalibration.Compensate", Process, bmp, mirrorPutPos, ptfOffset);
                             float tolerance = 20f; // um
-                            bool go = GdxCore.CheckCompensate(Process, bmp, mirrorPutPos, ptfOffset, tolerance);
+                            bool go = GdxCore.CheckCompensate(bmp, mirrorPutPos, ptfOffset, tolerance);
                             bmp.Dispose();
 
                             if (!go)

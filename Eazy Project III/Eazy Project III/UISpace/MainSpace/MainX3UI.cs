@@ -1472,7 +1472,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
 #endif
 
                             GdxCore.Trace("MirrorCalibration.Compensate", Process, bmp, mirrorPutPos, ptfOffset);
-                            bool go = GdxCore.CheckCompensate(Process, bmp, mirrorPutPos, ptfOffset, 20f);
+                            bool go = GdxCore.CheckCompensate(bmp, mirrorPutPos, ptfOffset, 20f);
                             if (!go)
                             {
 

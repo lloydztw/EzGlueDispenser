@@ -92,9 +92,8 @@ namespace Eazy_Project_III.ProcessSpace
 
                         SetRunningLight();
 
-                        //Process.NextDuriation = NextDurtimeTmp;
-                        //Process.ID = 510;
-                        SetNext(510);
+                        Process.NextDuriation = NextDurtimeTmp;
+                        Process.ID = 510;
                         CommonLogClass.Instance.LogMessage("主流程开始", Color.Black);
 
                         //m_PickIndex = MainGroupIndex;

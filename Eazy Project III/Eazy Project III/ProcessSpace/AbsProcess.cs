@@ -1,7 +1,6 @@
 ﻿using JetEazy.BasicSpace;
 using System;
-
-
+using System.Threading;
 
 namespace JetEazy.ProcessSpace
 {
@@ -15,6 +14,7 @@ namespace JetEazy.ProcessSpace
     public interface IxProcess
     {
         //event EventHandler OnStateChanged;
+        //event EventHandler<ProcessEventArgs> OnError;
         event EventHandler<ProcessEventArgs> OnMessage;
         event EventHandler<ProcessEventArgs> OnCompleted;
         void Tick();
@@ -37,6 +37,7 @@ namespace JetEazy.ProcessSpace
         #endregion
 
         //public event EventHandler OnStateChanged;
+        //public event EventHandler<ProcessEventArgs> OnError;
         public event EventHandler<ProcessEventArgs> OnMessage;
         public event EventHandler<ProcessEventArgs> OnCompleted;
 
@@ -58,7 +59,7 @@ namespace JetEazy.ProcessSpace
         }
         public abstract void Tick();
 
-        protected void SetNext(int id, int nextDuration = -1)
+        protected void SetNexState(int id, int nextDuration = -1)
         {
             bool isChanged = (this.ID != id);
             this.ID = id;
@@ -92,10 +93,17 @@ namespace JetEazy.ProcessSpace
 
     public class ProcessEventArgs : EventArgs
     {
+        public ProcessEventArgs(string msg = null, object tag= null)
+        {
+            Message = msg;
+            Tag = tag;
+        }
+
         /// <summary>
         /// sender 要通知給 receiver 的訊息.
         /// </summary>
         public string Message = null;
+        public object Tag = null;
 
         /// <summary>
         /// Cancel Flag: 
@@ -103,7 +111,6 @@ namespace JetEazy.ProcessSpace
         /// 來設定來通知 sender 是否要中斷 process
         /// </summary>
         public bool Cancel = false;
-
-        public object Tag = null;
+        public ManualResetEvent GoControlByClient = null;
     }
 }

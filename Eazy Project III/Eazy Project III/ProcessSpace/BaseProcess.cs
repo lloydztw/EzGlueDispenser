@@ -2,7 +2,12 @@
 using Eazy_Project_III.ControlSpace.MachineSpace;
 using Eazy_Project_III.OPSpace;
 using Eazy_Project_Interface;
+using JetEazy.BasicSpace;
+using JetEazy.GdxCore3.Model;
 using JetEazy.ProcessSpace;
+using System;
+using System.Drawing;
+using System.Text;
 using VsCommon.ControlSpace;
 
 
@@ -40,9 +45,9 @@ namespace Eazy_Project_III.ProcessSpace
             get { return UV.Instance; }
         }
 
-        protected IAxis IAXIS_0
+        protected IAxis GetAxis(int i)
         {
-            get { return ((DispensingMachineClass)MACHINECollection.MACHINE).PLCMOTIONCollection[0]; }
+            return ((DispensingMachineClass)MACHINECollection.MACHINE).PLCMOTIONCollection[i];
         }
 
         protected MachineCollectionClass MACHINECollection
@@ -89,5 +94,42 @@ namespace Eazy_Project_III.ProcessSpace
             MACHINE.PLCIO.ADR_GREEN = true;
         }
         #endregion
+
+
+        protected void _LOG(string msg, params object[] args)
+        {
+            Color color = Color.Black;
+
+            int N = args.Length;
+            if (N > 0 && args[N - 1] is Color)
+            {
+                color = (Color)args[N - 1];
+                N -= 1;
+            }
+
+            var sb = new StringBuilder();
+            sb.Append(Name);
+            sb.Append(", ");
+            sb.Append(msg);
+
+            for (int i = 0; i < N; i++)
+            {
+                sb.Append(", ");
+                sb.Append(args[i]);
+            }
+
+            msg = sb.ToString();
+            CommonLogClass.Instance.LogMessage(msg, color);
+            if (color == Color.Red)
+                GdxGlobal.LOG.Warn(msg);
+            else
+                GdxGlobal.LOG.Debug(msg);
+        }
+        protected void _LOG(Exception ex, string msg)
+        {
+            msg = Name + ", " + msg;
+            CommonLogClass.Instance.LogMessage(msg, Color.Red);
+            GdxGlobal.LOG.Warn(ex, msg);
+        }
     }
 }
