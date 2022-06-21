@@ -309,7 +309,7 @@ namespace Eazy_Project_III.ProcessSpace
                 return _blackboxMotors;
             }
         }
-        int[] m_motorParams = new int[N_MOTORS];
+        int[] m_motorParams = new int[2];
         QVector m_initMotorPos = new QVector(N_MOTORS);
         QVector m_currMotorPos = new QVector(N_MOTORS);
         QVector m_nextMotorPos = new QVector(N_MOTORS);
@@ -366,7 +366,7 @@ namespace Eazy_Project_III.ProcessSpace
 
                 isCompleted = _is_zero(m_motorParams);
                 if (isCompleted)
-                    return false;
+                    return true;
 
                 // 計算馬達移動
                 m_currMotorPos = ax_read_current_pos();
@@ -502,28 +502,39 @@ namespace Eazy_Project_III.ProcessSpace
         {
             var incr = new QVector(N_MOTORS);
 
-            for (int i = 0; i < 4; i++)
-            {
-                if (motorParams[i] > 0)
-                    incr[i] = STEP_XYZ;
-                else if (motorParams[i] < 0)
-                    incr[i] = -STEP_XYZ;
-                else
-                    incr[i] = 0;
-            }
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    if (motorParams[i] > 0)
+            //        incr[i] = STEP_XYZ;
+            //    else if (motorParams[i] < 0)
+            //        incr[i] = -STEP_XYZ;
+            //    else
+            //        incr[i] = 0;
+            //}
 
-            for (int i = 4; i < N_MOTORS; i++)
+            //for (int i = 4; i < N_MOTORS; i++)
+            //{
+            //    if (motorParams[i] > 0)
+            //        incr[i] = STEP_A;
+            //    else if (motorParams[i] < 0)
+            //        incr[i] = -STEP_A;
+            //    else
+            //        incr[i] = 0;
+            //}
+
+            // Y軸 封住不動
+            //incr[1] = 0;
+
+            // 2022/06/21 only compensate theta_y, theta_z
+            for (int i = 4, k=0; i < N_MOTORS; i++, k++)
             {
-                if (motorParams[i] > 0)
+                if (motorParams[k] > 0)
                     incr[i] = STEP_A;
-                else if (motorParams[i] < 0)
+                else if (motorParams[k] < 0)
                     incr[i] = -STEP_A;
                 else
                     incr[i] = 0;
             }
-
-            // Y軸 封住不動
-            incr[1] = 0;
 
             return incr;
         }
@@ -576,7 +587,7 @@ namespace Eazy_Project_III.ProcessSpace
         bool _is_zero(int[] motorParams)
         {
             bool yes = true;
-            for (int i = 0; i < N_MOTORS; i++)
+            for (int i = 0; i < motorParams.Length; i++)
                 yes &= (motorParams[i] == 0);
             return yes;
         }

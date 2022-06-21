@@ -40,7 +40,9 @@ namespace JetEazy.GdxCore3
             bool ok = CoretronicsAPI.updateParams();
 
             if (GdxGlobal.Facade.IsSimPLC())
-                ok = false; // 故意報錯測試
+            {
+                //> ok = false; // 故意報錯測試
+            }
 
             return ok;
         }
@@ -60,20 +62,11 @@ namespace JetEazy.GdxCore3
             }
 
             CoretronicsAPI.CenterCompProcess();
-            CoretronicsAPI.getCenterCompInfo(motorParam);
+            go = CoretronicsAPI.getCenterCompInfo();
 
-            var msg = string.Format("CoretronicsAPI, CenterCompensate, ({0},{1},{2}), ({3},{4},{5})",
-                    motorParam[0], motorParam[1], motorParam[2],
-                    motorParam[3], motorParam[4], motorParam[5]
-                );
-
-            CommonLogClass.Instance.LogMessage(msg, Color.Blue);
-            // 暫時不 go
-            go = false;
-
-            var mirrorPutPos = QVector.Parse(mirrorPutPosStr);
-            GdxGlobal.LOG.Debug("$$$ MirrorPutPos = {0}", mirrorPutPos);
-            GdxGlobal.LOG.Debug("$$$ recipePoint = {0}", recipePoint);
+            //var mirrorPutPos = QVector.Parse(mirrorPutPosStr);
+            //GdxGlobal.LOG.Debug("$$$ MirrorPutPos = {0}", mirrorPutPos);
+            //GdxGlobal.LOG.Debug("$$$ recipePoint = {0}", recipePoint);
 
             return go;
         }

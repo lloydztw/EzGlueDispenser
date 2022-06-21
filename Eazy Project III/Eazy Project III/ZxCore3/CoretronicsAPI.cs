@@ -33,9 +33,10 @@ namespace JetEazy.GdxCore3.Model
         [DllImport(DLL_PATH, EntryPoint = "CenterCompProcess", CallingConvention = CallingConvention.Cdecl)]
         [return:MarshalAs(UnmanagedType.I1)]
         public static extern bool CenterCompProcess();
-        
+
         [DllImport(DLL_PATH, EntryPoint = "getCenterCompInfo", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void getCenterCompInfo([MarshalAs(UnmanagedType.LPArray)] int[] MotorParams);
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool getCenterCompInfo();
 
         //-------------------------------------------------------------------------------------------------------
         // Projection Compensation
