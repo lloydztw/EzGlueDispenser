@@ -262,12 +262,12 @@ namespace Eazy_Project_III
         const string Cat00 = "A00.鐳射頭與吸嘴設置";
 
 
-        [CategoryAttribute(Cat00), DescriptionAttribute("鐳射頭測量塊規位置")]
+        [CategoryAttribute(Cat00), DescriptionAttribute("鐳射頭測量塊歸位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
         [DisplayName("01鐳射頭位置")]
         [Browsable(X3Visable)]
         public string LEPos { get; set; } = string.Empty;
-        [CategoryAttribute(Cat00), DescriptionAttribute("吸嘴吸住塊規位置")]
+        [CategoryAttribute(Cat00), DescriptionAttribute("吸嘴吸住塊歸位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
         [DisplayName("02吸嘴位置")]
         [Browsable(X3Visable)]

@@ -964,34 +964,61 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (FindForm().WindowState == FormWindowState.Minimized)
                 return;
 
+            //@LETAIN: 自動調整下方 panels
             _auto_adjust_bottom_panels();
-            _auto_adjust_disp_ui();
 
-            lblLEText.Top = dispUI1.Top;
-            lblLEText.Left = dispUI1.Right - lblLEText.Width;
+            //@LETIAN: 自動調整 DispUI
+            _auto_adjust_disp_ui();
         }
         void _auto_adjust_bottom_panels()
         {
-            var rcc = ClientRectangle;
-            int h = tabControl1.Height;
-            tabControl1.Left = rcc.Width - tabControl1.Width - 5;
-            tabControl1.Top = rcc.Height - h;
-            groupBox1.Top = rcc.Height - h;
-            groupBox1.Height = h;
-            groupBox1.Width = rcc.Width - tabControl1.Width - 5;
+            //@LETAIN: 自動調整下方 panels
+            _auto_align_to_parent_bottom(0, tabControl1);
+            _auto_align_to_parent_bottom(0, groupBox1, groupBox2);
+            _auto_align_to_parent_bottom(5, richTextBox1, label5);
+            tabControl1.Width = ClientRectangle.Width;
+            //@LETIAN: 自動調整下方 六按鈕
+            //_auto_adjust_six_major_buttons();
+        }
+        void _auto_adjust_six_major_buttons()
+        {
+            //@LETIAN: 自動調整下方 六按鈕
+            var header = label11;
+            var btns1 = new Control[] { button6, button4, button7 };
+            var btns2 = new Control[] { button8, button9, button1 };
+            var parent = header.Parent;
+            var rcc = parent.ClientRectangle;
+            int padding = 2;
+            var h = (rcc.Height - header.Bottom - padding * 3) / 2;
+            var y = header.Bottom + padding;
+            foreach (var btn in btns1)
+            {
+                btn.Top = y;
+                btn.Height = h;
+            }
+            y += (h + padding);
+            foreach (var btn in btns2)
+            {
+                btn.Top = y;
+                btn.Height = h;
+            }
         }
         void _auto_adjust_disp_ui()
         {
             var rcc = ClientRectangle;
-            var bottomPanel = tabControl1;
-            dispUI1.Height = rcc.Height - bottomPanel.Height - 5;
-            dispUI1.Width = rcc.Width;
-            foreach (Control c in dispUI1.Controls)
+            dispUI1.Height = rcc.Height - tabControl1.Height;
+            dispUI1.Width = tabControl1.Width;
+        }
+        void _auto_align_to_parent_bottom(int padding, params Control[] panels)
+        {
+            foreach (var panel in panels)
             {
-                c.Width = rcc.Width;
-                if(c is PictureBox)
+                if (panel != null)
                 {
-                    c.Height = rcc.Bottom - c.Top;
+                    var parent = panel.Parent;
+                    var rcc = parent.ClientRectangle;
+                    //panel.Height = rcc.Height - panel.Top - padding;
+                    panel.Top = rcc.Bottom - panel.Height;
                 }
             }
         }

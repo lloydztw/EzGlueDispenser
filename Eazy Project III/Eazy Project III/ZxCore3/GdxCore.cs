@@ -83,7 +83,6 @@ namespace JetEazy.GdxCore3
                 go = CoretronicsAPI.getCenterCompInfo();
 
                 //暫時跳過 no-go
-                CommonLogClass.Instance.LogMessage("Coretronics, CenterComp, 暫時跳過 go/no-go !");
                 go = true;
 
                 return go;
@@ -111,7 +110,7 @@ namespace JetEazy.GdxCore3
                 CoretronicsAPI.ProjCompProcess();
                 CoretronicsAPI.getProjCompInfo(lightColorID, motorParams);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
             }
@@ -119,9 +118,8 @@ namespace JetEazy.GdxCore3
 
         public static void Trace(string tag, object process, params object[] args)
         {
-            bool isSim = (GdxGlobal.Facade != null && GdxGlobal.Facade.IsSimPLC());
-            if (!isSim)
-                return;     //> 略過 Trace and Simulation
+            //> 略過 NLog Trace.
+            return;
 
             try
             {
@@ -130,7 +128,6 @@ namespace JetEazy.GdxCore3
                 {
                     case "MirrorCalibration":
                     case "MirrorDispenser":
-                    case "MirrorPicker":
                         trace_MirrorOperations(tag, strs, process, args);
                         break;
                     case "ModulePosition":
@@ -146,6 +143,7 @@ namespace JetEazy.GdxCore3
                 GdxGlobal.LOG.Error(ex, "Trace Error");
             }
         }
+
 
         #region PRIVATE_FUNCTION
         class XWait

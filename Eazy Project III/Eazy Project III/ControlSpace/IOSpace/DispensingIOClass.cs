@@ -362,12 +362,15 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             {
                 case ModuleName.MODULE_PICK:
                     MotorPickPosition(eIndex, ePosString);
+                    MotorPickPosition(0, ePosString);
                     break;
                 case ModuleName.MODULE_DISPENSING:
                     MotorDispensingPosition(eIndex, ePosString);
+                    MotorDispensingPosition(0, ePosString);
                     break;
                 case ModuleName.MODULE_ADJUST:
                     MotorPickCaliPosition(eIndex, ePosString);
+                    MotorPickCaliPosition(0, ePosString);
                     break;
             }
         }

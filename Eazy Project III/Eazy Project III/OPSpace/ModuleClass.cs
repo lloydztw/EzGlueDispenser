@@ -31,7 +31,7 @@ namespace Eazy_Project_III.OPSpace
         }
     }
 
-    public class Vac : ModuleClass, IVac
+    public class Vac : ModuleClass, IVac, IxActuator
     {
         private static readonly Vac _instance = new Vac();
         public static Vac Instance
@@ -105,14 +105,10 @@ namespace Eazy_Project_III.OPSpace
         
         public bool GetFrontOK()
         {
-            if (Universal.IsNoUseIO)
-                return true;
             return MACHINE.PLCIO.GetInputIndex(2);
         }
         public bool GetBackOK()
         {
-            if (Universal.IsNoUseIO)
-                return true;
             return MACHINE.PLCIO.GetInputIndex(1);
         }
 
