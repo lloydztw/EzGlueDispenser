@@ -218,7 +218,6 @@ namespace Eazy_Project_III.ProcessSpace
         }
         void thread_func()
         {
-            int maxRunCount = MAX_RUN_COUNT;
             int runCount = 0;
 
             while (_runFlag)
@@ -229,17 +228,10 @@ namespace Eazy_Project_III.ProcessSpace
 
                     bool isCompleted;
 
-                    bool go = cx_run_one_step_compensation(runCount, out isCompleted);
+                    bool go = cx_run_one_step_compensation(ref runCount, out isCompleted);
 
                     if (!go || isCompleted)
                         break;
-
-                    if (++runCount > maxRunCount)
-                    {
-                        _LOG("補償次數超過上限", maxRunCount, Color.Red);
-                        SetNextState(9999);
-                        break;
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -295,9 +287,9 @@ namespace Eazy_Project_III.ProcessSpace
         const double MAX_DELTA_XYZ = 0.25;
         const double MAX_DELTA_A = 0.25;
         const double MIN_DELTA_XYZ = MAX_DELTA_XYZ / 100;
-        const double MIN_DELTA_A = MAX_DELTA_A / 100;
-        const double STEP_XYZ = MAX_DELTA_XYZ / 10;
-        const double STEP_A = 0.0167;
+        const double MIN_DELTA_A = 0.0167;
+        const double INCR_XYZ = MAX_DELTA_XYZ / 10;
+        const double INCR_A = 0.0167;
         double _decay_rate = 0.9;
 
 
@@ -350,9 +342,9 @@ namespace Eazy_Project_III.ProcessSpace
                 pmotor.SetSpeed(SpeedTypeEnum.GOSLOW);
             }            
         }
-        bool cx_run_one_step_compensation(int runCount, out bool isCompleted)
+        bool cx_run_one_step_compensation(ref int runCount, out bool isCompleted)
         {
-            bool go = cx_run_one_step_coretron(runCount, out isCompleted);
+            bool go = cx_run_one_step_coretron(ref runCount, out isCompleted);
 
             if (go && isCompleted)
             {
@@ -366,7 +358,7 @@ namespace Eazy_Project_III.ProcessSpace
 
             return go;
         }
-        bool cx_run_one_step_coretron(int runCount, out bool isCompleted)
+        bool cx_run_one_step_coretron(ref int runCount, out bool isCompleted)
         {
             isCompleted = false;
 
@@ -424,6 +416,12 @@ namespace Eazy_Project_III.ProcessSpace
                     //// _LOG("馬達位置已被改動, 重新計算...");
                     //// return true;
                     _LOG("馬達位置已被改動, 為安全起見, 強制中止補償!", Color.Red);
+                    return false;
+                }
+                if (++runCount > MAX_RUN_COUNT)
+                {
+                    _LOG("補償次數超過上限", MAX_RUN_COUNT, Color.Red);
+                    SetNextState(9999);
                     return false;
                 }
 
@@ -492,14 +490,19 @@ namespace Eazy_Project_III.ProcessSpace
             var pos = new QVector(N_MOTORS);
             for (int i = 0; i < N_MOTORS; i++)
                 pos[i] = BlackBoxMotors[i].GetPos();
-            return pos;
+            return ax_convert_to_physical_unit(pos);
         }
         void ax_start_move(QVector pos)
         {
             //var motors = BlackboxMotors();
-            for (int i = 0; i < N_MOTORS; i++)
+            var steps = ax_convert_to_plc_unit(pos);
+            for (int i = 0; i < 4; i++)
             {
-                BlackBoxMotors[i].Go(pos[i], 0);
+                BlackBoxMotors[i].Go(steps[i], 0);
+            }
+            for (int i = 4; i < N_MOTORS; i++)
+            {
+                BlackBoxMotors[i].Go(steps[i], 0);
             }
         }
         bool ax_is_ready()
@@ -521,6 +524,20 @@ namespace Eazy_Project_III.ProcessSpace
                     return true;
             }
             return false;
+        }
+        QVector ax_convert_to_plc_unit(QVector pos)
+        {
+            var v = new QVector(pos);
+            v[4] = Math.Round(v[4] / 0.0167);
+            v[5] = Math.Round(v[5] / 0.0167);
+            return v;
+        }
+        QVector ax_convert_to_physical_unit(QVector pos)
+        {
+            var v = new QVector(pos);
+            v[4] = Math.Round(v[4] * 0.0167);
+            v[5] = Math.Round(v[5] * 0.0167);
+            return v;
         }
 
         QVector _calc_next_incr(int[] motorParams, QVector lastIncr)
@@ -551,12 +568,15 @@ namespace Eazy_Project_III.ProcessSpace
             //incr[1] = 0;
 
             // 2022/06/21 only compensate theta_y, theta_z
+            for (int i = 0; i < 4; i++)
+                incr[i] = 0;
+
             for (int i = 4, k=0; i < N_MOTORS; i++, k++)
             {
                 if (motorParams[k] > 0)
-                    incr[i] = STEP_A;
+                    incr[i] = INCR_A;
                 else if (motorParams[k] < 0)
-                    incr[i] = -STEP_A;
+                    incr[i] = -INCR_A;
                 else
                     incr[i] = 0;
             }
