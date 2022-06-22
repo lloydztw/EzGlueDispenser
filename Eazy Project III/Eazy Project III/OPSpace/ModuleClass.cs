@@ -31,7 +31,7 @@ namespace Eazy_Project_III.OPSpace
         }
     }
 
-    public class Vac : ModuleClass, IVac, IxActuator
+    public class Vac : ModuleClass, IVac
     {
         private static readonly Vac _instance = new Vac();
         public static Vac Instance

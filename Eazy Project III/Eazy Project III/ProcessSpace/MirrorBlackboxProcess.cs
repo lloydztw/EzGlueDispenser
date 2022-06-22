@@ -109,7 +109,7 @@ namespace Eazy_Project_III.ProcessSpace
                         {
                             _LOG("Start", "Mirror", _mirrorIndex);
                             set_light(true);
-                            SetNexState(10);
+                            SetNextState(10);
                         }
                         break;
 
@@ -120,7 +120,7 @@ namespace Eazy_Project_III.ProcessSpace
                             _LOG("設定曝光時間", expo);
                             var cam = ICamForBlackBox;
                             cam.SetExposure(expo);
-                            SetNexState(20);
+                            SetNextState(20);
                         }
                         break;
 
@@ -137,7 +137,7 @@ namespace Eazy_Project_III.ProcessSpace
                                 _LOG("開始連續取像補償");
                                 cx_init_compensation();
                                 start_scan_thread();
-                                SetNexState(40, 500);
+                                SetNextState(40, 500);
                             }
                         }
                         break;
@@ -237,7 +237,7 @@ namespace Eazy_Project_III.ProcessSpace
                     if (++runCount > maxRunCount)
                     {
                         _LOG("補償次數超過上限", maxRunCount, Color.Red);
-                        SetNexState(9999);
+                        SetNextState(9999);
                         break;
                     }
                 }
@@ -246,7 +246,7 @@ namespace Eazy_Project_III.ProcessSpace
                     if (_runFlag)
                     {
                         _LOG(ex, "live compensating 異常!");
-                        SetNexState(9999);
+                        SetNextState(9999);
                     }
                 }
             }
@@ -323,17 +323,32 @@ namespace Eazy_Project_III.ProcessSpace
         QVector m_nextMotorPos = new QVector(N_MOTORS);
         QVector m_lastIncr = new QVector(N_MOTORS);
         QVector m_incr = new QVector(N_MOTORS);
-
+        GdxMotorCoordsTransform m_trf;
 
         void cx_init_compensation()
         {
+            //(0) Read Motors Current Position as InitPos
             System.Diagnostics.Trace.Assert(ax_is_ready());
             m_initMotorPos = ax_read_current_pos();
+
+            //(1) Configuration
+            var Ini = INI.Instance;
+            var MotorCfg = MotorConfig.Instance;
+            double sphereCenterOffsetU = (_mirrorIndex==0) ?
+                        Ini.Mirror1_Offset_Adj : 
+                        Ini.Mirror2_Offset_Adj;
+            double u0 = MotorCfg.VirtureZero;
+            double theta_z0 = MotorCfg.TheaZVirtureZero;
+            double theta_y0 = MotorCfg.TheaYVirtureZero;
+            QVector mv0 = m_initMotorPos;
+            m_trf = new GdxMotorCoordsTransform(mv0, sphereCenterOffsetU);
+            
+            //(2) Set Motors Speed         
             for (int i = 0; i < N_MOTORS; i++)
             {
                 var pmotor = (PLCMotionClass)BlackBoxMotors[i];
                 pmotor.SetSpeed(SpeedTypeEnum.GOSLOW);
-            }
+            }            
         }
         bool cx_run_one_step_compensation(int runCount, out bool isCompleted)
         {
@@ -345,7 +360,7 @@ namespace Eazy_Project_III.ProcessSpace
                 go = cx_run_one_step_jez();
                 if (go)
                 {
-                    SetNexState(4001);
+                    SetNextState(4001);
                 }
             }
 
@@ -397,7 +412,7 @@ namespace Eazy_Project_III.ProcessSpace
                 if (!go)
                 {
                     _LOG("調適: 中止補償!", Color.Red);
-                    SetNexState(9999);
+                    SetNextState(9999);
                     return false;
                 }
                 if (isDirty)
@@ -430,15 +445,12 @@ namespace Eazy_Project_III.ProcessSpace
 
             while (true)
             {
-                //取出中光電貢獻的補償量
+                //取出 中光電貢獻的補償量
                 m_currMotorPos = ax_read_current_pos();
                 var cxDelta = m_currMotorPos - m_initMotorPos;
 
-                //JEZ補償
-                double u0 = 0;
-                var mv0 = m_initMotorPos + new QVector(0, 0, 0, u0, 0, 0);
-                var trf = new GdxMotorCoordsTransform(mv0);
-                var ezDelta = trf.CalcCompensation(m_initMotorPos, cxDelta);
+                //JEZ 補償
+                var ezDelta = m_trf.CalcSphereCenterCompensation(m_initMotorPos, cxDelta);
                 m_nextMotorPos = m_currMotorPos + ezDelta;
                 if (_clip_into_safe_box(m_nextMotorPos))
                     ezDelta = m_nextMotorPos - m_currMotorPos;
@@ -449,7 +461,7 @@ namespace Eazy_Project_III.ProcessSpace
                 if (!go)
                 {
                     _LOG("調適: 中止補償!", Color.Red);
-                    SetNexState(9999);
+                    SetNextState(9999);
                     return false;
                 }
                 if (isDirty)
