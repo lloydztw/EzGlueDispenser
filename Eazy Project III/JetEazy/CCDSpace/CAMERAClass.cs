@@ -50,10 +50,6 @@ namespace JetEazy.CCDSpace
 
         CameraPara _camCfg = new CameraPara();
 
-        public bool IsSim()
-        {
-            return _camCfg.IsDebug;
-        }
         public void Initial(string inipara)
         {
             _camCfg.FromCameraString(inipara);

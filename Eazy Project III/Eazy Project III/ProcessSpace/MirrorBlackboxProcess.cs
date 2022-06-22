@@ -335,8 +335,6 @@ namespace Eazy_Project_III.ProcessSpace
                 var pmotor = (PLCMotionClass)BlackBoxMotors[i];
                 pmotor.SetSpeed(SpeedTypeEnum.GOSLOW);
             }
-            ICamForCali.StopCapture();
-            ICamForBlackBox.StartCapture();
         }
         bool cx_run_one_step_compensation(ref int runCount, out bool isCompleted)
         {
@@ -397,24 +395,21 @@ namespace Eazy_Project_III.ProcessSpace
                     return true;
 
                 // STEP TRACER
-                if (false)
+                bool isDirty;
+                bool go = FireCompensatingAndCheckMotorPos("Coretronics", m_nextMotorPos, m_incr, out isDirty);
+                if (!go)
                 {
-                    bool isDirty;
-                    bool go = FireCompensatingAndCheckMotorPos("Coretronics", m_nextMotorPos, m_incr, out isDirty);
-                    if (!go)
-                    {
-                        _LOG("調適: 中止補償!", Color.Red);
-                        SetNexState(9999);
-                        return false;
-                    }
-                    if (isDirty)
-                    {
-                        //// Repeat next run by thread_func
-                        //// _LOG("馬達位置已被改動, 重新計算...");
-                        //// return true;
-                        _LOG("馬達位置已被改動, 為安全起見, 強制中止補償!", Color.Red);
-                        return false;
-                    }
+                    _LOG("調適: 中止補償!", Color.Red);
+                    SetNexState(9999);
+                    return false;
+                }
+                if (isDirty)
+                {
+                    //// Repeat next run by thread_func
+                    //// _LOG("馬達位置已被改動, 重新計算...");
+                    //// return true;
+                    _LOG("馬達位置已被改動, 為安全起見, 強制中止補償!", Color.Red);
+                    return false;
                 }
                 if (++runCount > MAX_RUN_COUNT)
                 {
@@ -458,26 +453,22 @@ namespace Eazy_Project_III.ProcessSpace
                 if (_clip_into_safe_box(m_nextMotorPos))
                     ezDelta = m_nextMotorPos - m_currMotorPos;
 
-                bool go = true;
                 // STEP TRACER
-                if (false)
+                bool isDirty;
+                bool go = FireCompensatingAndCheckMotorPos("JEZ", m_nextMotorPos, ezDelta, out isDirty);
+                if (!go)
                 {
-                    bool isDirty;
-                    go = FireCompensatingAndCheckMotorPos("JEZ", m_nextMotorPos, ezDelta, out isDirty);
-                    if (!go)
-                    {
-                        _LOG("調適: 中止補償!", Color.Red);
-                        SetNexState(9999);
-                        return false;
-                    }
-                    if (isDirty)
-                    {
-                        //// Repeat Polling Motor Pos
-                        //// _LOG("馬達位置已被改動, 重新計算...");
-                        //// continue;
-                        _LOG("馬達位置已被改動, 為安全起見, 強制中止補償!", Color.Red);
-                        return false;
-                    }
+                    _LOG("調適: 中止補償!", Color.Red);
+                    SetNexState(9999);
+                    return false;
+                }
+                if (isDirty)
+                {
+                    //// Repeat Polling Motor Pos
+                    //// _LOG("馬達位置已被改動, 重新計算...");
+                    //// continue;
+                    _LOG("馬達位置已被改動, 為安全起見, 強制中止補償!", Color.Red);
+                    return false;
                 }
 
                 // 下馬達指令
@@ -620,10 +611,8 @@ namespace Eazy_Project_III.ProcessSpace
         Bitmap snapshot_image(int runCount)
         {
             // Capture Image
-           
             var cam = ICamForBlackBox;
             cam.Snap();
-            System.Threading.Thread.Sleep(1000);
             Bitmap bmp = new Bitmap(cam.GetSnap());
 
             #region ASYNC_DUMP_IMAGE

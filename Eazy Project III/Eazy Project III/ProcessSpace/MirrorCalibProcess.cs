@@ -109,9 +109,6 @@ namespace Eazy_Project_III.ProcessSpace
                             {
                                 //到达位置 打开灯光 设定曝光
 
-                                ICamForCali.StartCapture();
-                                ICamForBlackBox.StopCapture();
-
                                 ICamForCali.SetExposure(RecipeCHClass.Instance.CaliCamExpo);
 
                                 Process.NextDuriation = NextDurtimeTmp;

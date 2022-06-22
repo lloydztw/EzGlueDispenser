@@ -234,7 +234,7 @@ namespace Eazy_Project_III.FormSpace
         {
             CameraRunning[1] = false;
             btnCam0Live.BackColor = (CameraRunning[1] ? Color.Red : Control.DefaultBackColor);
-            ICam01.StartCapture();
+
             ICam01.SetExposure(RecipeCHClass.Instance.JudgeCamExpo);
             ICam01.Snap();
             Bitmap bmp = new Bitmap(ICam01.GetSnap());
