@@ -16,6 +16,7 @@ namespace Eazy_Project_III.FormSpace
         {
             InitializeComponent();
             m_blackboxArgs = e;
+            m_blackboxArgs.GoControlByClient = new ManualResetEvent(false);
             vsCompensationRangeUI1.TitleName = e.PhaseName;
             vsCompensationRangeUI1.lblMaxDelta.Text = e.MaxDelta.ToString();
             vsCompensationRangeUI1.lblMax.Text = (e.InitPos + e.MaxDelta).ToString();
@@ -23,8 +24,13 @@ namespace Eazy_Project_III.FormSpace
             vsCompensationRangeUI1.lblMin.Text = (e.InitPos - e.MaxDelta).ToString();
             vsCompensationRangeUI1.lblNextDelta.Text = e.Delta.ToString();
             vsCompensationRangeUI1.lblNextPos.Text = (e.CurrentPos + e.Delta).ToString();
+            FormClosed += FormCompensationStepTracer_FormClosed;
         }
 
+        private void FormCompensationStepTracer_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            m_blackboxArgs.GoControlByClient.Set();
+        }
         private void btnFreeRun_Click(object sender, EventArgs e)
         {
             m_blackboxArgs.ContinueToDebug = false;

@@ -29,6 +29,7 @@ namespace Eazy_Project_III.ProcessSpace
     /// <summary>
     /// 投影補償 (Projection Compensate) 流程 <br/>
     /// --------------------------------------------
+    /// @LETIAN: 20220623 加入Phase1, Phase2, Phase3
     /// @LETIAN: 20220619 開始實作
     /// </summary>
     public class MirrorBlackboxProcess : BaseProcess
@@ -146,6 +147,9 @@ namespace Eazy_Project_III.ProcessSpace
                     case 10:
                         if (Process.IsTimeup)
                         {
+                            _LOG("切換相機");
+                            ICamForCali.StopCapture();
+                            ICamForBlackBox.StartCapture();
                             int expo = RecipeCHClass.Instance.JudgeCamExpo;
                             _LOG("提前設定曝光時間", expo);
                             ICamForBlackBox.SetExposure(expo);
@@ -172,7 +176,7 @@ namespace Eazy_Project_III.ProcessSpace
                             else if (isReady)
                             {
                                 _LOG(PHASE_1, "開始");
-                                start_scan_thread(m_phase1, phase1_run_one_step);
+                                start_scan_thread(m_phase1);
                                 SetNextState(199, 500);
                             }
                         }
@@ -215,7 +219,7 @@ namespace Eazy_Project_III.ProcessSpace
                             else if  (isReady)
                             {
                                 _LOG(PHASE_2, "開始連續攝相");
-                                start_scan_thread(m_phase2, phase2_run_one_step);
+                                start_scan_thread(m_phase2);
                                 SetNextState(299, 500);
                             }
                         }
@@ -259,7 +263,7 @@ namespace Eazy_Project_III.ProcessSpace
                             else if  (isReady)
                             {
                                 _LOG(PHASE_3, "開始");
-                                start_scan_thread(m_phase3, phase3_run_one_step);
+                                start_scan_thread(m_phase3);
                                 SetNextState(399);
                             }
                         }
@@ -306,13 +310,13 @@ namespace Eazy_Project_III.ProcessSpace
         {
             return _runFlag || _thread != null;
         }
-        void start_scan_thread(XRunContext run, Action<XRunContext> one_step_func)
+        void start_scan_thread(XRunContext phase, object dummy = null)
         {
             if (!is_thread_running())
             {
                 _runFlag = true;
                 _thread = new Thread(thread_func);
-                _thread.Start(new object[] { run, one_step_func });
+                _thread.Start(phase);
             }
             else
             {
@@ -336,11 +340,9 @@ namespace Eazy_Project_III.ProcessSpace
                 }
             }
         }
-        void thread_func(object args)
+        void thread_func(object arg)
         {
-            object[] objs = (object[])args;
-            var runPhase = (XRunContext)objs[0];
-            var runFunc = (Action<XRunContext>)phase1_run_one_step;
+            var phase = (XRunContext)arg;
 
             while (_runFlag)
             {
@@ -348,12 +350,12 @@ namespace Eazy_Project_III.ProcessSpace
                 {
                     Thread.Sleep(1);
 
-                    runFunc(runPhase);
+                    phase.StepFunc(phase);
 
-                    if (!runPhase.Go)
+                    if (!phase.Go)
                         break;
 
-                    if (runPhase.IsCompleted)
+                    if (phase.IsCompleted)
                         break;
                 }
                 catch (Exception ex)
@@ -370,15 +372,15 @@ namespace Eazy_Project_III.ProcessSpace
             _runFlag = false;
             _thread = null;
 
-            if (runPhase == m_phase1)
+            if (phase == m_phase1)
             {
                 SetNextState(1000);
             }
-            if (runPhase == m_phase2)
+            if (phase == m_phase2)
             {
                 SetNextState(2000);
             }
-            if (runPhase == m_phase3)
+            if (phase == m_phase3)
             {
                 SetNextState(3000);
             }
@@ -435,10 +437,6 @@ namespace Eazy_Project_III.ProcessSpace
         const int N_MOTORS = 6;
         static QVector MAX_DELTA = new QVector(0.25, 0.25, 0.25, 0.25, 2, 2);
         static QVector MIN_DELTA = new QVector(0.0025, 0.0025, 0.0025, 0.0025, 0.0167, 0.0167);
-        //static double MAX_DELTA_XYZ = 0.25;
-        //static double MAX_DELTA_A = 2;
-        //static double MIN_DELTA_XYZ = MAX_DELTA_XYZ / 100;
-        //static double MIN_DELTA_A = 0.0167;
         static double STEP_XYZU = MIN_DELTA[0] * 2;
         static double STEP_A = MIN_DELTA[5] * 5;
         static double[] THETA_DIR = new double[] { -1, 1 };     // theta_y, theta_z
@@ -726,10 +724,12 @@ namespace Eazy_Project_III.ProcessSpace
             {
                 Name = name;
             }
+            public Action<XRunContext> StepFunc;
         }
         XRunContext m_phase1 = null;
         XRunContext m_phase2 = null;
         XRunContext m_phase3 = null;
+
 
         XRunContext phase1_init()
         {
@@ -739,6 +739,7 @@ namespace Eazy_Project_III.ProcessSpace
 
             //(1) Phase Run Context
             m_phase1 = new XRunContext(PHASE_1);
+            m_phase1.StepFunc = phase1_run_one_step;
             m_phase1.InitMotorPos = new QVector(m_initMotorPos);
             m_phase1.IsDebugMode = _is_step_debug1;
 
@@ -826,6 +827,7 @@ namespace Eazy_Project_III.ProcessSpace
             return incr;
         }
 
+
         XRunContext phase2_init()
         {
             //(0) Read Motors Current Position as InitPos
@@ -833,6 +835,7 @@ namespace Eazy_Project_III.ProcessSpace
 
             //(1) Phase Run Context
             m_phase2 = new XRunContext(PHASE_2);
+            m_phase2.StepFunc = phase2_run_one_step;
             m_phase2.InitMotorPos = new QVector(m_initMotorPos);
             m_phase2.IsDebugMode = _is_step_debug2;
 
@@ -870,7 +873,7 @@ namespace Eazy_Project_III.ProcessSpace
                 FireLiveImaging(bmp);
 
                 //(2.2) 紅or綠光斑
-                Color color = _mirrorIndex == 0 ? Color.DarkRed : Color.DarkGreen;
+                Color color = _mirrorIndex == 0 ? Color.DarkOrange : Color.Blue;
                 int compType = _mirrorIndex == 0 ? 1 : 0;
                 GdxCore.CalcProjCompensation(bmp, m_motorParams, compType);
                 _LOG(runCtrl.Name, "Coretronics", "ProjComp", m_motorParams[0], m_motorParams[1], color);
@@ -946,37 +949,31 @@ namespace Eazy_Project_III.ProcessSpace
             return incr;
         }
 
+
         XRunContext phase3_init()
         {
             //(0) Read Motors Current Position as InitPos
             m_initMotorPos = ax_read_current_pos();
 
-            //(0.1) Phase Run Context
+            //(1) Phase Run Context
             m_phase3 = new XRunContext(PHASE_3);
+            m_phase3.StepFunc = phase3_run_one_step;
             m_phase3.InitMotorPos = new QVector(m_initMotorPos);
             m_phase3.IsDebugMode = _is_step_debug3;
 
-            //(1) Configuration
-            //var Ini = INI.Instance;
-            //var MotorCfg = MotorConfig.Instance;
-            //double sphereCenterOffsetU = (_mirrorIndex == 0) ?
-            //            Ini.Mirror1_Offset_Adj :
-            //            Ini.Mirror2_Offset_Adj;
+            //(2) Configuration
+            var Ini = INI.Instance;
+            var MotorCfg = MotorConfig.Instance;
+            double sphereCenterOffsetU = (_mirrorIndex == 0) ?
+                        Ini.Mirror1_Offset_Adj :
+                        Ini.Mirror2_Offset_Adj;
 
-            //double u0 = MotorCfg.VirtureZero;
-            //double theta_z0 = MotorCfg.TheaZVirtureZero;
-            //double theta_y0 = MotorCfg.TheaYVirtureZero;
+            double u0 = MotorCfg.VirtureZero;
+            double theta_z0 = MotorCfg.TheaZVirtureZero;
+            double theta_y0 = MotorCfg.TheaYVirtureZero;
 
-            //QVector mv0 = m_initMotorPos;
-            //m_trf = new GdxMotorCoordsTransform(mv0, sphereCenterOffsetU);
-
-            //(2) Set Motors Speed (SLOW-MODE)        
-            //for (int i = 0; i < N_MOTORS; i++)
-            //{
-            //    var pmotor = (PLCMotionClass)BlackBoxMotors[i];
-            //    pmotor.SetSpeed(SpeedTypeEnum.GOSLOW);
-            //}
-
+            QVector mv0 = m_phase1.InitMotorPos;
+            m_trf = new GdxMotorCoordsTransform(mv0, sphereCenterOffsetU);
             return m_phase3;
         }
         void phase3_run_one_step(XRunContext runCtrl)
@@ -989,8 +986,20 @@ namespace Eazy_Project_III.ProcessSpace
             if (!runCtrl.Go || isError)
                 return;
 
+            //取出 中光電貢獻的補償量
+            var initPos = m_phase2.InitMotorPos;
+            m_currMotorPos = ax_read_current_pos();
+            var cxDelta = m_currMotorPos - initPos;
+
+            //JEZ 補償
+            var ezDelta = m_trf.CalcSphereCenterCompensation(initPos, cxDelta);
+            m_nextMotorPos = m_currMotorPos + ezDelta;
+            if (_clip_into_safe_box(m_nextMotorPos))
+                ezDelta = m_nextMotorPos - m_currMotorPos;
+            m_incr = ezDelta;
 
             // 計算馬達移動
+            if (false)
             {
                 //(1) Current Pos
                 m_currMotorPos = ax_read_current_pos();
@@ -1005,27 +1014,30 @@ namespace Eazy_Project_III.ProcessSpace
                 m_lastIncr = m_incr;
                 if (_clip_into_safe_box(m_nextMotorPos))
                     m_incr = m_nextMotorPos - m_currMotorPos;
-
-                //(5) delta 小於馬達解析度, 當作完成.
-                runCtrl.IsCompleted = _is_almost_zero(m_incr);
-                if (runCtrl.IsCompleted)
-                    return;
-
-                //(6) 調試模式
-                if (runCtrl.IsDebugMode)
-                {
-                    check_debug_mode(runCtrl, m_currMotorPos, m_incr);
-                }
-
-                //(7) Max Run Count
-                if (!check_max_run_count(runCtrl))
-                    return;
-
-                //(8) 下指令
-                _LOG(runCtrl.Name, "馬達 Delta", m_incr);
-                _LOG(runCtrl.Name, "馬達 GoTo", m_nextMotorPos);
-                ax_start_move(m_nextMotorPos);
             }
+
+            //(5) delta 小於馬達解析度, 當作完成.
+            runCtrl.IsCompleted = _is_almost_zero(m_incr);
+            if (runCtrl.IsCompleted)
+                return;
+
+            //(6) 調試模式
+            if (runCtrl.IsDebugMode)
+            {
+                check_debug_mode(runCtrl, m_currMotorPos, m_incr);
+            }
+
+            //(7) Max Run Count
+            if (!check_max_run_count(runCtrl))
+                return;
+
+            //(8) 下指令
+            _LOG(runCtrl.Name, "馬達 Delta", m_incr);
+            _LOG(runCtrl.Name, "馬達 GoTo", m_nextMotorPos);
+            ax_start_move(m_nextMotorPos);
+
+            // 只跑一次
+            runCtrl.IsCompleted = true;
         }
         QVector phase3_calc_next_incr(XRunContext runCtrl)
         {
@@ -1222,12 +1234,4 @@ namespace Eazy_Project_III.ProcessSpace
             //MACHINE.PLCIO.ADR_POGO_PIN = on;//調試先不用
         }
     }
-
-
-
-
-
-
-
-    
 }

@@ -884,21 +884,22 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 else
                 {
                     // @LETIAN: 20220623 Async GUI interaction (new)
-                    e.GoControlByClient = new ManualResetEvent(false);
+                    // e.GoControlByClient = new ManualResetEvent(false);
                     var frm = new FormCompensationStepTracer(e)
                     {
-                        Tag = e,
+                        //Tag = e,
                         TopMost = true
                     };
                     frm.FormClosed += new FormClosedEventHandler((s2, e2) =>
                     {
                         //>>> DialogResult ret = ((Form)s2).DialogResult;
-                        var blackBoxEventArgs = (ProcessEventArgs)((Form)s2).Tag;
+                        //>>> var blackBoxEventArgs = (ProcessEventArgs)((Form)s2).Tag;
                         //>>> blackBoxEventArgs.Cancel = (ret != DialogResult.OK);
-                        blackBoxEventArgs.GoControlByClient.Set();
+                        //>>> blackBoxEventArgs.GoControlByClient.Set();
                         frm.Dispose();
                     });
                     frm.Show(this);
+                    frm.Location = new Point(100, 100);
                 }
             }
             catch(Exception ex)
