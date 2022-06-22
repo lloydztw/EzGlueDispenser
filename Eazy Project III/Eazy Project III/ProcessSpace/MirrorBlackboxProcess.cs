@@ -385,8 +385,11 @@ namespace Eazy_Project_III.ProcessSpace
             {
                 // 中光電
                 FireLiveImaging(bmp);
-                GdxCore.CalcProjCompensation(bmp, m_motorParams, _mirrorIndex);
-                Color color = _mirrorIndex == 0 ? Color.Blue : Color.Orange;
+
+                Color color = _mirrorIndex == 0 ? Color.DarkOrange : Color.Blue;
+                int compType = _mirrorIndex == 0 ? 1 : 0;
+                GdxCore.CalcProjCompensation(bmp, m_motorParams, compType);
+                
                 _LOG("Coretronics", "ProjComp", m_motorParams[0], m_motorParams[1], color);
 
                 isCompleted = _is_zero(m_motorParams);
