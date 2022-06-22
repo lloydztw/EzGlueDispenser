@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A24458C1-B3AC-462A-8B42-DAFD1D420E19}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>JetEazy</RootNamespace>
+    <AssemblyName>JetEazy</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="HslCommunication">
+      <HintPath>..\DLLS\HslCommunication.dll</HintPath>
+    </Reference>
+    <Reference Include="JetEazy.QUtility">
+      <HintPath>..\DLLS\JetEazy.QUtility.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="MvCameraControl.Net">
+      <HintPath>..\DLLS\MvCameraControl.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVSDK">
+      <HintPath>..\DLLS\MVSDK.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\DLLS\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Drawing.Common">
+      <HintPath>..\..\..\00AVS2019PROJECT\AnimatedGif-master\AnimatedGif.Demo\bin\Debug\System.Drawing.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BasicSpace\JzAHBlob.cs" />
+    <Compile Include="BasicSpace\JzFindObjectClass.cs" />
+    <Compile Include="BasicSpace\JzLangKernel32.cs" />
+    <Compile Include="BasicSpace\JzLanguageClass.cs" />
+    <Compile Include="BasicSpace\JzLogClass.cs" />
+    <Compile Include="BasicSpace\JzPlaneClass.cs" />
+    <Compile Include="BasicSpace\JzPlugClass.cs" />
+    <Compile Include="BasicSpace\JzTimesClass.cs" />
+    <Compile Include="BasicSpace\JzToolsClass.cs" />
+    <Compile Include="BasicSpace\JzTransparentPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CCDSpace\CAMERAClass.cs" />
+    <Compile Include="Class1.cs" />
+    <Compile Include="CCDSpace\CAM_HIKVISION.cs" />
+    <Compile Include="ControlSpace\CCDClass.cs" />
+    <Compile Include="ControlSpace\COMClass.cs" />
+    <Compile Include="ControlSpace\EventClass.cs" />
+    <Compile Include="ControlSpace\MotionSpace\CanMotionClass.cs" />
+    <Compile Include="ControlSpace\MotionSpace\GeoMotionClass.cs" />
+    <Compile Include="ControlSpace\MotionSpace\PLCMotionClass.cs" />
+    <Compile Include="ControlSpace\MotoCanSpace\CanDeviceCore.cs" />
+    <Compile Include="ControlSpace\MotoCanSpace\CanDeviceMotor.cs" />
+    <Compile Include="ControlSpace\MotoCanSpace\CanMotoControl.cs" />
+    <Compile Include="ControlSpace\MotoCanSpace\SocketCan.cs" />
+    <Compile Include="ControlSpace\MotoCanSpace\UsbCan.cs" />
+    <Compile Include="ControlSpace\AddressClass.cs" />
+    <Compile Include="ControlSpace\AlarmsClass.cs" />
+    <Compile Include="ControlSpace\PLCAlarmsClass.cs" />
+    <Compile Include="ControlSpace\PLCSpace\FatekClass.cs" />
+    <Compile Include="ControlSpace\PLCSpace\Modbus_From_HSL.cs" />
+    <Compile Include="ControlSpace\PLCSpace\PLCComm.cs" />
+    <Compile Include="DBSpace\AccDBClass.cs" />
+    <Compile Include="DBSpace\EsssDBClass.cs" />
+    <Compile Include="DBSpace\RCPDBClass.cs" />
+    <Compile Include="DBSpace\RUNDBClass.cs" />
+    <Compile Include="FormSpace\AccountForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\AccountForm.designer.cs">
+      <DependentUpon>AccountForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\LoginForm.designer.cs">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\VsMessageBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\VsMessageBox.Designer.cs">
+      <DependentUpon>VsMessageBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GlobalSpace\Enums.cs" />
+    <Compile Include="GlobalSpace\Universal.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="UISpace\EssUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UISpace\EssUI.designer.cs">
+      <DependentUpon>EssUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UISpace\VsMotorParasClass.cs" />
+    <Compile Include="UISpace\VsTouchMotorClass.cs" />
+    <Compile Include="UISpace\VsTouchMotorUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UISpace\VsTouchMotorUI.Designer.cs">
+      <DependentUpon>VsTouchMotorUI.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="FormSpace\AccountForm.resx">
+      <DependentUpon>AccountForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\LoginForm.resx">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\VsMessageBox.resx">
+      <DependentUpon>VsMessageBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UISpace\EssUI.resx">
+      <DependentUpon>EssUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UISpace\VsTouchMotorUI.resx">
+      <DependentUpon>VsTouchMotorUI.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Eazy Project Interface\Eazy Project Interface.csproj">
+      <Project>{5b8a94dc-98da-4330-a5a8-89d9ce06410f}</Project>
+      <Name>Eazy Project Interface</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
