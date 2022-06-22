@@ -1,29 +1,23 @@
-﻿using JetEazy;
+﻿using Eazy_Project_III.ControlSpace.MachineSpace;
+using Eazy_Project_III.OPSpace;
+using Eazy_Project_Measure;
+using JetEazy;
+using JetEazy.CCDSpace;
 using JetEazy.ControlSpace;
 using JetEazy.DBSpace;
 //using PhotoMachine.ControlSpace.MachineSpace;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VsCommon.ControlSpace;
-using Eazy_Project_Interface;
-using Eazy_Project_Module;
-using Eazy_Project_III.ControlSpace.MachineSpace;
 using VsCommon.ControlSpace.MachineSpace;
-using Eazy_Project_III.OPSpace;
-using JetEazy.CCDSpace;
-using Eazy_Project_Measure;
+
+
 
 namespace Eazy_Project_III
 {
     public class Universal : JetEazy.Universal
     {
-        public static bool IsNoUseCCD = false;
-        public static bool IsNoUseIO = false;
-        public static bool IsNoUseMotor = false;
+        public static bool IsNoUseCCD = true;      // 已經沒有用, 改用 ICam.IsSim()
+        public static bool IsNoUseIO = true;
+        public static bool IsNoUseMotor = true;
 
         public static string VersionDate = "2022/06/21";
 

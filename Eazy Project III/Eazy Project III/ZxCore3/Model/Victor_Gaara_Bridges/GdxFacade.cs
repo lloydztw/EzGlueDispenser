@@ -59,9 +59,12 @@ namespace JetEazy.GdxCore3.Model
             }
         }
 
-        public bool IsSimCamera()
+        public bool IsSimCamera(int camID)
         {
-            return Eazy_Project_III.Universal.IsNoUseCCD;
+            var cameras = Eazy_Project_III.Universal.CAMERAS;
+            if (cameras == null || camID >= cameras.Length || cameras[camID] == null)
+                return true;
+            return cameras[camID].IsSim();
         }
         public bool IsSimMotor()
         {

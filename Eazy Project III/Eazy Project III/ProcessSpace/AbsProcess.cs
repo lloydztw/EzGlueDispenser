@@ -59,7 +59,7 @@ namespace JetEazy.ProcessSpace
         }
         public abstract void Tick();
 
-        protected void SetNexState(int id, int nextDuration = -1)
+        protected void SetNextState(int id, int nextDuration = -1)
         {
             bool isChanged = (this.ID != id);
             this.ID = id;

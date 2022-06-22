@@ -29,35 +29,36 @@ namespace Eazy_Project_III.FormSpace
         /// </summary>
         private void InitializeComponent()
         {
-            this.btnOK = new System.Windows.Forms.Button();
+            this.btnStepRun = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOpenMotorsTool = new System.Windows.Forms.Button();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.btnContinueRun = new System.Windows.Forms.Button();
+            this.vsCompensationRangeUI1 = new Common.VsCompensationRangeUI();
             this.SuspendLayout();
             // 
-            // btnOK
+            // btnStepRun
             // 
-            this.btnOK.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
-            this.btnOK.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnOK.Location = new System.Drawing.Point(455, 151);
-            this.btnOK.Margin = new System.Windows.Forms.Padding(4);
-            this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(99, 39);
-            this.btnOK.TabIndex = 5;
-            this.btnOK.Text = "确定";
-            this.btnOK.UseVisualStyleBackColor = false;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            this.btnStepRun.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.btnStepRun.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnStepRun.Location = new System.Drawing.Point(351, 242);
+            this.btnStepRun.Margin = new System.Windows.Forms.Padding(4);
+            this.btnStepRun.Name = "btnStepRun";
+            this.btnStepRun.Size = new System.Drawing.Size(99, 39);
+            this.btnStepRun.TabIndex = 5;
+            this.btnStepRun.Text = "單步";
+            this.btnStepRun.UseVisualStyleBackColor = false;
+            this.btnStepRun.Click += new System.EventHandler(this.btnStepRun_Click);
             // 
             // btnCancel
             // 
             this.btnCancel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
             this.btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnCancel.Location = new System.Drawing.Point(562, 151);
+            this.btnCancel.Location = new System.Drawing.Point(458, 242);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(99, 39);
             this.btnCancel.TabIndex = 4;
-            this.btnCancel.Text = "取消";
+            this.btnCancel.Text = "中止";
             this.btnCancel.UseVisualStyleBackColor = false;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
@@ -65,7 +66,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.btnOpenMotorsTool.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(255)))));
             this.btnOpenMotorsTool.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnOpenMotorsTool.Location = new System.Drawing.Point(31, 151);
+            this.btnOpenMotorsTool.Location = new System.Drawing.Point(23, 242);
             this.btnOpenMotorsTool.Margin = new System.Windows.Forms.Padding(4);
             this.btnOpenMotorsTool.Name = "btnOpenMotorsTool";
             this.btnOpenMotorsTool.Size = new System.Drawing.Size(99, 39);
@@ -74,37 +75,55 @@ namespace Eazy_Project_III.FormSpace
             this.btnOpenMotorsTool.UseVisualStyleBackColor = false;
             this.btnOpenMotorsTool.Click += new System.EventHandler(this.btnOpenMotorsTool_Click);
             // 
-            // richTextBox1
+            // btnContinueRun
             // 
-            this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.richTextBox1.Location = new System.Drawing.Point(8, 8);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(673, 136);
-            this.richTextBox1.TabIndex = 7;
-            this.richTextBox1.Text = "";
+            this.btnContinueRun.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.btnContinueRun.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnContinueRun.Location = new System.Drawing.Point(244, 242);
+            this.btnContinueRun.Margin = new System.Windows.Forms.Padding(4);
+            this.btnContinueRun.Name = "btnContinueRun";
+            this.btnContinueRun.Size = new System.Drawing.Size(99, 39);
+            this.btnContinueRun.TabIndex = 10;
+            this.btnContinueRun.Text = "連續執行";
+            this.btnContinueRun.UseVisualStyleBackColor = false;
+            this.btnContinueRun.Click += new System.EventHandler(this.btnFreeRun_Click);
             // 
-            // FormCompensationDebugger
+            // vsCompensationRangeUI1
+            // 
+            this.vsCompensationRangeUI1.BackColor = System.Drawing.SystemColors.Control;
+            this.vsCompensationRangeUI1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.vsCompensationRangeUI1.Location = new System.Drawing.Point(8, 8);
+            this.vsCompensationRangeUI1.Margin = new System.Windows.Forms.Padding(4);
+            this.vsCompensationRangeUI1.Name = "vsCompensationRangeUI1";
+            this.vsCompensationRangeUI1.Size = new System.Drawing.Size(755, 214);
+            this.vsCompensationRangeUI1.TabIndex = 11;
+            this.vsCompensationRangeUI1.TitleName = "X, Y, Z, U, theta_y, theta_z";
+            // 
+            // FormCompensationStepTracer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(689, 202);
-            this.Controls.Add(this.richTextBox1);
+            this.ClientSize = new System.Drawing.Size(771, 368);
+            this.ControlBox = false;
+            this.Controls.Add(this.btnContinueRun);
             this.Controls.Add(this.btnOpenMotorsTool);
-            this.Controls.Add(this.btnOK);
+            this.Controls.Add(this.btnStepRun);
             this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.vsCompensationRangeUI1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Name = "FormCompensationDebugger";
+            this.Name = "FormCompensationStepTracer";
             this.Padding = new System.Windows.Forms.Padding(8);
-            this.Text = "FormCompensationDebugger";
+            this.Text = "單步調試";
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Button btnOK;
+        private System.Windows.Forms.Button btnStepRun;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOpenMotorsTool;
-        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.Button btnContinueRun;
+        private Common.VsCompensationRangeUI vsCompensationRangeUI1;
     }
 }

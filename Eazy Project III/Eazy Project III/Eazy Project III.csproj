@@ -121,6 +121,12 @@
     <Compile Include="FormSpace\FormX3\frmAXISSetup.Designer.cs">
       <DependentUpon>frmAXISSetup.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\FormX3\VsCompensationRangeUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FormSpace\FormX3\VsCompensationRangeUI.Designer.cs">
+      <DependentUpon>VsCompensationRangeUI.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSpace\frmDataGridViewPosition.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -301,6 +307,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\FormX3\frmAXISSetup.resx">
       <DependentUpon>frmAXISSetup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\FormX3\VsCompensationRangeUI.resx">
+      <DependentUpon>VsCompensationRangeUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\frmDataGridViewPosition.resx">
       <DependentUpon>frmDataGridViewPosition.cs</DependentUpon>
