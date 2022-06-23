@@ -33,6 +33,7 @@ namespace Eazy_Project_III.ProcessSpace
 
         #region PRIVATE_DATA
         int _mirrorIndex = 0;
+        bool _isDebug = false;
         #endregion
 
         #region SINGLETON
@@ -72,7 +73,12 @@ namespace Eazy_Project_III.ProcessSpace
             // (2) 目前為了相容 Tick() 舊碼 ,
             //      暫時透過 base (ProcessClass.RelateString) 傳遞
             //      (a little awkwardly)
-            base.Start(args[0]);
+
+            if (args.Length > 0)
+                int.TryParse(args[0].ToString(), out _mirrorIndex);
+            if (args.Length > 1)
+                bool.TryParse(args[1].ToString(), out _isDebug);
+            base.Start();
         }
         public override void Stop()
         {
@@ -100,7 +106,7 @@ namespace Eazy_Project_III.ProcessSpace
                             Terminate();
                             return;
                         }
-                        else if (!int.TryParse(Process.RelateString, out _mirrorIndex) || _mirrorIndex >= 2)
+                        else if (_mirrorIndex >= 2 || _mirrorIndex < 0)
                         {
                             _LOG("未定义Mirror的值停止流程", Color.Red);
                             Terminate();
@@ -282,6 +288,10 @@ namespace Eazy_Project_III.ProcessSpace
         {
             bool go = true;
             isMotorPosChangedByClient = false;
+
+            if (!_isDebug)
+                return true;
+
             if (OnLiveCompensating != null)
             {
                 _LOG("調適: 單步補償");
@@ -613,7 +623,7 @@ namespace Eazy_Project_III.ProcessSpace
             // Capture Image
             var cam = ICamForBlackBox;
             cam.Snap();
-            Bitmap bmp = new Bitmap(cam.GetSnap());
+            Bitmap bmp = new Bitmap(cam.GetSnap(200));
 
             #region ASYNC_DUMP_IMAGE
             var dump_func = new Action<Bitmap, int>((b, i) => {

@@ -64,6 +64,9 @@ namespace JetEazy.GdxCore3
         }
         public static bool CheckCompensate(Bitmap bmp)
         {
+            // BYPASS
+            return true;
+
             try
             {
                 bool go = false;
@@ -95,6 +98,7 @@ namespace JetEazy.GdxCore3
         }
         public static void CalcProjCompensation(Bitmap bmp, int[] motorParams, int lightColorID)
         {
+            GdxGlobal.LOG.Debug("中光電 dll begin");
             try
             {
                 CoretronicsAPI.setProjCompInitial();
@@ -114,6 +118,7 @@ namespace JetEazy.GdxCore3
             {
                 GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
             }
+            GdxGlobal.LOG.Debug("中光電 dll end");
         }
 
         public static void Trace(string tag, object process, params object[] args)

@@ -2,6 +2,7 @@
 using JetEazy.ControlSpace;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -50,6 +51,10 @@ namespace JetEazy.CCDSpace
 
         CameraPara _camCfg = new CameraPara();
 
+        public bool IsSim()
+        {
+            return _camCfg.IsDebug;
+        }
         public void Initial(string inipara)
         {
             _camCfg.FromCameraString(inipara);
@@ -153,11 +158,11 @@ namespace JetEazy.CCDSpace
 
             _cam.TriggerSoftwareX();
         }
-        public Bitmap GetSnap()
+        public Bitmap GetSnap(int msec = 1000)
         {
             if (_camCfg.IsDebug)
             {
-                if(list_debugFiles.Count <=0)
+                if (list_debugFiles.Count <= 0)
                     return m_BmpError;
 
                 if (dbgIndex >= list_debugFiles.Count)
@@ -175,12 +180,18 @@ namespace JetEazy.CCDSpace
             if (_cam == null)
                 return m_BmpError;
 
-            Bitmap bmptemp = _cam.CaptureBmp(_camCfg.Rotate);
-            if (bmptemp == null)
-                return m_BmpError;
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            while (true)
+            {
+                Bitmap bmptemp = _cam.CaptureBmp(_camCfg.Rotate);
+                if (bmptemp != null)
+                    return new Bitmap(bmptemp);
 
-            return new Bitmap(bmptemp);
-            
+                if (watch.ElapsedMilliseconds > msec)
+                    break;
+            }
+            return m_BmpError;
         }
     }
 }

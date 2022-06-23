@@ -95,12 +95,13 @@ namespace Eazy_Project_Interface
 
     public interface ICam
     {
+        bool IsSim();
         void Initial(string inipara);
         void SetExposure(int val);
         void StartCapture();
         void StopCapture();
         void Snap();
-        System.Drawing.Bitmap GetSnap();
+        System.Drawing.Bitmap GetSnap(int msec = 1000);
     }
 
     public interface IRecipe
