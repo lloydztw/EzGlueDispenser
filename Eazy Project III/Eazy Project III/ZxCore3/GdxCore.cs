@@ -21,6 +21,7 @@ namespace JetEazy.GdxCore3
         public static void Init()
         {
             GdxGlobal.Init();
+            System.Diagnostics.Trace.WriteLine(GdxGlobal.INI);
         }
         public static void Dispose()
         {

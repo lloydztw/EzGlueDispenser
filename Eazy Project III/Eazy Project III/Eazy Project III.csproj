@@ -202,6 +202,7 @@
     <Compile Include="ZxCore3\Model\GdxMotorCoordsTransform.cs" />
     <Compile Include="ZxCore3\Model\Victor_Gaara_Bridges\GdxFacade.cs" />
     <Compile Include="ZxCore3\Model\Victor_Gaara_Bridges\GdxFacadeIO.cs" />
+    <Compile Include="ZxCore3\Model\Victor_Gaara_Bridges\GdxIni.cs" />
     <Compile Include="ZxCore3\Utils\QVector.cs" />
     <Compile Include="ZxCore3\Utils\QxConvert.cs" />
     <Compile Include="GlobalSpace\Enums.cs" />

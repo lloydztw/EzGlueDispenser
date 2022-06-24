@@ -84,6 +84,7 @@ namespace Eazy_Project_III.ProcessSpace
                 switch (Process.ID)
                 {
                     case 5:
+                        #region INIT_START
 
                         Process.NextDuriation = NextDurtimeTmp;
                         m_PlaneRunDataList.Clear();
@@ -143,7 +144,7 @@ namespace Eazy_Project_III.ProcessSpace
                             Process.Stop();
                             CommonLogClass.Instance.LogMessage("拾取 未定义Mirror的值停止流程", Color.Red);
                         }
-
+                        #endregion
                         break;
 
                     #region 测试平面度
@@ -341,7 +342,7 @@ namespace Eazy_Project_III.ProcessSpace
 
                     #region INITIAL POS
 
-                    case 4010:
+                    case 4010:  //平面度超標
                         if (Process.IsTimeup)
                         {
                             Process.NextDuriation = NextDurtimeTmp;
@@ -353,7 +354,7 @@ namespace Eazy_Project_III.ProcessSpace
                             CommonLogClass.Instance.LogMessage("吸嘴模组回待命启动", Color.Black);
                         }
                         break;
-                    case 4020:
+                    case 4020:  //吸嘴模组待命完成
                         if (Process.IsTimeup)
                         {
                             if (MACHINE.PLCIO.ModulePositionIsReadyComplete(ModuleName.MODULE_PICK, 6) || Universal.IsNoUseIO)
