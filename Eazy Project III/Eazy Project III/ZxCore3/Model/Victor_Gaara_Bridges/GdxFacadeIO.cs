@@ -1,4 +1,5 @@
-﻿using JetEazy.Drivers.IOCtrl;
+﻿using JetEazy.ControlSpace.MotionSpace;
+using JetEazy.Drivers.IOCtrl;
 using JetEazy.Drivers.IOCtrl.HCFA;
 using System;
 
@@ -61,6 +62,12 @@ namespace JetEazy.GdxCore3.Model
         }
 
         #region SIMULATION_FUNCTIONS
+        internal void sim_motor_pos(int axisID, double pos)
+        {
+            var motor = GdxGlobal.Facade.GetMotor(axisID);
+            var pmotor = (PLCMotionClass)motor;
+            pmotor.Go((float)pos);
+        }
         void OnPlcSim_WriteUint16(short[] readbuffer, string operationstring, string myname)
         {
             if (operationstring.StartsWith("SIM_"))

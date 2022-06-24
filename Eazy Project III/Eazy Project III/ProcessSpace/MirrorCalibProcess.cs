@@ -176,7 +176,7 @@ namespace Eazy_Project_III.ProcessSpace
                                     Terminate();
                                     // Log
                                     _LOG(PHASE_1, "回報 No GO!");
-                                    FireMessage("NG. " + PHASE_1 + ", 回報No GO!");
+                                    FireMessage("NG. " + PHASE_1 + ", 回報 No GO!");
                                     return;
                                 }
                             }
@@ -191,7 +191,7 @@ namespace Eazy_Project_III.ProcessSpace
 
                     #region PHASE_II
                     case 20:
-                        if(Process.IsTimeup)
+                        if (Process.IsTimeup)
                         {
                             _LOG(PHASE_2);
                             //> ==============================================
@@ -235,9 +235,12 @@ namespace Eazy_Project_III.ProcessSpace
                             }
                             string posPutAdjust = ToolAdjustData(mirrorPutPos, ptfOffset.X, ptfOffset.Y);
 #endif
-                            GdxCore.Trace("MirrorCalibration.MoveToPut", Process, "dst", posPutAdjust);
+                            GdxCore.Trace("MirrorCalibration.MoveToPut", Process, "putPos", mirrorPutPos);
+                            GdxCore.Trace("MirrorCalibration.MoveToPut", Process, "ofset", ptfOffset);
+                            GdxCore.Trace("MirrorCalibration.MoveToPut", Process, "adjPos", posPutAdjust);
+
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 3, posPutAdjust);
-                            //MACHINE.PLCIO.ADR_SMALL_LIGHT = false; //<<< 已經於 15.4 關掉
+                            //MACHINE.PLCIO.ADR_SMALL_LIGHT = false; //<<< 已經於 state (15.4) 關掉
 
                             Process.NextDuriation = NextDurtimeTmp;
                             Process.ID = 301;
@@ -378,11 +381,10 @@ namespace Eazy_Project_III.ProcessSpace
                             break;
                         }
                         break;
-                    #endregion
+                        #endregion
                 }
             }
         }
-
 
         /// <summary>
         /// 工具 对位置进行补偿
@@ -404,8 +406,8 @@ namespace Eazy_Project_III.ProcessSpace
         QVector m_initMotorPos = new QVector(N_MOTORS);
         QVector m_currMotorPos = new QVector(N_MOTORS);
         QVector m_nextMotorPos = new QVector(N_MOTORS);
+        QVector m_target = new QVector(N_MOTORS);
         QVector m_incr = new QVector(N_MOTORS);
-
 
         protected override QVector CompensationInitPos
         {
@@ -423,23 +425,30 @@ namespace Eazy_Project_III.ProcessSpace
             m_phase3.InitMotorPos = new QVector(m_initMotorPos);
             m_phase3.Reset();
 
-            //(2) Configuration
+            //(2) Configuration and Calculation
             //var Ini = INI.Instance;
             //var MotorCfg = MotorConfig.Instance;
-            //double sphereCenterOffsetU = (m_mirrorIndex == 0) ?
-            //            Ini.Mirror1_Offset_Adj :
-            //            Ini.Mirror2_Offset_Adj;
-            //double u0 = MotorCfg.VirtureZero;
-            //double theta_z0 = MotorCfg.TheaZVirtureZero;
-            //double theta_y0 = MotorCfg.TheaYVirtureZero;
 
-            //QVector mv0 = this.CompensationInitPos;
-            //m_trf = new GdxMotorCoordsTransform(mv0, sphereCenterOffsetU);
+            //(*) Simulation
+            #region SIMULATION
+            if (GdxGlobal.Facade.IsSimMotor() || GdxGlobal.Facade.IsSimPLC())
+            {
+                var rnd = new Random();
+                m_target = new QVector(m_initMotorPos);
+                for (int i = 0; i < 4; i++)
+                {
+                    m_target[i] += MAX_DELTA[i] * (rnd.NextDouble() * 0.5 - 1);
+                }
+                _clip_into_safe_box(m_target);
+                PlcUnitConvert.ROUND(m_target, true);
+            }
+            #endregion
+
             return m_phase3;
         }
         void phase3_run_one_step(XRunContext runCtrl)
         {
-            // To be continued.
+            // TO BE CONTINUED.
 
             runCtrl.IsCompleted = false;
 
@@ -450,24 +459,21 @@ namespace Eazy_Project_III.ProcessSpace
                 return;
 
             // 計算馬達移動
-            if (true)
-            {
-                //(1) Current Pos
-                m_currMotorPos = ax_read_current_pos();
+            //(1) Current Pos
+            m_currMotorPos = ax_read_current_pos();
 
-                //(2) Delta for *** PHASE III ***
-                m_incr = phase3_calc_next_incr(runCtrl);
+            //(2) Delta for *** PHASE III ***
+            m_incr = phase3_calc_next_incr(runCtrl, m_currMotorPos, m_target);
 
-                //(3) Next Pos
-                m_nextMotorPos = m_currMotorPos + m_incr;
+            //(3) Next Pos
+            m_nextMotorPos = m_currMotorPos + m_incr;
 
-                //(4) Safe Box
-                if (_clip_into_safe_box(m_nextMotorPos))
-                    m_incr = m_nextMotorPos - m_currMotorPos;
-            }
+            //(4) Safe Box
+            if (_clip_into_safe_box(m_nextMotorPos))
+                m_incr = m_nextMotorPos - m_currMotorPos;
 
             //(5) delta 小於馬達解析度, 當作完成.
-            runCtrl.IsCompleted = _is_almost_zero(m_incr);
+            runCtrl.IsCompleted = PlcUnitConvert.AreAllSmalSteps(m_incr);
             //(5.1) 調試模式
             if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
                 return;
@@ -482,32 +488,28 @@ namespace Eazy_Project_III.ProcessSpace
             //(8) 下指令
             log_motor_command(runCtrl, m_nextMotorPos, m_incr);
             ax_start_move(m_nextMotorPos);
-
-            // 只跑一次
-            //> runCtrl.IsCompleted = true;
         }
-        QVector phase3_calc_next_incr(XRunContext runCtrl)
+        QVector phase3_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {
-            // To be continued.
-
-            var incr = new QVector(N_MOTORS);
-
-            #region SIMULATION
-            if (GdxGlobal.Facade.IsSimPLC())
+            var incr = target - cur;
+            for (int i = 0; i < 4; i++)
             {
-                if (runCtrl.RunCount > 15)
+                double delta = incr[i];
+                if (Math.Abs(delta) > STEP_XYZU)
                 {
-                    runCtrl.IsCompleted = true;
-                    return incr;
-                }
-                else
-                {
-                    incr.Z = new Random().NextDouble() * STEP_XYZU;
+                    incr[i] = delta > 0 ? STEP_XYZU : -STEP_XYZU;
                 }
             }
-            #endregion
-
+            for (int i = 4; i < N_MOTORS; i++)
+            {
+                double delta = incr[i];
+                if (Math.Abs(delta) > STEP_A)
+                {
+                    incr[i] = delta > 0 ? STEP_A : -STEP_A;
+                }
+            }
+            PlcUnitConvert.ROUND(incr, true);
             return incr;
-        }
+        }        
     }
 }

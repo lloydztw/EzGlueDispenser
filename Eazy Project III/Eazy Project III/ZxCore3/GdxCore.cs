@@ -333,10 +333,11 @@ namespace JetEazy.GdxCore3
             var pos = QVector.Parse(posStr);
             for (int i = 0; i < pos.Dimensions; i++, axisID++)
             {
-                var motor = GdxGlobal.Facade.GetMotor(axisID);
-                motor.Go(pos[0], 0);
+                //var motor = GdxGlobal.Facade.GetMotor(axisID);
+                //motor.Go(pos[0], 0);
                 //motor.SetActionSpeed(0);
                 //motor.SetManualSpeed(0);
+                GdxGlobal.IO.sim_motor_pos(axisID, pos[i]);
             }
         }
         static int check_wait_count(XWait last_wait, string tag, string[] strs)
