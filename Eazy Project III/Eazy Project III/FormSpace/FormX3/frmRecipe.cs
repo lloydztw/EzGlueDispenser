@@ -219,12 +219,14 @@ namespace Eazy_Project_III.FormSpace
         {
             if (!CameraRunning[0])
             {
+                ICam00.StartCapture();
                 CameraRunning[0] = true;
                 btnCam0Live.BackColor = (CameraRunning[0] ? Color.Red : Control.DefaultBackColor);
                 CameraLive(0);
             }
             else
             {
+                ICam00.StopCapture();
                 CameraRunning[0] = false;
             }
             btnCam0Live.BackColor = (CameraRunning[0] ? Color.Red : Control.DefaultBackColor);
@@ -246,12 +248,14 @@ namespace Eazy_Project_III.FormSpace
         {
             if (!CameraRunning[1])
             {
+                ICam01.StartCapture();
                 CameraRunning[1] = true;
                 btnCam1Live.BackColor = (CameraRunning[1] ? Color.Red : Control.DefaultBackColor);
                 CameraLive(1);
             }
             else
             {
+                ICam01.StopCapture();
                 CameraRunning[1] = false;
             }
             btnCam1Live.BackColor = (CameraRunning[1] ? Color.Red : Control.DefaultBackColor);

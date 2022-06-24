@@ -129,7 +129,7 @@ namespace Eazy_Project_III.ProcessSpace
                             {
                                 var cam = ICamForCali;
                                 cam.Snap();
-                                bmp = new Bitmap(cam.GetSnap());
+                                bmp = cam.GetSnap();
                                 bmp.Save("image0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
                             }
                             catch(Exception ex)
@@ -198,6 +198,7 @@ namespace Eazy_Project_III.ProcessSpace
                             GdxCore.Trace("MirrorCalibration.Compensate", Process, bmp, mirrorPutPos, ptfOffset);
                             bool go = GdxCore.CheckCompensate(bmp);
                             bmp.Dispose();
+
                             if (!go)
                             {
                                 // 就地停止 Process
@@ -238,15 +239,22 @@ namespace Eazy_Project_III.ProcessSpace
                                 //微調模組到達 0的位置 方便下面 微調
                                 CommonLogClass.Instance.LogMessage("吸嘴模组到达位置", Color.Black);
 
-                                switch (Mirror_CalibrateProcessIndex)
-                                {
-                                    case 0:
-                                        MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 1, "0,0,0");
-                                        break;
-                                    case 1:
-                                        MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 1, "0,0,0");
-                                        break;
-                                }
+                                //微調Z=0 thetaY=ready thetaZ=ready
+
+                                string posStr = "0,";
+                                posStr += MACHINECollection.GetSingleAXISPositionForReady(7) + ",";
+                                posStr += MACHINECollection.GetSingleAXISPositionForReady(8);
+                                MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 1, posStr);
+
+                                //switch (Mirror_CalibrateProcessIndex)
+                                //{
+                                //    case 0:
+                                //        MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 1, "0,0,0");
+                                //        break;
+                                //    case 1:
+                                //        MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 1, "0,0,0");
+                                //        break;
+                                //}
 
                                 //switch (Mirror_CalibrateProcessIndex)
                                 //{

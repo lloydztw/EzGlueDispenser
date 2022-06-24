@@ -101,7 +101,7 @@ namespace Eazy_Project_Interface
         void StartCapture();
         void StopCapture();
         void Snap();
-        System.Drawing.Bitmap GetSnap();
+        System.Drawing.Bitmap GetSnap(int msec = 1000);
     }
 
     public interface IRecipe

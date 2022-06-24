@@ -50,9 +50,6 @@ namespace Eazy_Project_III.ProcessSpace
 
         #region PRIVATE_DATA
         int _mirrorIndex = 0;
-        bool _is_step_debug1 = false;
-        bool _is_step_debug2 = false;
-        bool _is_step_debug3 = false;
         #endregion
 
         #region SINGLETON
@@ -96,9 +93,9 @@ namespace Eazy_Project_III.ProcessSpace
             {
                 if (bool.TryParse(args[1].ToString(), out bool is_step_debug))
                 {
-                    _is_step_debug1 = is_step_debug;
-                    _is_step_debug2 = is_step_debug;
-                    _is_step_debug3 = is_step_debug;
+                    m_phase1.IsDebugMode = is_step_debug;
+                    m_phase2.IsDebugMode = is_step_debug;
+                    m_phase3.IsDebugMode = is_step_debug;
                 }
             }
             base.Start();
@@ -112,6 +109,7 @@ namespace Eazy_Project_III.ProcessSpace
         {
             m_mainprocess.Stop();
             this.Stop();
+            ax_set_motor_speed(SpeedTypeEnum.GO);
         }
 
         public override void Tick()
@@ -356,7 +354,11 @@ namespace Eazy_Project_III.ProcessSpace
                         break;
 
                     if (phase.IsCompleted)
+                    {
+                        if (phase.RunCount == 0)
+                            _LOG(phase.Name, "補償 = 0");
                         break;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -402,6 +404,9 @@ namespace Eazy_Project_III.ProcessSpace
         }
         bool FireCompensating(XRunContext phase, QVector cur, QVector delta, out bool isMotorPosChangedByClient)
         {
+            //////isMotorPosChangedByClient = false;
+            //////return phase.Go;
+
             var e = new CompensatingEventArgs()
             {
                 PhaseName = phase.Name,
@@ -436,7 +441,7 @@ namespace Eazy_Project_III.ProcessSpace
 
         const int N_MOTORS = 6;
         static QVector MAX_DELTA = new QVector(0.25, 0.25, 0.25, 0.25, 2, 2);
-        static QVector MIN_DELTA = new QVector(0.0025, 0.0025, 0.0025, 0.0025, 0.0167, 0.0167);
+        static QVector MIN_DELTA = new QVector(0.0015, 0.0015, 0.0015, 0.0015, 0.0167, 0.0167);
         static double STEP_XYZU = MIN_DELTA[0] * 2;
         static double STEP_A = MIN_DELTA[5] * 5;
         static double[] THETA_DIR = new double[] { -1, 1 };     // theta_y, theta_z
@@ -725,10 +730,16 @@ namespace Eazy_Project_III.ProcessSpace
                 Name = name;
             }
             public Action<XRunContext> StepFunc;
+            public void Reset()
+            {
+                IsCompleted = false;
+                RunCount = 0;
+                Go = true;
+            }
         }
-        XRunContext m_phase1 = null;
-        XRunContext m_phase2 = null;
-        XRunContext m_phase3 = null;
+        XRunContext m_phase1 = new XRunContext(PHASE_1);
+        XRunContext m_phase2 = new XRunContext(PHASE_2);
+        XRunContext m_phase3 = new XRunContext(PHASE_3);
 
 
         XRunContext phase1_init()
@@ -738,10 +749,10 @@ namespace Eazy_Project_III.ProcessSpace
             m_initMotorPos = ax_read_current_pos();
 
             //(1) Phase Run Context
-            m_phase1 = new XRunContext(PHASE_1);
+            // m_phase1 = new XRunContext(PHASE_1);
             m_phase1.StepFunc = phase1_run_one_step;
             m_phase1.InitMotorPos = new QVector(m_initMotorPos);
-            m_phase1.IsDebugMode = _is_step_debug1;
+            m_phase1.Reset();
 
             //(2) Configuration
             //var Ini = INI.Instance;
@@ -786,22 +797,22 @@ namespace Eazy_Project_III.ProcessSpace
 
                 //(5) delta 小於馬達解析度, 當作完成.
                 runCtrl.IsCompleted = _is_almost_zero(m_incr);
-                if (runCtrl.IsCompleted)
+
+                //(5.1) 調試模式
+                if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
                     return;
 
-                //(6) 調試模式
-                if (runCtrl.IsDebugMode)
-                {
-                    check_debug_mode(runCtrl, m_currMotorPos, m_incr);
-                }
+                //(5.2) Completed
+                if (runCtrl.IsCompleted)
+                    return;
 
                 //(7) Max Run Count
                 if (!check_max_run_count(runCtrl))
                     return;
 
                 //(8) 下指令
-                _LOG(runCtrl.Name, "馬達 Delta", m_incr);
-                _LOG(runCtrl.Name, "馬達 GoTo", m_nextMotorPos);
+                _LOG(runCtrl.Name, runCtrl.RunCount, "馬達 Delta", m_incr);
+                _LOG(runCtrl.Name, runCtrl.RunCount, "馬達 GoTo", m_nextMotorPos);
                 ax_start_move(m_nextMotorPos);
             }
         }
@@ -834,10 +845,10 @@ namespace Eazy_Project_III.ProcessSpace
             m_initMotorPos = ax_read_current_pos();
 
             //(1) Phase Run Context
-            m_phase2 = new XRunContext(PHASE_2);
+            // m_phase2 = new XRunContext(PHASE_2);
             m_phase2.StepFunc = phase2_run_one_step;
             m_phase2.InitMotorPos = new QVector(m_initMotorPos);
-            m_phase2.IsDebugMode = _is_step_debug2;
+            m_phase2.Reset();
 
             //(2) Configuration
             var Ini = INI.Instance;
@@ -881,7 +892,14 @@ namespace Eazy_Project_III.ProcessSpace
                 //(2.3) m_motorParams == (0,0) => 完成
                 runCtrl.IsCompleted = _is_zero(m_motorParams);
                 if (runCtrl.IsCompleted)
-                    return;
+                {
+                    //(2.4) 調試模式
+                    if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
+                        return;
+                    //(2.5) Completed
+                    if (runCtrl.IsCompleted)
+                        return;
+                }
 
                 //(3) Current Pos
                 m_currMotorPos = ax_read_current_pos();
@@ -897,22 +915,20 @@ namespace Eazy_Project_III.ProcessSpace
 
                 //(6) delta 小於馬達解析度, 當作完成.
                 runCtrl.IsCompleted = _is_almost_zero(m_incr);
+                //(6.1) 調試模式
+                if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
+                    return;
+                //(6.2) Completed
                 if (runCtrl.IsCompleted)
                     return;
-
-                //(7) 調試模式
-                if (runCtrl.IsDebugMode)
-                {
-                    check_debug_mode(runCtrl, m_currMotorPos, m_incr);
-                }
 
                 //(8) Max Run Count
                 if (!check_max_run_count(runCtrl))
                     return;
 
                 //(9) 下馬達指令
-                _LOG(runCtrl.Name, "馬達 Delta", m_incr);
-                _LOG(runCtrl.Name, "馬達 GoTo", m_nextMotorPos);
+                _LOG(runCtrl.Name, runCtrl.RunCount, "馬達 Delta", m_incr);
+                _LOG(runCtrl.Name, runCtrl.RunCount, "馬達 GoTo", m_nextMotorPos);                
                 ax_start_move(m_nextMotorPos);
 
                 #region SIMULATION
@@ -956,10 +972,10 @@ namespace Eazy_Project_III.ProcessSpace
             m_initMotorPos = ax_read_current_pos();
 
             //(1) Phase Run Context
-            m_phase3 = new XRunContext(PHASE_3);
+            // m_phase3 = new XRunContext(PHASE_3);
             m_phase3.StepFunc = phase3_run_one_step;
             m_phase3.InitMotorPos = new QVector(m_initMotorPos);
-            m_phase3.IsDebugMode = _is_step_debug3;
+            m_phase3.Reset();
 
             //(2) Configuration
             var Ini = INI.Instance;
@@ -1018,22 +1034,20 @@ namespace Eazy_Project_III.ProcessSpace
 
             //(5) delta 小於馬達解析度, 當作完成.
             runCtrl.IsCompleted = _is_almost_zero(m_incr);
+            //(5.1) 調試模式
+            if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
+                return;
+            //(5.2) Completed
             if (runCtrl.IsCompleted)
                 return;
-
-            //(6) 調試模式
-            if (runCtrl.IsDebugMode)
-            {
-                check_debug_mode(runCtrl, m_currMotorPos, m_incr);
-            }
 
             //(7) Max Run Count
             if (!check_max_run_count(runCtrl))
                 return;
 
             //(8) 下指令
-            _LOG(runCtrl.Name, "馬達 Delta", m_incr);
-            _LOG(runCtrl.Name, "馬達 GoTo", m_nextMotorPos);
+            _LOG(runCtrl.Name, runCtrl.RunCount, "馬達 Delta", m_incr);
+            _LOG(runCtrl.Name, runCtrl.RunCount, "馬達 GoTo", m_nextMotorPos);
             ax_start_move(m_nextMotorPos);
 
             // 只跑一次
@@ -1105,12 +1119,16 @@ namespace Eazy_Project_III.ProcessSpace
         }
         bool check_debug_mode(XRunContext runCtrl, QVector curMotorPos, QVector incr)
         {
+            if (!runCtrl.IsDebugMode)
+                return runCtrl.Go;
+
             bool go = FireCompensating(runCtrl, curMotorPos, incr, out bool isDirty);
 
             if (!go)
             {
                 _LOG(runCtrl.Name, "調試", "中止補償!", Color.Red);
                 SetNextState(9999);
+                runCtrl.IsCompleted = false;
                 return (runCtrl.Go = false);
             }
 
@@ -1118,9 +1136,9 @@ namespace Eazy_Project_III.ProcessSpace
             {
                 //// Repeat next run by thread_func
                 //// _LOG("馬達位置已被改動, 重新計算...");
-                //// return true;
-                
+                //// return true;                
                 _LOG(runCtrl.Name, "調試", "馬達位置已被改動, 為安全起見, 強制中止補償!", Color.Red);
+                runCtrl.IsCompleted = false;
                 return (runCtrl.Go = false);
             }
 
@@ -1215,13 +1233,14 @@ namespace Eazy_Project_III.ProcessSpace
             // Capture Image
             var cam = ICamForBlackBox;
             cam.Snap();
-            Bitmap bmp = new Bitmap(cam.GetSnap());
+            Bitmap bmp = cam.GetSnap();
 
             #region ASYNC_DUMP_IMAGE
-            var dump_func = new Action<Bitmap, int>((b, i) => {
+            var dump_func = new Action<Bitmap, int>((bmp2, i) => {
                 string fileName = string.Format("image_proj_{0}.bmp", i);
                 fileName = System.IO.Path.Combine(IMAGE_SAVE_PATH, fileName);
-                b.Save(fileName, ImageFormat.Bmp);
+                bmp2.Save(fileName, ImageFormat.Bmp);
+                bmp2.Dispose();
             });
             dump_func.BeginInvoke((Bitmap)bmp.Clone(), runCount, null, null);
             #endregion

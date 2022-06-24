@@ -76,8 +76,8 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="CCDSpace\CAMERAClass.cs" />
-    <Compile Include="Class1.cs" />
     <Compile Include="CCDSpace\CAM_HIKVISION.cs" />
+    <Compile Include="Class1.cs" />
     <Compile Include="ControlSpace\CCDClass.cs" />
     <Compile Include="ControlSpace\COMClass.cs" />
     <Compile Include="ControlSpace\EventClass.cs" />

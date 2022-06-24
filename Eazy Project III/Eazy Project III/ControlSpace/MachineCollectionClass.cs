@@ -79,19 +79,19 @@ namespace VsCommon.ControlSpace
                     {
                         case OptionEnum.DISPENSING:
 
-                            //初始化位置 固定6
-                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 6, Eazy_Project_III.Universal.MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_PICK));
-                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 6, Eazy_Project_III.Universal.MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_DISPENSING));
-                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 6, Eazy_Project_III.Universal.MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_ADJUST));
+                            //初始化位置 固定6 
+                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 6, Eazy_Project_III.Universal.MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_PICK),false);
+                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 6, Eazy_Project_III.Universal.MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_DISPENSING), false);
+                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 6, Eazy_Project_III.Universal.MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_ADJUST), false);
 
                             //设定点胶时间&UV时间
                             machineX3.PLCIO.SetMWIndex(Eazy_Project_III.ControlSpace.IOSpace.IOConstClass.MW1091, Eazy_Project_III.OPSpace.RecipeCHClass.Instance.DispensingTime);
                             machineX3.PLCIO.SetMWIndex(Eazy_Project_III.ControlSpace.IOSpace.IOConstClass.MW1092, RecipeCHClass.Instance.UVTime);
 
                             //避光槽位置 9上 7下
-                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 9, INI.Instance.ShadowPosUp);
-                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 7, INI.Instance.ShadowPos);
-                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 4, INI.Instance.sMirrorAdjBackLength.ToString() + ",0,0");
+                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 9, INI.Instance.ShadowPosUp, false);
+                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 7, INI.Instance.ShadowPos, false);
+                            machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 4, INI.Instance.sMirrorAdjBackLength.ToString() + ",0,0", false);
 
                             break;
 
@@ -309,6 +309,16 @@ namespace VsCommon.ControlSpace
         public string GetSingleAXISPositionForReady(int eIndex)
         {
             string posstr = MACHINE.PLCMOTIONCollection[eIndex].READYPOSITION.ToString();
+            return posstr;
+        }
+        /// <summary>
+        /// 單個軸的當前位置
+        /// </summary>
+        /// <param name="eIndex">軸號  從0開始</param>
+        /// <returns></returns>
+        public string GetSingleAXISPositionNow(int eIndex)
+        {
+            string posstr = MACHINE.PLCMOTIONCollection[eIndex].PositionNow.ToString();
             return posstr;
         }
 

@@ -412,8 +412,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
             }
 
             //判断吸嘴是否有料
-            string IX0_6 = "0:IX0.6";
-            if (MACHINE.PLCIO.GetIO(IX0_6))
+            string IX0_6 = "0:IX0.6";//輸入點位6
+            //if (MACHINE.PLCIO.GetIO(IX0_6))
+            if (MACHINE.PLCIO.GetInputIndex(6))
             {
                 VsMSG.Instance.Warning("請先取走鏡片，再復位。");
                 return;
@@ -791,6 +792,11 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
 
         #region PROCESS_EVENT_HANSLERS
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            check_coretronic_version();
+        }
         private void process_OnCompleted(object sender, ProcessEventArgs e)
         {
             if (sender == m_resetprocess)
@@ -811,7 +817,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             try
             {
                 // Do whatever message you want to show to the operators.
-                string msg = "程序 " + ((BaseProcess)sender).Name + "\n\r已完成!";
+                string msg = "程序 " + ((BaseProcess)sender).Name + "\n已完成!\n";
                 CommonLogClass.Instance.LogMessage(msg, Color.Black);
             }
             catch
