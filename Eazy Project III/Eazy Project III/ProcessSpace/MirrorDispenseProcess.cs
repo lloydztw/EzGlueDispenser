@@ -332,7 +332,11 @@ namespace Eazy_Project_III.ProcessSpace
 
                                 CommonLogClass.Instance.LogMessage("產品破真空完成", Color.Black);
 
-                                MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 4, INI.Instance.sMirrorAdjBackLength.ToString() + ",0,0");
+                                //點膠結束后 U退至 -6000  thetaY和thetaZ 給當前位置 相當於不要動
+                                string posStr = INI.Instance.sMirrorAdjBackLength.ToString() + ",";
+                                posStr += MACHINECollection.GetSingleAXISPositionNow(7) + ",";
+                                posStr += MACHINECollection.GetSingleAXISPositionNow(8);
+                                MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 4, posStr);
                                 CommonLogClass.Instance.LogMessage("微調模組後退位置寫入", Color.Black);
 
                             }
@@ -363,7 +367,7 @@ namespace Eazy_Project_III.ProcessSpace
                                 Process.NextDuriation = NextDurtimeTmp;
                                 Process.ID = 4040;
                                 CommonLogClass.Instance.LogMessage("微調模組後退完成", Color.Black);
-
+                                
                                 MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_PICK, 6);
 
                                 //CommonLogClass.Instance.LogMessage("微调模组待命完成", Color.Black);

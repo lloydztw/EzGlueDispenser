@@ -52,6 +52,9 @@ namespace Eazy_Project_III.ProcessSpace
                         MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 6, MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_DISPENSING));
                         MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 6, MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_ADJUST));
 
+                        //U AXIS 後退的距離
+                        MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 4, INI.Instance.sMirrorAdjBackLength.ToString() + ",0,0");
+
                         CommonLogClass.Instance.LogMessage("模组初始化位置设定", Color.Black);
 
                         Process.NextDuriation = 2000;

@@ -348,13 +348,14 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
 
         #region 模组相关操作
 
-       /// <summary>
-       /// 模组位置设定
-       /// </summary>
-       /// <param name="eModuleIndex">模组名称</param>
-       /// <param name="eIndex">0-9个位置</param>
-       /// <param name="ePosString">格式X,Y,Z 数据</param>
-        public void ModulePositionSet(ModuleName eModuleIndex,int eIndex,string ePosString)
+        /// <summary>
+        /// 模组位置设定
+        /// </summary>
+        /// <param name="eModuleIndex">模组名称</param>
+        /// <param name="eIndex">0-9个位置</param>
+        /// <param name="ePosString">格式X,Y,Z 数据</param>
+        /// <param name="bWritePos0">是否寫入位置0 爲了防止No Ready</param>
+        public void ModulePositionSet(ModuleName eModuleIndex,int eIndex,string ePosString,bool bWritePos0 =true)
         {
             JetEazy.GdxCore3.GdxCore.Trace("ModulePosition.Set", null, eModuleIndex, eIndex, ePosString);
 
@@ -362,15 +363,18 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             {
                 case ModuleName.MODULE_PICK:
                     MotorPickPosition(eIndex, ePosString);
-                    MotorPickPosition(0, ePosString);
+                    if (bWritePos0)
+                        MotorPickPosition(0, ePosString);
                     break;
                 case ModuleName.MODULE_DISPENSING:
                     MotorDispensingPosition(eIndex, ePosString);
-                    MotorDispensingPosition(0, ePosString);
+                    if (bWritePos0)
+                        MotorDispensingPosition(0, ePosString);
                     break;
                 case ModuleName.MODULE_ADJUST:
                     MotorPickCaliPosition(eIndex, ePosString);
-                    MotorPickCaliPosition(0, ePosString);
+                    if (bWritePos0)
+                        MotorPickCaliPosition(0, ePosString);
                     break;
             }
         }

@@ -45,12 +45,20 @@ namespace JetEazy.CCDSpace
         
         CAM_HIKVISION _cam = null;
         Bitmap m_BmpError = new Bitmap(1, 1);
-        Bitmap m_BmpDebug = new Bitmap(1, 1);
+        //Bitmap m_BmpDebug = new Bitmap(1, 1);
         List<string> list_debugFiles = new List<string>();
         int dbgIndex = 0;
 
         CameraPara _camCfg = new CameraPara();
-
+        //public void Dispose()
+        //{
+        //    if (m_BmpDebug != null)
+        //        m_BmpDebug.Dispose();
+        //    m_BmpDebug = null;
+        //    if (m_BmpError != null)
+        //        m_BmpError.Dispose();
+        //    m_BmpError = null;
+        //}
         public bool IsSim()
         {
             return _camCfg.IsDebug;
@@ -94,13 +102,13 @@ namespace JetEazy.CCDSpace
                     foreach (string str in myFiles)
                         list_debugFiles.Add(str);
 
-                    if(list_debugFiles.Count > 0)
-                    {
-                        Bitmap bmp = new Bitmap(list_debugFiles[dbgIndex]);
-                        m_BmpDebug.Dispose();
-                        m_BmpDebug = new Bitmap(bmp);
-                        bmp.Dispose();
-                    }
+                    //if(list_debugFiles.Count > 0)
+                    //{
+                    //    Bitmap bmp = new Bitmap(list_debugFiles[dbgIndex]);
+                    //    m_BmpDebug.Dispose();
+                    //    m_BmpDebug = new Bitmap(bmp);
+                    //    bmp.Dispose();
+                    //}
                 }
 
                 return;
@@ -112,6 +120,13 @@ namespace JetEazy.CCDSpace
         }
         public void Close()
         {
+            //if (m_BmpDebug != null)
+            //    m_BmpDebug.Dispose();
+            //m_BmpDebug = null;
+            if (m_BmpError != null)
+                m_BmpError.Dispose();
+            m_BmpError = null;
+
             if (_camCfg.IsDebug)
                 return;
             if (_cam == null)
@@ -158,40 +173,59 @@ namespace JetEazy.CCDSpace
 
             _cam.TriggerSoftwareX();
         }
+        
+        /// <summary>
+        /// The caller must maintain the life cycle of the Bitmap returned by this function!!!
+        /// </summary>
+        /// <param name="msec"></param>
+        /// <returns></returns>
         public Bitmap GetSnap(int msec = 1000)
         {
             if (_camCfg.IsDebug)
             {
-                if (list_debugFiles.Count <= 0)
-                    return m_BmpError;
+                Bitmap ret = null;  //  this ret must be new bitmap or clone() !!
 
-                if (dbgIndex >= list_debugFiles.Count)
-                    dbgIndex = 0;
+                //is it possible that m_BmpError is null here?
+                {
+                    if (list_debugFiles.Count <= 0)
+                    {
+                        ret = (Bitmap)m_BmpError.Clone();
+                    }
+                    else
+                    {
+                        if (dbgIndex >= list_debugFiles.Count)
+                            dbgIndex = 0;
 
-                Bitmap bmp = new Bitmap(list_debugFiles[dbgIndex]);
-                m_BmpDebug.Dispose();
-                m_BmpDebug = new Bitmap(bmp);
-                bmp.Dispose();
+                        Bitmap bmp = new Bitmap(list_debugFiles[dbgIndex]);
+                        ret = new Bitmap(bmp);
+                        bmp.Dispose();
 
-                dbgIndex++;
-
-                return m_BmpDebug;
+                        dbgIndex++;
+                    }
+                }
+                return ret;
             }
             if (_cam == null)
-                return m_BmpError;
+                return (Bitmap)m_BmpError.Clone();  // ok
 
             Stopwatch watch = new Stopwatch();
             watch.Start();
             while (true)
             {
-                Bitmap bmptemp = _cam.CaptureBmp(_camCfg.Rotate);
-                if (bmptemp != null)
-                    return new Bitmap(bmptemp);
+                Bitmap newBitmapFrame = _cam.CaptureBmp(_camCfg.Rotate);
+
+                if (newBitmapFrame != null)
+                {
+                    //var ret= (Bitmap)bmptemp.Clone();
+                    //bmptemp.Dispose();
+                    //return ret;
+                    return newBitmapFrame;
+                }
 
                 if (watch.ElapsedMilliseconds > msec)
                     break;
             }
-            return m_BmpError;
+            return (Bitmap)m_BmpError.Clone();
         }
     }
 }

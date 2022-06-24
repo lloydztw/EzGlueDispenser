@@ -468,7 +468,7 @@ namespace JetEazy.ControlSpace
             {
                 lock (BufForDriverLock)
                 {
-                    nRet = m_MyCamera.MV_CC_GetOneFrameTimeout_NET(m_BufForDriver, nPayloadSize, ref stFrameInfo, 100);
+                    nRet = m_MyCamera.MV_CC_GetOneFrameTimeout_NET(m_BufForDriver, nPayloadSize, ref stFrameInfo, 1);
                     if (nRet == MyCamera.MV_OK)
                     {
                         m_stFrameInfo = stFrameInfo;

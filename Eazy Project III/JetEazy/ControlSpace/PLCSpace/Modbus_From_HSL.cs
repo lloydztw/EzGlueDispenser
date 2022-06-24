@@ -162,7 +162,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                 }
                 if (m_Thread_Hsl != null)
                 {
-                    if (m_Thread_Hsl.ThreadState != System.Threading.ThreadState.Stopped)
+                    //if (m_Thread_Hsl.ThreadState != System.Threading.ThreadState.Stopped)
                     {
                         m_Thread_Hsl.Abort();
                         m_Thread_Hsl = null;
