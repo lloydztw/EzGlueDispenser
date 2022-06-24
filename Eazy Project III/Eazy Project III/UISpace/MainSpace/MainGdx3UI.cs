@@ -370,15 +370,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (VsMSG.Instance.Question(msg) == DialogResult.OK)
             {
                 if (!m_blackboxprocess.IsOn)
-                {
-                    var ret = MessageBox.Show("是否要單步?", "DEBUG", MessageBoxButtons.YesNo);
-                    bool isDebug = ret == DialogResult.Yes;
-                    m_blackboxprocess.Start(MainMirrorIndex, isDebug);
-                }
+                    m_blackboxprocess.Start(MainMirrorIndex, true);
                 else
-                {
                     m_blackboxprocess.Stop();
-                }
             }
         }
         private void BtnDispensingProcess_Click(object sender, EventArgs e)
@@ -823,7 +817,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             try
             {
                 // Do whatever message you want to show to the operators.
-                string msg = "程序 " + ((BaseProcess)sender).Name + "\n\r已完成!";
+                string msg = "程序 " + ((BaseProcess)sender).Name + "\n已完成!\n";
                 CommonLogClass.Instance.LogMessage(msg, Color.Black);
             }
             catch
@@ -884,57 +878,34 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
             }
         }
-        private void blackBoxProcess_OnLiveCompensating(object sender, ProcessEventArgs e)
+        private void blackBoxProcess_OnLiveCompensating(object sender, CompensatingEventArgs e)
         {
             try
             {
                 if (InvokeRequired)
                 {
-                    EventHandler<ProcessEventArgs> h = blackBoxProcess_OnLiveCompensating;
+                    EventHandler<CompensatingEventArgs> h = blackBoxProcess_OnLiveCompensating;
                     this.Invoke(h, sender, e);
                 }
                 else
                 {
-                    // @LETIAN: 20220620 Compensation Step Tracer
-                    var args = (object[])e.Tag;
-                    var actor = (string)args[0];
-                    var nextMotorPos = (JetEazy.QMath.QVector)args[1];
-                    var delta = (JetEazy.QMath.QVector)args[2];
-                    var v1 = nextMotorPos.Slice(0, 4);
-                    var v2 = nextMotorPos.Slice(4);
-                    var incr1 = delta.Slice(0, 4);
-                    var incr2 = delta.Slice(4);
-
-                    string msg = actor + "補償, 即將移動馬達";
-                    msg += "\n XYZU 至 " + v1.ToString();
-                    msg += "\n theta 至 " + v2.ToString();
-                    msg += "\n相對量:";
-                    msg += "\n XYZU " + incr1.ToString();
-                    msg += "\n theta " + incr2.ToString();
-
-                    //// var ret = MessageBox.Show(msg, "BlackBox. DEBUG",
-                    ////            MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
-                    //// var ret = frm.ShowDialog();
-                    //// if (ret == DialogResult.Cancel)
-                    ////    e.Cancel = true;
-
-                    // @LETIAN: 20220620 Async GUI interaction
-                    e.GoControlByClient = new ManualResetEvent(false);
-                    var frm = new FormCompensationStepTracer(msg, "BlackBox.Debugger: " + actor)
+                    // @LETIAN: 20220623 Async GUI interaction (new)
+                    // e.GoControlByClient = new ManualResetEvent(false);
+                    var frm = new FormCompensationStepTracer(e)
                     {
-                        TopMost = true,
-                        Tag = e,
+                        //Tag = e,
+                        TopMost = true
                     };
                     frm.FormClosed += new FormClosedEventHandler((s2, e2) =>
                     {
-                        DialogResult ret = ((Form)s2).DialogResult;
-                        var blackBoxEventArgs = (ProcessEventArgs)((Form)s2).Tag;
-                        blackBoxEventArgs.Cancel = (ret != DialogResult.OK);
-                        blackBoxEventArgs.GoControlByClient.Set();
+                        //>>> DialogResult ret = ((Form)s2).DialogResult;
+                        //>>> var blackBoxEventArgs = (ProcessEventArgs)((Form)s2).Tag;
+                        //>>> blackBoxEventArgs.Cancel = (ret != DialogResult.OK);
+                        //>>> blackBoxEventArgs.GoControlByClient.Set();
                         frm.Dispose();
                     });
                     frm.Show(this);
-                    this.tabControl1.SelectedIndex = 0;
+                    frm.Location = new Point(100, 100);
                 }
             }
             catch(Exception ex)
@@ -976,61 +947,34 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (FindForm().WindowState == FormWindowState.Minimized)
                 return;
 
-            //@LETAIN: 自動調整下方 panels
             _auto_adjust_bottom_panels();
-
-            //@LETIAN: 自動調整 DispUI
             _auto_adjust_disp_ui();
+
+            lblLEText.Top = dispUI1.Top;
+            lblLEText.Left = dispUI1.Right - lblLEText.Width;
         }
         void _auto_adjust_bottom_panels()
         {
-            //@LETAIN: 自動調整下方 panels
-            _auto_align_to_parent_bottom(0, tabControl1);
-            _auto_align_to_parent_bottom(0, groupBox1, groupBox2);
-            _auto_align_to_parent_bottom(5, richTextBox1, label5);
-            tabControl1.Width = ClientRectangle.Width;
-            //@LETIAN: 自動調整下方 六按鈕
-            //_auto_adjust_six_major_buttons();
-        }
-        void _auto_adjust_six_major_buttons()
-        {
-            //@LETIAN: 自動調整下方 六按鈕
-            var header = label11;
-            var btns1 = new Control[] { button6, button4, button7 };
-            var btns2 = new Control[] { button8, button9, button1 };
-            var parent = header.Parent;
-            var rcc = parent.ClientRectangle;
-            int padding = 2;
-            var h = (rcc.Height - header.Bottom - padding * 3) / 2;
-            var y = header.Bottom + padding;
-            foreach (var btn in btns1)
-            {
-                btn.Top = y;
-                btn.Height = h;
-            }
-            y += (h + padding);
-            foreach (var btn in btns2)
-            {
-                btn.Top = y;
-                btn.Height = h;
-            }
+            var rcc = ClientRectangle;
+            int h = tabControl1.Height;
+            tabControl1.Left = rcc.Width - tabControl1.Width - 5;
+            tabControl1.Top = rcc.Height - h;
+            groupBox1.Top = rcc.Height - h;
+            groupBox1.Height = h;
+            groupBox1.Width = rcc.Width - tabControl1.Width - 5;
         }
         void _auto_adjust_disp_ui()
         {
             var rcc = ClientRectangle;
-            dispUI1.Height = rcc.Height - tabControl1.Height;
-            dispUI1.Width = tabControl1.Width;
-        }
-        void _auto_align_to_parent_bottom(int padding, params Control[] panels)
-        {
-            foreach (var panel in panels)
+            var bottomPanel = tabControl1;
+            dispUI1.Height = rcc.Height - bottomPanel.Height - 5;
+            dispUI1.Width = rcc.Width;
+            foreach (Control c in dispUI1.Controls)
             {
-                if (panel != null)
+                c.Width = rcc.Width;
+                if(c is PictureBox)
                 {
-                    var parent = panel.Parent;
-                    var rcc = parent.ClientRectangle;
-                    //panel.Height = rcc.Height - panel.Top - padding;
-                    panel.Top = rcc.Bottom - panel.Height;
+                    c.Height = rcc.Bottom - c.Top;
                 }
             }
         }

@@ -1,6 +1,7 @@
 ﻿using Eazy_Project_III.ControlSpace.IOSpace;
 using Eazy_Project_Measure;
 using JetEazy.BasicSpace;
+using JetEazy.GdxCore3;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -10,7 +11,7 @@ using System.Linq;
 namespace Eazy_Project_III.ProcessSpace
 {
     /// <summary>
-    /// INIT流程 即初始化流程 所有轴在手动模式下归位 归位完成后 运动至各轴初始化位置 <br/>
+    /// PICKER <br/>
     /// @LETIAN: 20220619 重新包裝
     /// </summary>
     public class MirrorPickProcess : BaseProcess
@@ -91,7 +92,7 @@ namespace Eazy_Project_III.ProcessSpace
 
                         bool bInitOK = true;
 
-                        // 指定 m_PlaneRunList 來自 INI.Instance.Mirror<i+1>PlanePosList
+                        // 指定 m_PlaneRunList 是來自 INI.Instance.Mirror<i+1>PlanePosList
                         // 檢查 MainGroupIndex 是否在 INI.Instance.Mirror<i+1>PosList.Count 範圍內.
                         switch (Process.RelateString)
                         {
@@ -134,6 +135,7 @@ namespace Eazy_Project_III.ProcessSpace
                         {
                             Process.ID = 10;
                             CommonLogClass.Instance.LogMessage("拾取启动 index=" + MainGroupIndex.ToString(), Color.Black);
+                            GdxCore.Trace("MirrorPicker.Start", Process, m_PickMirrorIndex, MainGroupIndex);
                         }
                         else
                         {
@@ -149,6 +151,8 @@ namespace Eazy_Project_III.ProcessSpace
                     case 10:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorPicker.PlanRun", Process, "PlaneIdx", m_PlaneIndex, "Pt", m_PlaneRunList[m_PlaneIndex]);
+
                             //开始循环设定 产品 平面度位置
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 1, m_PlaneRunList[m_PlaneIndex]);
 
@@ -171,7 +175,7 @@ namespace Eazy_Project_III.ProcessSpace
                         break;
                     case 30:
                         if (Process.IsTimeup)
-                        {
+                        {                            
                             if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_PICK, 1))
                             {
                                 //读数据 
@@ -183,6 +187,8 @@ namespace Eazy_Project_III.ProcessSpace
                                 string planeNew_xyz = plane_xyz[1] + "," + plane_xyz[2] + "," + z.ToString();
                                 m_PlaneRunDataList.Add(planeNew_xyz);
 
+                                //> GdxCore.Trace("MirrorPicker.MarkLaserDist", Process, "PlaneIdx", m_PlaneIndex, "laserDist", z, "Pts", plane_xyz);
+                                GdxCore.MarkLaserOnRunPiece(MainGroupIndex, m_PickIndex, m_PlaneIndex, z, plane_xyz);
                                 CommonLogClass.Instance.LogMessage("Index=" + m_PlaneIndex.ToString() + ":" + planeNew_xyz, Color.Black);
 
                                 m_PlaneIndex++;
@@ -208,9 +214,12 @@ namespace Eazy_Project_III.ProcessSpace
                                 bool bOK = true;
 
                                 //首先判断块规资料是否超过3个 不超过则NG
-
+                                
                                 if (INI.Instance.Mirror0PlaneHeightPosList.Count >= 3)
                                 {
+                                    GdxCore.Trace("MirrorPicker.CheckPlane", Process, "Mirror0PlaneHeightPosList", "Pts", INI.Instance.Mirror0PlaneHeightPosList);
+                                    GdxCore.SetGaugeBlockPlanePoints(INI.Instance.Mirror0PlaneHeightPosList);
+
                                     QPoint3D[] _planeheight = new QPoint3D[INI.Instance.Mirror0PlaneHeightPosList.Count];
                                     int i = 0;
                                     while (i < INI.Instance.Mirror0PlaneHeightPosList.Count)
@@ -269,8 +278,8 @@ namespace Eazy_Project_III.ProcessSpace
                     case 50:
                         if (Process.IsTimeup)
                         {
-
                             //开始吸料流程 及 到达测试偏移位置
+                            GdxCore.Trace("MirrorPicker.SetPostions $$$ begin", Process, "GroupIndex", MainGroupIndex);
 
                             switch (m_PickMirrorIndex)
                             {
@@ -290,6 +299,12 @@ namespace Eazy_Project_III.ProcessSpace
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 4, INI.Instance.sMirrorAdjBackLength.ToString() + ",0,0");
 
                             CommonLogClass.Instance.LogMessage("吸嘴 测试偏移 位置写入", Color.Black);
+                            GdxCore.Trace("MirrorPicker.SetPostions $$$ end", Process);
+
+                            GdxCore.Trace("MirrorPicker.IniData", Process, "Mirror1", "PosList", "Pts", INI.Instance.Mirror1PosList);
+                            GdxCore.Trace("MirrorPicker.IniData", Process, "Mirror1", "CaliPos", INI.Instance.Mirror1CaliPos);
+                            GdxCore.Trace("MirrorPicker.IniData", Process, "MirrorAdjDeep1", "Length", INI.Instance.sMirrorAdjDeep1Length);
+                            GdxCore.Trace("MirrorPicker.IniData", Process, "sMirrorAdjBack", "Length", INI.Instance.sMirrorAdjBackLength);
 
                             Process.NextDuriation = NextDurtimeTmp;
                             Process.ID = 60;
@@ -312,11 +327,14 @@ namespace Eazy_Project_III.ProcessSpace
                     case 70:
                         if (Process.IsTimeup)
                         {
+                            GdxCore.Trace("MirrorPicker.IO.Wait", Process, "QB1542", false);
+
                             if (!MACHINE.PLCIO.GetIO(IOConstClass.QB1542))
                             {
                                 CommonLogClass.Instance.LogMessage("拾取及到达测试位置 完成", Color.Black);
 
                                 Process.Stop();
+                                FireCompleted();
                             }
                         }
                         break;

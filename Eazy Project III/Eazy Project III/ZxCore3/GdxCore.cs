@@ -6,6 +6,8 @@ using JetEazy.Drivers.Laser;
 using JetEazy.GdxCore3.Model;
 using JetEazy.QMath;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Text;
@@ -62,19 +64,20 @@ namespace JetEazy.GdxCore3
                 return false;
             }
         }
-        public static bool CheckCompensate(Bitmap bmp)
+        public static bool CheckCompensate(Bitmap bmpSrc)
         {
             // BYPASS
-            return true;
+            // CommonLogClass.Instance.LogMessage("GdxCore.CheckCompensate BYPASS", Color.Yellow);
+            // return true;
 
             try
             {
                 bool go = false;
 
-                int[] motorParam = new int[6];
                 CoretronicsAPI.setCenterCompInitial();
 
-                // unsafe
+                // JUST for safety-verification
+                using (Bitmap bmp = new Bitmap(bmpSrc))
                 {
                     var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                     var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
@@ -86,6 +89,7 @@ namespace JetEazy.GdxCore3
                 go = CoretronicsAPI.getCenterCompInfo();
 
                 //暫時跳過 no-go
+                CommonLogClass.Instance.LogMessage("Coretronics, CenterComp, 暫時跳過 go/no-go !");
                 go = true;
 
                 return go;
@@ -96,35 +100,75 @@ namespace JetEazy.GdxCore3
                 return false;
             }
         }
-        public static void CalcProjCompensation(Bitmap bmp, int[] motorParams, int lightColorID)
+        public static void CalcProjCompensation(Bitmap bmpSrc, int[] motorParams, int projCompType)
         {
-            GdxGlobal.LOG.Debug("中光電 dll begin");
+            // BYPASS
+            // CommonLogClass.Instance.LogMessage("GdxCore.CalcProjCompensation BYPASS", Color.Yellow);
+            // return;
+
             try
             {
                 CoretronicsAPI.setProjCompInitial();
 
-                // unsafe
+                // JUST for safety-verification
+                using (Bitmap bmp = new Bitmap(bmpSrc))
                 {
                     var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                     var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-                    CoretronicsAPI.setProjCompImg(rect.Width, rect.Height, 3, bmpd.Scan0, lightColorID);
+                    CoretronicsAPI.setProjCompImg(rect.Width, rect.Height, 3, bmpd.Scan0, projCompType);
                     bmp.UnlockBits(bmpd);
                 }
 
                 CoretronicsAPI.ProjCompProcess();
-                CoretronicsAPI.getProjCompInfo(lightColorID, motorParams);
+                CoretronicsAPI.getProjCompInfo(projCompType, motorParams);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
             }
-            GdxGlobal.LOG.Debug("中光電 dll end");
+        }
+
+        public static void SetGaugeBlockPlanePoints(List<string> ga_strs)
+        {
+
+        }
+        public static void MarkLaserOnRunPiece(int groupIdx, int mirrorIdx, int pointIdx, double laserDist, string[] motorPt)
+        {
+            //GdxCore.Trace("MirrorPicker.MarkLaserDist", Process, "PlaneIdx", m_PlaneIndex, "laserDist", z, "Pts", plane_xyz);
+            //var trf = GdxGlobal.PickerCoordTransform;
+            //var idx = new MirrorIndexer(groupIdx, mirrorIdx, pointIdx);
+            var motorPos = parseSingleMotorPos(motorPt);
+            if (motorPos.Dimensions < 4)
+            {
+                // X, Y, Z, U
+                var axisU = GdxGlobal.Facade.GetMotor(3);
+                double u = axisU.GetPos();
+                motorPos = new QVector(motorPos[0], motorPos[1], motorPos[2], u);
+            }
+            
+            //trf.MarkLaserDist(idx, motorPos, laserDist);
+            //>>> trf.MarkLaserDist(groupID, mirrorID, pointID);
+
+            GdxGlobal.LOG.Trace("MirrorPicker.MarkLaserOnRunPiece, mirror={0}-{1}, pt={2}, laser={3}, motorPos={4}",
+                                    groupIdx, mirrorIdx, pointIdx, laserDist, motorPos );
+        }
+        static QVector parseSingleMotorPos(string[] strs)
+        {
+            int N = strs.Length;
+            var motorPos = new QVector(N);
+            for (int i = 0; i < N; i++)
+            {
+                if (double.TryParse(strs[i], out double v))
+                    motorPos[i] = v;
+            }
+            return motorPos;
         }
 
         public static void Trace(string tag, object process, params object[] args)
         {
-            //> 略過 NLog Trace.
-            return;
+            bool isSim = (GdxGlobal.Facade != null && GdxGlobal.Facade.IsSimPLC());
+            if (!isSim)
+                return;     //> 略過 Trace and Simulation
 
             try
             {
@@ -133,6 +177,7 @@ namespace JetEazy.GdxCore3
                 {
                     case "MirrorCalibration":
                     case "MirrorDispenser":
+                    case "MirrorPicker":
                         trace_MirrorOperations(tag, strs, process, args);
                         break;
                     case "ModulePosition":
@@ -148,7 +193,6 @@ namespace JetEazy.GdxCore3
                 GdxGlobal.LOG.Error(ex, "Trace Error");
             }
         }
-
 
         #region PRIVATE_FUNCTION
         class XWait
@@ -174,7 +218,10 @@ namespace JetEazy.GdxCore3
                 {
                     case "Start":
                         {
-                            LOG.Trace("{0}, ps={1}, mirror={2}", tag, ps_state, args[0]);
+                            if(args.Length>1)
+                                LOG.Trace("{0}, ps={1}, mirror={2}, GroupIndex={3}", tag, ps_state, args[0], args[1]);
+                            else
+                                LOG.Trace("{0}, ps={1}, mirror={2}", tag, ps_state, args[0]);
                             break;
                         }
 
@@ -214,8 +261,8 @@ namespace JetEazy.GdxCore3
                         }
 
                     default:
-                        {
-                            LOG.Trace("{0}, ps={1}", tag, ps_state);
+                        {                            
+                            LOG.Trace("{0}, ps={1}, {2}", tag, ps_state, pack(args));
                             break;
                         }
                 }
@@ -305,6 +352,61 @@ namespace JetEazy.GdxCore3
         static bool is_wait(string[] strs)
         {
             return strs[strs.Length - 1] == "Wait";
+        }
+        static string pack(params object[] args)
+        {
+            StringBuilder sb = new StringBuilder();
+            string tag;
+            for(int i=0; i< args.Length;i++)
+            {
+                object arg = args[i];
+                tag = arg.ToString();
+                sb.Append(", ");
+                sb.Append(tag);
+                if (tag == "Pts" && i < args.Length-1)
+                {
+                    try
+                    {
+                        arg = args[i + 1];
+                        if (arg is IList)
+                        {
+                            sb.Append(packPts((IList)arg));
+                            i++;
+                        }
+                        else if (arg is Array)
+                        {
+                            sb.Append(packPts((Array)arg));
+                            i++;
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex);
+                    }
+                }
+            }
+            return sb.ToString();
+        }
+        static string packPts(IEnumerable pts)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(", [ ");
+            foreach (object pt in pts)
+            {
+                var pos = QVector.Parse(pt.ToString());
+                if (pos.Dimensions == 1)
+                {
+                    sb.Append(",");
+                    sb.Append(pos[0]);
+                }
+                else
+                {
+                    sb.Append(",");
+                    sb.Append(pos.ToString());
+                }
+            }
+            sb.Append(" ]");
+            return sb.Replace("[ ,", "[ ").ToString();
         }
         #endregion
     }

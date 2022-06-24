@@ -121,6 +121,12 @@
     <Compile Include="FormSpace\FormX3\frmAXISSetup.Designer.cs">
       <DependentUpon>frmAXISSetup.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\FormX3\VsCompensationRangeUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FormSpace\FormX3\VsCompensationRangeUI.Designer.cs">
+      <DependentUpon>VsCompensationRangeUI.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSpace\frmDataGridViewPosition.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -272,12 +278,6 @@
     <Compile Include="UISpace\MainSpace\MainX1UI.Designer.cs">
       <DependentUpon>MainX1UI.cs</DependentUpon>
     </Compile>
-    <Compile Include="UISpace\MainSpace\MainX3UI.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UISpace\MainSpace\MainX3UI.Designer.cs">
-      <DependentUpon>MainX3UI.cs</DependentUpon>
-    </Compile>
     <Compile Include="UISpace\RcpUI.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -301,6 +301,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\FormX3\frmAXISSetup.resx">
       <DependentUpon>frmAXISSetup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\FormX3\VsCompensationRangeUI.resx">
+      <DependentUpon>VsCompensationRangeUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\frmDataGridViewPosition.resx">
       <DependentUpon>frmDataGridViewPosition.cs</DependentUpon>
@@ -368,9 +371,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UISpace\MainSpace\MainGdx3UI.resx">
       <DependentUpon>MainGdx3UI.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UISpace\MainSpace\MainX3UI.resx">
-      <DependentUpon>MainX3UI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UISpace\RcpUI.resx">
       <DependentUpon>RcpUI.cs</DependentUpon>

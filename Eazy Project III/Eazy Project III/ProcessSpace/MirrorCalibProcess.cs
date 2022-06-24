@@ -129,7 +129,7 @@ namespace Eazy_Project_III.ProcessSpace
                             {
                                 var cam = ICamForCali;
                                 cam.Snap();
-                                bmp = new Bitmap(cam.GetSnap());
+                                bmp = cam.GetSnap();
                                 bmp.Save("image0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
                             }
                             catch(Exception ex)
@@ -198,6 +198,7 @@ namespace Eazy_Project_III.ProcessSpace
                             GdxCore.Trace("MirrorCalibration.Compensate", Process, bmp, mirrorPutPos, ptfOffset);
                             bool go = GdxCore.CheckCompensate(bmp);
                             bmp.Dispose();
+
                             if (!go)
                             {
                                 // 就地停止 Process
