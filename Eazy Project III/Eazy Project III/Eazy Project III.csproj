@@ -177,9 +177,10 @@
     </Compile>
     <Compile Include="ProcessSpace\AbsProcess.cs" />
     <Compile Include="ProcessSpace\BaseProcess.cs" />
+    <Compile Include="ProcessSpace\MirrorAbsImageProcess.cs" />
     <Compile Include="ProcessSpace\MirrorBlackboxProcess.cs" />
-    <Compile Include="ProcessSpace\MirrorDispenseProcess.cs" />
     <Compile Include="ProcessSpace\MirrorCalibProcess.cs" />
+    <Compile Include="ProcessSpace\MirrorDispenseProcess.cs" />
     <Compile Include="ProcessSpace\MirrorPickProcess.cs" />
     <Compile Include="ProcessSpace\ResetProcess.cs" />
     <Compile Include="ProcessSpace\BuzzerProcess.cs" />

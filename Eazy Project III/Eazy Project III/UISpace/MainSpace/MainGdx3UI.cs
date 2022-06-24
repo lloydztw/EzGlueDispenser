@@ -349,7 +349,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (VsMSG.Instance.Question(msg) == DialogResult.OK)
             {
                 if (!m_calibrateprocess.IsOn)
-                    m_calibrateprocess.Start(MainMirrorIndex.ToString());
+                    m_calibrateprocess.Start(MainMirrorIndex, true);
                 else
                     m_calibrateprocess.Stop();
             }
@@ -787,7 +787,8 @@ namespace Eazy_Project_III.UISpace.MainSpace
             m_blackboxprocess.OnMessage += blackboxProcess_OnMessage;
             ((MirrorCalibProcess)m_calibrateprocess).OnLiveImage += process_OnLiveImage;
             ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveImage += process_OnLiveImage;
-            ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveCompensating += blackBoxProcess_OnLiveCompensating;
+            ((MirrorCalibProcess)m_calibrateprocess).OnLiveCompensating += process_OnLiveCompensating;
+            ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveCompensating += process_OnLiveCompensating;
         }
 
 
@@ -878,13 +879,13 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
             }
         }
-        private void blackBoxProcess_OnLiveCompensating(object sender, CompensatingEventArgs e)
+        private void process_OnLiveCompensating(object sender, CompensatingEventArgs e)
         {
             try
             {
                 if (InvokeRequired)
                 {
-                    EventHandler<CompensatingEventArgs> h = blackBoxProcess_OnLiveCompensating;
+                    EventHandler<CompensatingEventArgs> h = process_OnLiveCompensating;
                     this.Invoke(h, sender, e);
                 }
                 else
