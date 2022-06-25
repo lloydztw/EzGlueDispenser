@@ -15,8 +15,15 @@ namespace JetEazy.GdxCore3.Model
     public class GdxFacade
     {
         #region PRIVATE_MEMBER
-        static GdxFacade _singleton = null;
         private IxLaser _laser = null;
+        #endregion
+
+        #region SINGLETON
+        static GdxFacade _singleton = null;
+        private GdxFacade()
+        {
+            // 強制使用 singleton
+        }
         #endregion
 
         public static GdxFacade Singleton
@@ -28,14 +35,14 @@ namespace JetEazy.GdxCore3.Model
                 return _singleton;
             }
         }
-        private GdxFacade()
-        {
-            // 強制使用 singleton
-        }
         internal GdxFacadeIO IO
         {
             get;
             private set;
+        }
+        internal GdxFacadeIni INI
+        {
+            get { return GdxFacadeIni.Singleton; }
         }
 
         public void Init()
@@ -45,9 +52,20 @@ namespace JetEazy.GdxCore3.Model
                 IO = new GdxFacadeIO();
                 IO.BindIoPoints();
             }
+
             if (_laser == null)
             {
                 _laser = new GdxLaser(getGaaraLaser());
+            }
+
+            if (LaserCoordsTransform == null)
+            {
+                LaserCoordsTransform = new GdxLaserCenterCompensator();
+            }
+
+            if (MotorCoordsTransform == null)
+            {
+                MotorCoordsTransform = new GdxMotorCoordsTransform();
             }
         }
         public void Dispose()
@@ -56,6 +74,16 @@ namespace JetEazy.GdxCore3.Model
             {
                 _laser.Dispose();
                 _laser = null;
+            }
+            if (LaserCoordsTransform != null)
+            {
+                LaserCoordsTransform.Dispose();
+                LaserCoordsTransform = null;
+            }
+            if (MotorCoordsTransform != null)
+            {
+                MotorCoordsTransform.Dispose();
+                MotorCoordsTransform = null;
             }
         }
 
@@ -79,30 +107,31 @@ namespace JetEazy.GdxCore3.Model
         {
             return _laser;
         }
-
-        /// <summary>
-        /// 检查校正的相机
-        /// </summary>
         public ICam CameraCali
         {
             get { return Eazy_Project_III.Universal.CAMERAS[0]; }
         }
-
-        /// <summary>
-        /// 投影的校正相机
-        /// </summary>
         public ICam CameraBlackBox
         {
             get { return Eazy_Project_III.Universal.CAMERAS[1]; }
         }
-
-        /// <summary>
-        /// Motor
-        /// </summary>
         public IAxis GetMotor(int axisID)
         {
             var machine = (DispensingMachineClass)Eazy_Project_III.Universal.MACHINECollection.MACHINE;
             return machine.PLCMOTIONCollection[axisID];
+        }
+
+
+        public GdxLaserCenterCompensator LaserCoordsTransform
+        {
+            get;
+            private set;
+        }
+
+        public GdxMotorCoordsTransform MotorCoordsTransform
+        {
+            get;
+            private set;
         }
 
 

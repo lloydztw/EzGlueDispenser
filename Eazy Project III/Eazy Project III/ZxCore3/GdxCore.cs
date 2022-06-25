@@ -21,7 +21,9 @@ namespace JetEazy.GdxCore3
         public static void Init()
         {
             GdxGlobal.Init();
-            System.Diagnostics.Trace.WriteLine(GdxGlobal.INI);
+            var xyzl = GdxGlobal.INI.GaugeBlockPlanePoses;
+            System.Diagnostics.Trace.WriteLine(xyzl);
+            GdxGlobal.Facade.LaserCoordsTransform.BuildGoldenPlaneFormula();
         }
         public static void Dispose()
         {
@@ -129,30 +131,29 @@ namespace JetEazy.GdxCore3
             }
         }
 
-        public static void SetGaugeBlockPlanePoints(List<string> ga_strs)
+        public static void CollectLaserPt(int mirrorIdx, int pointIdx, double laserDist, string ga_motorPt)
         {
-
-        }
-        public static void MarkLaserOnRunPiece(int groupIdx, int mirrorIdx, int pointIdx, double laserDist, string[] motorPt)
-        {
-            //GdxCore.Trace("MirrorPicker.MarkLaserDist", Process, "PlaneIdx", m_PlaneIndex, "laserDist", z, "Pts", plane_xyz);
-            //var trf = GdxGlobal.PickerCoordTransform;
-            //var idx = new MirrorIndexer(groupIdx, mirrorIdx, pointIdx);
-            var motorPos = parseSingleMotorPos(motorPt);
-            if (motorPos.Dimensions < 4)
-            {
-                // X, Y, Z, U
-                var axisU = GdxGlobal.Facade.GetMotor(3);
-                double u = axisU.GetPos();
-                motorPos = new QVector(motorPos[0], motorPos[1], motorPos[2], u);
-            }
+            var trf = GdxGlobal.Facade.LaserCoordsTransform;
             
-            //trf.MarkLaserDist(idx, motorPos, laserDist);
-            //>>> trf.MarkLaserDist(groupID, mirrorID, pointID);
+            // (X,Y,Z,L)
+            var motorPosL = QVector.Parse(ga_motorPt + "," + laserDist);
+            
+            if (pointIdx == 0)
+                trf.ResetLaserPtsOnMirror(mirrorIdx);
 
-            GdxGlobal.LOG.Trace("MirrorPicker.MarkLaserOnRunPiece, mirror={0}-{1}, pt={2}, laser={3}, motorPos={4}",
-                                    groupIdx, mirrorIdx, pointIdx, laserDist, motorPos );
+            trf.AddLaserPtOnMirror(mirrorIdx, motorPosL);
+
+
+            GdxGlobal.LOG.Trace("MirrorPicker.CollectLaserPos, mirror={0}, @{1}, laser={2:0.0000}, motorPos={3}",
+                                    mirrorIdx, pointIdx, laserDist, motorPosL );
         }
+        public static void BuildLaserCoordsTransform(int mirrorIdx, List<string> ga_strs)
+        {
+            var trf = GdxGlobal.Facade.LaserCoordsTransform;
+            trf.BuildMirrorPlaneTransform(mirrorIdx);
+            System.Diagnostics.Debug.WriteLine(GdxGlobal.INI.GaugeBlockPlanePoses);
+        }
+
         static QVector parseSingleMotorPos(string[] strs)
         {
             int N = strs.Length;

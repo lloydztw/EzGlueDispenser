@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CSML;
+﻿using CSML;
+using System;
 
 namespace JetEazy.BasicSpace
 {
@@ -128,7 +125,7 @@ namespace JetEazy.BasicSpace
             y = yy;
             z = zz;
         }
-        public string ToString()
+        public override string ToString()
         {
             return string.Format("{0}, {1}, {2}", x, y, z);
         }

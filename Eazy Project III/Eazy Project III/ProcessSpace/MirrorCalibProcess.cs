@@ -491,6 +491,8 @@ namespace Eazy_Project_III.ProcessSpace
         }
         QVector phase3_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {
+            return new QVector(N_MOTORS);
+
             var incr = target - cur;
             for (int i = 0; i < 4; i++)
             {

@@ -95,7 +95,12 @@ namespace Eazy_Project_III.ProcessSpace
         }
         #endregion
 
-
+        /// <summary>
+        /// Generic LOG (dual) <br/>
+        /// 指定紅色 會調用 NLog.Warning 其他則調用 NLog.Debug <br/>
+        /// (將來有待抽離 GUI 之部分) <br/>
+        /// @LETIAN: 202206
+        /// </summary>
         protected void _LOG(string msg, params object[] args)
         {
             Color color = Color.Black;
@@ -125,6 +130,12 @@ namespace Eazy_Project_III.ProcessSpace
             else
                 GdxGlobal.LOG.Debug(msg);
         }
+
+        /// <summary>
+        /// Generic LOG (dual) <br/>
+        /// 會額外調用 NLog.Warning <br/>
+        /// @LETIAN: 202206
+        /// </summary>
         protected void _LOG(Exception ex, string msg)
         {
             msg = Name + ", " + msg;

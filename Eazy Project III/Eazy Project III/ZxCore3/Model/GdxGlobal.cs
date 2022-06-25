@@ -10,7 +10,7 @@ namespace JetEazy.GdxCore3.Model
         {
             Facade = GdxFacade.Singleton;
             Facade.Init();
-            INI = GdxIni.Singleton;
+            INI = GdxFacadeIni.Singleton;
         }
         public static void Dispose()
         {
@@ -26,7 +26,7 @@ namespace JetEazy.GdxCore3.Model
         {
             get { return Facade.IO; }
         }
-        internal static GdxIni INI
+        internal static GdxFacadeIni INI
         {
             get;
             private set;

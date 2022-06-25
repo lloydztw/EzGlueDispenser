@@ -192,7 +192,7 @@ namespace JetEazy.QMath
             }
         }
 
-        public static bool AreEqual(QVector v1, QVector v2)
+        public static bool AreEqual(QVector v1, QVector v2, int percision = -1)
         {
             if (v1 == v2)
                 return true;
@@ -200,9 +200,19 @@ namespace JetEazy.QMath
             if (v1.Dimensions != v2.Dimensions)
                 return false;
 
-            for (int i = 0, N = v1.Dimensions; i < N; i++)
-                if (v1[i] != v2[i])
-                    return false;
+            if (percision < 0)
+            {
+                for (int i = 0, N = v1.Dimensions; i < N; i++)
+                    if (v1[i] != v2[i])
+                        return false;
+            }
+            else
+            {
+                for (int i = 0, N = v1.Dimensions; i < N; i++)
+                    if (Math.Round(v1[i], percision) != Math.Round(v2[i], percision))
+                        return false;
+            }
+
 
             return true;
         }
@@ -279,22 +289,34 @@ namespace JetEazy.QMath
         {
             return ToString("0.0000");
         }
-        public string ToString(string format)
+        public string ToString(bool compact)
+        {
+            return ToString("0.0000", compact);
+        }
+        public string ToString(string format, bool compact = false)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             int iSize = this.Size;
 
-            sb.Append("{");
+            if (!compact)
+                sb.Append("{");
+
             for (int i = 0; i < iSize; i++)
             {
-                if (m_VD[i] >= 0.0)
+                if (!compact)
+                {
+                    if (m_VD[i] >= 0.0)
+                        sb.Append(" ");
                     sb.Append(" ");
-                sb.Append(" ");
+                }
                 sb.Append(m_VD[i].ToString(format));
                 if (i != iSize - 1)
                     sb.Append(",");
             }
-            sb.Append(" }");
+
+            if(!compact)
+                sb.Append(" }");
+
             return sb.ToString();
         }
         public void FromString(string str)

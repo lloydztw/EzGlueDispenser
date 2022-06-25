@@ -4,7 +4,7 @@ using System;
 
 namespace JetEazy.GdxCore3.Model
 {
-    class GdxMotorCoordsTransform : IDisposable
+    public class GdxMotorCoordsTransform : IDisposable
     {
         #region PRIVATE_DATA
         QVector mv_zero = new QVector(6);
@@ -31,6 +31,9 @@ namespace JetEazy.GdxCore3.Model
         {
             //mv_zero = new QVector(mv0);
             mv_zero = mv0 + new QVector(0, 0, 0, ud0, 0, 0);
+        }
+        public GdxMotorCoordsTransform()
+        {
         }
         public void Dispose()
         {

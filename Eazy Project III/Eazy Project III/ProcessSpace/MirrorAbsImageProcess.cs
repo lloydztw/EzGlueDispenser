@@ -208,7 +208,7 @@ namespace Eazy_Project_III.ProcessSpace
 
             // 檢查馬達位置是否被 user 移動
             var cur2 = ax_read_current_pos();
-            isMotorPosChangedByClient = !QVector.AreEqual(cur, cur2);
+            isMotorPosChangedByClient = !QVector.AreEqual(cur, cur2, 4);
 
             return phase.Go;
         }
