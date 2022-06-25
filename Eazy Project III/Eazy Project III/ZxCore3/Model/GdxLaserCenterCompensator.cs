@@ -109,18 +109,27 @@ namespace JetEazy.GdxCore3.Model
 
             //(1) Xc, Yc, Zc, Lmin
             double lmin = double.MaxValue;
-            var sum = new QVector(4);
+            double xmin = double.MaxValue;
+            double ymin = double.MaxValue;
+            double zmin = double.MaxValue;
+            double xmax = double.MinValue;
+            double ymax = double.MinValue;
+            double zmax = double.MinValue;
             for (int i = 0; i < N; i++)
             {
-                var pos = pointsXYZL[i];
-                lmin = Math.Min(Lmin, pos[3]);
-                sum += pos;
+                var pos = pointsXYZL[i];              
+                lmin = Math.Min(lmin, pos[3]);
+                xmin = Math.Min(xmin, pos[0]);
+                xmax = Math.Max(xmax, pos[0]);
+                ymin = Math.Min(ymin, pos[1]);
+                ymax = Math.Max(ymax, pos[1]);
+                zmin = Math.Min(zmin, pos[2]);
+                zmax = Math.Max(zmax, pos[2]);
             }
-            FacadeCenter = sum / N;
-            FacadeCenter[3] = lmin;
-            double Xc = FacadeCenter[0];
-            double Yc = FacadeCenter[1];
-            double Zc = FacadeCenter[2];
+            double Xc = (xmin + xmax) / 2;
+            double Yc = (ymin + ymax) / 2;
+            double Zc = (zmin + zmax) / 2;
+            FacadeCenter = new QVector(Xc, Yc, Zc, lmin);
             MotorBasePos = new QVector(Xc, Yc, Zc);
 
             //(2) Relative Points
@@ -152,13 +161,18 @@ namespace JetEazy.GdxCore3.Model
             //-----------------------------------------------------------------------------
             var normalV = new QVector(plane.A, plane.B, -1);
             normalV /= normalV.NormLength;
+            // 法向量朝 z 正方向
+            if (normalV.Z < 0)
+                normalV = normalV * (-1);
             PlaneNormalVector = normalV;
             //-----------------------------------------------------------------------------
             QVector.Percision = old_percision;
             //-----------------------------------------------------------------------------
 
             //(4) LcDepth
-            LcDepth = plane.GetZLocation(new QPoint3D(0, 0, 0));
+            // lz = A * lx + B * ly + C (at 0,0,0)
+            //    = plane.C
+            LcDepth = plane.C;
 
             //(5) RealSurface Center
             RealSurfaceCenter = new QVector(Xc, Yc, Zc, Lmin + LcDepth);
@@ -221,16 +235,7 @@ namespace JetEazy.GdxCore3.Model
         {
             //(0) Golden Source List<(X, Y, Z, Laser)>
             m_xplaneGolden.BuildTransform(GdxGlobal.INI.GaugeBlockPlanePoses);
-
-            //(1) Motor Offset Vector (X, Y, Z)
-            //var laserTouchPos = GdxGlobal.INI.LEPos;
-            //var suckerTouchPos = GdxGlobal.INI.AttractPos;
-            //var OffsetSL = suckerTouchPos - laserTouchPos;
-            // 6-Axis Motor Offset Vector
-            //m_xplaneGolden.MotorOffset = new QVector(6);
-            //m_xplaneGolden.MotorOffset[0] = offset[0];
-            //m_xplaneGolden.MotorOffset[1] = offset[1];
-            //m_xplaneGolden.MotorOffset[2] = offset[2];
+            //Save();
             return true;
         }
         
@@ -271,7 +276,17 @@ namespace JetEazy.GdxCore3.Model
             if (fileName == null)
                 fileName = getDefaultFileName();
 
-            string jstr = JsonConvert.SerializeObject(m_xplaneGolden);
+            var list = new List<GdxLocalPlaneCoord>();
+            if (m_xplaneGolden.IsBuilt)
+                list.Add(m_xplaneGolden);
+
+            if (m_xplaneMirror0.IsBuilt)
+                list.Add(m_xplaneMirror0);
+
+            if (m_xplaneMirror1.IsBuilt)
+                list.Add(m_xplaneMirror1);
+
+            string jstr = JsonConvert.SerializeObject(list, Formatting.Indented);
             using (var stm = new System.IO.StreamWriter(fileName, false))
             {
                 stm.Write(jstr);
