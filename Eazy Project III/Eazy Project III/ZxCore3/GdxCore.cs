@@ -21,7 +21,7 @@ namespace JetEazy.GdxCore3
         public static void Init()
         {
             GdxGlobal.Init();
-            var xyzl = GdxGlobal.INI.GaugeBlockPlanePoses;
+            var xyzl = GdxGlobal.INI.GaugeBlockPlanePoints;
             System.Diagnostics.Trace.WriteLine(xyzl);
             GdxGlobal.Facade.LaserCoordsTransform.BuildGoldenPlaneFormula();
         }
@@ -151,19 +151,7 @@ namespace JetEazy.GdxCore3
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
             trf.BuildMirrorPlaneTransform(mirrorIdx);
-            System.Diagnostics.Debug.WriteLine(GdxGlobal.INI.GaugeBlockPlanePoses);
-        }
-
-        static QVector parseSingleMotorPos(string[] strs)
-        {
-            int N = strs.Length;
-            var motorPos = new QVector(N);
-            for (int i = 0; i < N; i++)
-            {
-                if (double.TryParse(strs[i], out double v))
-                    motorPos[i] = v;
-            }
-            return motorPos;
+            System.Diagnostics.Debug.WriteLine(GdxGlobal.INI.GaugeBlockPlanePoints);
         }
 
         public static void Trace(string tag, object process, params object[] args)
@@ -335,10 +323,6 @@ namespace JetEazy.GdxCore3
             var pos = QVector.Parse(posStr);
             for (int i = 0; i < pos.Dimensions; i++, axisID++)
             {
-                //var motor = GdxGlobal.Facade.GetMotor(axisID);
-                //motor.Go(pos[0], 0);
-                //motor.SetActionSpeed(0);
-                //motor.SetManualSpeed(0);
                 GdxGlobal.IO.sim_motor_pos(axisID, pos[i]);
             }
         }

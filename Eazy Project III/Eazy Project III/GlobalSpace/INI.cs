@@ -105,6 +105,7 @@ namespace Eazy_Project_III
         }
     }
 
+
     public class INI
     {
         private static readonly INI _instance = new INI();
@@ -260,13 +261,13 @@ namespace Eazy_Project_III
         #region 第三站 INI
 
         const string Cat00 = "A00.鐳射頭與吸嘴設置";
-
-
+        #region CATEGORY_A00
         [CategoryAttribute(Cat00), DescriptionAttribute("鐳射頭測量塊規位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
         [DisplayName("01鐳射頭位置")]
         [Browsable(X3Visable)]
         public string LEPos { get; set; } = string.Empty;
+
         [CategoryAttribute(Cat00), DescriptionAttribute("吸嘴吸住塊規位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
         [DisplayName("02吸嘴位置")]
@@ -295,13 +296,15 @@ namespace Eazy_Project_III
         [DisplayName("06Mirror2相對位置補償")]
         [Browsable(X3Visable)]
         public double Mirror2_Offset_Adj { get; set; } = 0;
+        #endregion
 
 
         //public string InitialPos { get; set; } = string.Empty;//放到各个plc motion 里面了
         //public string InitialTheta { get; set; } = string.Empty;
 
-        const string Cat0 = "A02.拾取設置";
 
+        const string Cat0 = "A02.拾取設置";
+        #region CATEGORY_A02
         [CategoryAttribute(Cat0), DescriptionAttribute("第一個 Mirror 的取得位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
         [DisplayName("Mirror1位置集合")]
@@ -335,9 +338,11 @@ namespace Eazy_Project_III
         [DisplayName("拾取后退位置")]
         [Browsable(X3Visable)]
         public int sMirrorAdjBackLength { get; set; } = 0;
+        #endregion
+
 
         const string Cat2 = "A01.平面度設置";
-
+        #region CATEGORY_A01
         [CategoryAttribute(Cat2), DescriptionAttribute("第一個 Mirror 取得平面資料的位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
         [DisplayName("Mirror1平面资料集合")]
@@ -374,10 +379,11 @@ namespace Eazy_Project_III
         [Browsable(false)]
         public string sMirror0PlaneHeightPosList { get; set; } = string.Empty;
         public List<string> Mirror0PlaneHeightPosList = new List<string>();
+        #endregion
 
 
         const string Cat3 = "A03.校正設置";
-
+        #region CATEGROY_A03
         [CategoryAttribute(Cat3), DescriptionAttribute("Mirror1 檢測補償偏移的位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
         [DisplayName("Mirror1檢測補償")]
@@ -393,10 +399,11 @@ namespace Eazy_Project_III
         [DisplayName("校正檢測補償")]
         [Browsable(X3Visable)]
         public string Mirror0CaliPos { get; set; } = string.Empty;
+        #endregion
 
 
         const string Cat4 = "A04.放入設置";
-
+        #region CATEGORY_A04
 
         [CategoryAttribute(Cat4), DescriptionAttribute("Mirror1 開始調整位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
@@ -421,7 +428,7 @@ namespace Eazy_Project_III
         [Browsable(X3Visable)]
         [ReadOnly(true)]
         public int sMirrorPutAdjDeep2Length { get; set; } = 0;
-
+        #endregion
 
         const string Cat1 = "A05.點膠設置";
 

@@ -2,12 +2,14 @@
 using JetEazy.QMath;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace JetEazy.GdxCore3.Model
 {
+    /// <summary>
+    /// 將 Eazy_Project_III.INI 轉換成比較好閱讀的 Class <br/>
+    /// @LETIAN: 202206
+    /// </summary>
     class GdxFacadeIni : GdxIniParser
     {
         #region SINGLETON
@@ -33,7 +35,7 @@ namespace JetEazy.GdxCore3.Model
                 return _singleton;
             }
         }
-        public void Sync(bool all = false, bool reload = false)
+        public void Sync(bool reload = false)
         {
             if (reload)
                 ini.Load();
@@ -44,13 +46,20 @@ namespace JetEazy.GdxCore3.Model
             Offset_LEAtract = Math.Round(ini.Offset_LEAttract, 4);
             Offset_ModuleZ = Math.Round(ini.Offset_ModuleZ, 4);
 
-            // Mirrors
-            if (all)
-            {
-                Mirror0.Sync();
-                Mirror1.Sync();
-                Mirror2.Sync();
-            }
+            // Mirror0
+            if (Mirror0 == null)
+                Mirror0 = new GdxMirror0();
+            Mirror0.Sync();
+            
+            // Mirror1
+            if (Mirror1 == null)
+                Mirror1 = new GdxMirror(1);
+            Mirror1.Sync();
+
+            // Mirror2
+            if (Mirror2 == null)
+                Mirror2 = new GdxMirror(2);
+            Mirror2.Sync();
 
             // Shadow
             ShadowPos = Parse(ini.ShadowPos);
@@ -69,16 +78,17 @@ namespace JetEazy.GdxCore3.Model
         public QVector ShadowPos;
         public QVector ShadowPosUp;
 
+
         /// <summary>
         /// 塊規 laser 量測 motors 點位
         /// X,Y,Z,L
         /// </summary>
-        public List<QVector> GaugeBlockPlanePoses
+        public List<QVector> GaugeBlockPlanePoints
         {
             get
             {
                 if (_gaugeBlockPlanePoses == null)
-                    _gaugeBlockPlanePoses = CombineGaugeBlockPlanePoses();
+                    _gaugeBlockPlanePoses = combineGaugeBlockPlanePoints();
                 return _gaugeBlockPlanePoses;
             }
         }
@@ -88,7 +98,7 @@ namespace JetEazy.GdxCore3.Model
         /// List< (X,Y,Z,L) >
         /// </summary>
         /// <returns></returns>
-        private List<QVector> CombineGaugeBlockPlanePoses()
+        private List<QVector> combineGaugeBlockPlanePoints()
         {
             var yzl = Mirror0.PlaneHeightPosList;
             var xyz = Mirror0.PlanePosList;
@@ -115,9 +125,9 @@ namespace JetEazy.GdxCore3.Model
         public List<QVector> PlaneHeightPosList;
         public List<QVector> PlanePosList;
 
+        #region CONSTRUCTOR_AND_SYNC
         public GdxMirror0()
         {
-            Sync();
         }
         public void Sync()
         {
@@ -126,6 +136,7 @@ namespace JetEazy.GdxCore3.Model
             Mirror0.PlaneHeightPosList = Parse(ini.Mirror0PlaneHeightPosList);
             Mirror0.PlanePosList = Parse(ini.Mirror0PlanePosList);
         }
+        #endregion
     }
 
 
@@ -146,11 +157,11 @@ namespace JetEazy.GdxCore3.Model
         public int AdjDeepLength;
         public int PutAdjDeepLength;
 
+        #region CONSTRUCTOR_AND_SYNC
         public GdxMirror(int index)
         {
             System.Diagnostics.Trace.Assert(index == 1 || index == 2);
             _index = index;
-            Sync();
         }
         public void Sync()
         {
@@ -185,11 +196,16 @@ namespace JetEazy.GdxCore3.Model
                 Mirror2.AdjBackLength = ini.sMirrorAdjBackLength;
             }
         }
+        #endregion
     }
 
 
     class GdxIniParser
-    { 
+    {
+        protected static INI ini
+        {
+            get { return INI.Instance; }
+        }
         public static List<QVector> Parse(List<string> strs)
         {
             var vectors = new List<QVector>();
@@ -202,10 +218,6 @@ namespace JetEazy.GdxCore3.Model
         public static QVector Parse(string str)
         {
             return QVector.Parse(str);
-        }
-        protected static INI ini
-        {
-            get { return INI.Instance; }
         }
     }
 }

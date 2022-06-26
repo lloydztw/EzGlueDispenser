@@ -175,10 +175,10 @@ namespace Eazy_Project_III.ProcessSpace
                     case 10:
                         if (Process.IsTimeup)
                         {
-                            GdxCore.Trace("MirrorPicker.PlanRun", Process, "pointIdx", m_PlaneIndex, "motorPos", m_PlaneRunList[m_PlaneIndex]);
-
                             //> 开始循环设定 产品 平面度位置
-                            _LOG("雷射量測點位", m_PlaneIndex, "寫入PLC馬達控點");
+                            GdxCore.Trace("MirrorPicker.PlanRun", Process, "pointIdx", m_PlaneIndex, "motorPos", m_PlaneRunList[m_PlaneIndex]);
+                            _LOG("雷射量測", "點位", m_PlaneIndex, "寫入PLC馬達控點");
+
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 1, m_PlaneRunList[m_PlaneIndex]);
 
                             //> CommonLogClass.Instance.LogMessage("产品平面度位置设定 Index=" + m_PlaneIndex.ToString(), Color.Black);
@@ -190,7 +190,7 @@ namespace Eazy_Project_III.ProcessSpace
                     case 20:
                         if (Process.IsTimeup)
                         {
-                            _LOG("量測雷射點位", m_PlaneIndex, "啟動馬達");
+                            _LOG("雷射量測", "點位", m_PlaneIndex, "啟動馬達");
                             MACHINE.PLCIO.ModulePositionGO(ModuleName.MODULE_PICK, 1);
 
                             //> CommonLogClass.Instance.LogMessage("启动 Index" + m_PlaneIndex.ToString(), Color.Black);
@@ -219,7 +219,8 @@ namespace Eazy_Project_III.ProcessSpace
 
                                 //@LETIAN: LOG 馬達 當下位置 讀值 (for trace and debug)
                                 var curMotorPos = ax_read_current_motor_pos();
-                                _LOG("量測雷射點位", m_PlaneIndex, "馬達XYZ", curMotorPos, "Laser量測值", laserZ);
+                                _LOG("雷射量測", "點位", m_PlaneIndex, "馬達XYZ", curMotorPos, "Laser量測值", laserZ);
+
                                 //@LETIAN: 比對 馬達 與 ini 設定值 (比對精度 0.001 mm)
                                 var iniMotorPos = QVector.Parse(m_PlaneRunList[m_PlaneIndex]);
                                 if (!QVector.AreEqual(curMotorPos, iniMotorPos, 3))
@@ -259,7 +260,6 @@ namespace Eazy_Project_III.ProcessSpace
                                 if (INI.Instance.Mirror0PlaneHeightPosList.Count >= 3)
                                 {
                                     //@LETIAN: 告知 GdxCore 模組, 已經標測完雷射點位.
-                                    //> GdxCore.Trace("MirrorPicker.CheckPlane", Process, "Mirror0PlaneHeightPosList", "Pts", INI.Instance.Mirror0PlaneHeightPosList);
                                     GdxCore.BuildLaserCoordsTransform(m_PickMirrorIndex, INI.Instance.Mirror0PlaneHeightPosList);
 
                                     QPoint3D[] _planeheight = new QPoint3D[INI.Instance.Mirror0PlaneHeightPosList.Count];
