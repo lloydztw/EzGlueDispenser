@@ -406,7 +406,7 @@ namespace Eazy_Project_III.ProcessSpace
         QVector m_initMotorPos = new QVector(N_MOTORS);
         QVector m_currMotorPos = new QVector(N_MOTORS);
         QVector m_nextMotorPos = new QVector(N_MOTORS);
-        QVector m_target = new QVector(N_MOTORS);
+        QVector m_targetPos = new QVector(N_MOTORS);
         QVector m_incr = new QVector(N_MOTORS);
 
         XRunContext m_phase3 = new XRunContext(PHASE_3, 3000);
@@ -426,7 +426,7 @@ namespace Eazy_Project_III.ProcessSpace
             if (comp.CanCompensate(m_mirrorIndex))
             {
                 var delta = comp.CalcCompensation(m_mirrorIndex, m_initMotorPos);
-                m_target = m_initMotorPos + delta;
+                m_targetPos = m_initMotorPos + delta;
             }
 
             //(*) Simulation
@@ -434,13 +434,13 @@ namespace Eazy_Project_III.ProcessSpace
             if (GdxGlobal.Facade.IsSimMotor() || GdxGlobal.Facade.IsSimPLC())
             {
                 var rnd = new Random();
-                m_target = new QVector(m_initMotorPos);
+                m_targetPos = new QVector(m_initMotorPos);
                 for (int i = 0; i < 4; i++)
                 {
-                    m_target[i] += MAX_DELTA[i] * (rnd.NextDouble() * 0.5 - 1);
+                    m_targetPos[i] += MAX_DELTA[i] * (rnd.NextDouble() * 0.5 - 1);
                 }
-                _clip_into_safe_box(m_target);
-                AxisUnitConvert.Round(m_target, true);
+                _clip_into_safe_box(m_targetPos);
+                AxisUnitConvert.Round(m_targetPos, true);
             }
             #endregion
 
@@ -448,8 +448,6 @@ namespace Eazy_Project_III.ProcessSpace
         }
         void phase3_run_one_step(XRunContext runCtrl)
         {
-            // TO BE CONTINUED.
-
             runCtrl.IsCompleted = false;
 
             // 檢查馬達狀態
@@ -463,7 +461,7 @@ namespace Eazy_Project_III.ProcessSpace
             m_currMotorPos = ax_read_current_pos();
 
             //(2) Delta for *** PHASE III ***
-            m_incr = phase3_calc_next_incr(runCtrl, m_currMotorPos, m_target);
+            m_incr = phase3_calc_next_incr(runCtrl, m_currMotorPos, m_targetPos);
 
             //(3) Next Pos
             m_nextMotorPos = m_currMotorPos + m_incr;
@@ -476,7 +474,7 @@ namespace Eazy_Project_III.ProcessSpace
             runCtrl.IsCompleted = AxisUnitConvert.IsSmallVector(m_incr);
 
             //(5.1) 調試模式
-            if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
+            if (!check_debug_mode(runCtrl, m_targetPos, m_currMotorPos, m_incr))
                 return;
 
             //(5.2) IsCompleted ?

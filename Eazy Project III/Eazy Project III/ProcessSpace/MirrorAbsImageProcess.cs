@@ -1,7 +1,5 @@
-﻿using Eazy_Project_III.OPSpace;
-using Eazy_Project_Interface;
+﻿using Eazy_Project_Interface;
 using JetEazy.ControlSpace.MotionSpace;
-using JetEazy.GdxCore3;
 using JetEazy.GdxCore3.Model;
 using JetEazy.ProcessSpace;
 using JetEazy.QMath;
@@ -17,10 +15,11 @@ namespace Eazy_Project_III.ProcessSpace
     public class CompensatingEventArgs : ProcessEventArgs
     {
         public string PhaseName;
-        public QVector MaxDelta;
+        public QVector FinalTarget;
         public QVector InitPos;
         public QVector CurrentPos;
         public QVector Delta;
+        public QVector MaxDelta;
         public bool ContinueToDebug;
     }
 
@@ -177,18 +176,19 @@ namespace Eazy_Project_III.ProcessSpace
             var e = new ProcessEventArgs("live.image", bmp);
             OnLiveImage?.Invoke(this, e);
         }
-        protected bool FireCompensating(XRunContext phase, QVector cur, QVector delta, out bool isMotorPosChangedByClient)
+        protected bool FireCompensating(XRunContext phase, QVector target, QVector cur, QVector delta, out bool isMotorPosChangedByClient)
         {
-            //////isMotorPosChangedByClient = false;
-            //////return phase.Go;
+            ////// isMotorPosChangedByClient = false;
+            ////// return phase.Go;
 
             var e = new CompensatingEventArgs()
             {
                 PhaseName = phase.Name,
                 InitPos = new QVector(CompensationInitPos),
-                MaxDelta = new QVector(MAX_DELTA),
+                FinalTarget = target != null ? new QVector(target) : null,
                 CurrentPos = new QVector(cur),
                 Delta = new QVector(delta),
+                MaxDelta = new QVector(MAX_DELTA),
                 ContinueToDebug = true
             };
 
@@ -212,6 +212,7 @@ namespace Eazy_Project_III.ProcessSpace
 
             return phase.Go;
         }
+
 
         /// <summary>
         /// 補償控制, 所有可能用到的馬達軸編號 <br/>
@@ -241,9 +242,9 @@ namespace Eazy_Project_III.ProcessSpace
                 for (int i = 0; i < N_MOTORS; i++)
                 {
                     // 搭配 PLCMotionClass 實作
-                    // 中轉 float
-                    int N = (int)Math.Round((float)world[i] / (float)PERCISIONS[i]);
-                    u[i] = (double)Math.Round((float)PERCISIONS[i] * N, 4);
+                    // 中轉 float 可能會有誤差
+                    int N = (int)Math.Round(world[i] / PERCISIONS[i]);
+                    u[i] = (double)Math.Round((double)PERCISIONS[i] * N, 4);
                 }
                 return u;
             }
@@ -334,7 +335,7 @@ namespace Eazy_Project_III.ProcessSpace
             for (int i = 0; i < N_MOTORS; i++)
                 pos[i] = BlackBoxMotors[i].GetPos();
             //> return ax_convert_to_physical_unit(pos);
-            return AxisUnitConvert.ToWorld(pos);
+            return AxisUnitConvert.ToWorld(pos, true);
         }
         protected void ax_start_move(QVector pos)
         {
@@ -426,7 +427,6 @@ namespace Eazy_Project_III.ProcessSpace
             }
         }
 
-
         /// <summary>
         /// 檢查 motor 狀態是否 ready, 
         /// 有異常時會將 runCtrl.Go = false
@@ -468,12 +468,12 @@ namespace Eazy_Project_III.ProcessSpace
             }
             return runCtrl.Go;
         }
-        protected bool check_debug_mode(XRunContext runCtrl, QVector curMotorPos, QVector incr)
+        protected bool check_debug_mode(XRunContext runCtrl, QVector targetMotorPos, QVector curMotorPos, QVector incr)
         {
             if (!runCtrl.IsDebugMode)
                 return runCtrl.Go;
 
-            bool go = FireCompensating(runCtrl, curMotorPos, incr, out bool isDirty);
+            bool go = FireCompensating(runCtrl, targetMotorPos, curMotorPos, incr, out bool isDirty);
 
             if (!go)
             {
@@ -535,16 +535,12 @@ namespace Eazy_Project_III.ProcessSpace
         }
         protected bool _is_almost_zero(QVector delta)
         {
-            bool yes = true;
-            //yes &= Math.Abs(delta[0]) < MIN_DELTA_XYZ;
-            //yes &= Math.Abs(delta[1]) < MIN_DELTA_XYZ;
-            //yes &= Math.Abs(delta[2]) < MIN_DELTA_XYZ;
-            //yes &= Math.Abs(delta[3]) < MIN_DELTA_XYZ;
-            //yes &= Math.Abs(delta[4]) < MIN_DELTA_A;
-            //yes &= Math.Abs(delta[5]) < MIN_DELTA_A;
             for (int i = 0; i < N_MOTORS; i++)
-                yes &= (Math.Abs(delta[i]) < MIN_DELTA[i]);
-            return yes;
+            {
+                if (Math.Abs(delta[i]) >= MIN_DELTA[i])
+                    return false;
+            }
+            return true;
         }
         protected bool _is_zero(int[] motorParams)
         {

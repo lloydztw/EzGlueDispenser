@@ -296,7 +296,7 @@ namespace Eazy_Project_III.ProcessSpace
                 {
                     //(2.4) 調試模式
                     m_currMotorPos = ax_read_current_pos();
-                    if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
+                    if (!check_debug_mode(runCtrl, null, m_currMotorPos, m_incr))
                         return;
                     //(2.5) Completed
                     if (runCtrl.IsCompleted)
@@ -322,7 +322,7 @@ namespace Eazy_Project_III.ProcessSpace
                 }
 
                 //(6.1) 調試模式
-                if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
+                if (!check_debug_mode(runCtrl, null, m_currMotorPos, m_incr))
                     return;
 
                 //(6.2) IsCompleted ?
@@ -444,7 +444,7 @@ namespace Eazy_Project_III.ProcessSpace
             runCtrl.IsCompleted = AxisUnitConvert.IsSmallVector(m_incr);
 
             //(5.1) 調試模式
-            if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
+            if (!check_debug_mode(runCtrl, m_targetPos, m_currMotorPos, m_incr))
                 return;
 
             //(5.2) Completed

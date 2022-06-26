@@ -371,7 +371,10 @@ namespace JetEazy.ControlSpace.MotionSpace
         }
         public override void Go(float position)
         {
-            int setposition = (int)(position * (float)ONEMMSTEP);
+            //@LETIAN: 原先的寫法會有數值誤差!!!
+            //   案例 position = 36.35 會被處理成 3634 (36.34) 
+            //old code >>> int setposition = (int)(position * (float)ONEMMSTEP);
+            int setposition = (int)Math.Round((double)position * ONEMMSTEP);
 
             StepPositionSet = setposition;
 

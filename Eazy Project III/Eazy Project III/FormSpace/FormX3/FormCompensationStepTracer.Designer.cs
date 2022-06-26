@@ -34,9 +34,6 @@ namespace Eazy_Project_III.FormSpace
             this.btnOpenMotorsTool = new System.Windows.Forms.Button();
             this.btnContinueRun = new System.Windows.Forms.Button();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.lblTitleName = new System.Windows.Forms.Label();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.Column0 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.X = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Y = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -45,6 +42,9 @@ namespace Eazy_Project_III.FormSpace
             this.theta_y = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.theta_z = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.lblTitleName = new System.Windows.Forms.Label();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.panel1 = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -126,53 +126,8 @@ namespace Eazy_Project_III.FormSpace
             this.dataGridView1.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dataGridView1.RowTemplate.Height = 23;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(583, 265);
+            this.dataGridView1.Size = new System.Drawing.Size(583, 319);
             this.dataGridView1.TabIndex = 12;
-            // 
-            // lblTitleName
-            // 
-            this.lblTitleName.BackColor = System.Drawing.Color.Black;
-            this.lblTitleName.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.lblTitleName.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblTitleName.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.lblTitleName.ForeColor = System.Drawing.Color.White;
-            this.lblTitleName.Location = new System.Drawing.Point(4, 0);
-            this.lblTitleName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblTitleName.Name = "lblTitleName";
-            this.lblTitleName.Size = new System.Drawing.Size(583, 31);
-            this.lblTitleName.TabIndex = 15;
-            this.lblTitleName.Text = "Module Name";
-            this.lblTitleName.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.ColumnCount = 1;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.lblTitleName, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 1);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(8, 8);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(1);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 3;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(591, 388);
-            this.tableLayoutPanel1.TabIndex = 16;
-            // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.btnOpenMotorsTool);
-            this.panel1.Controls.Add(this.btnContinueRun);
-            this.panel1.Controls.Add(this.btnCancel);
-            this.panel1.Controls.Add(this.btnStepRun);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(3, 307);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(585, 78);
-            this.panel1.TabIndex = 17;
             // 
             // Column0
             // 
@@ -233,11 +188,56 @@ namespace Eazy_Project_III.FormSpace
             this.Column2.Name = "Column2";
             this.Column2.Width = 66;
             // 
+            // lblTitleName
+            // 
+            this.lblTitleName.BackColor = System.Drawing.Color.Black;
+            this.lblTitleName.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.lblTitleName.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTitleName.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.lblTitleName.ForeColor = System.Drawing.Color.White;
+            this.lblTitleName.Location = new System.Drawing.Point(4, 0);
+            this.lblTitleName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblTitleName.Name = "lblTitleName";
+            this.lblTitleName.Size = new System.Drawing.Size(583, 31);
+            this.lblTitleName.TabIndex = 15;
+            this.lblTitleName.Text = "Module Name";
+            this.lblTitleName.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 1;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.lblTitleName, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 1);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(8, 8);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(1);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 3;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(591, 442);
+            this.tableLayoutPanel1.TabIndex = 16;
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.btnOpenMotorsTool);
+            this.panel1.Controls.Add(this.btnContinueRun);
+            this.panel1.Controls.Add(this.btnCancel);
+            this.panel1.Controls.Add(this.btnStepRun);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(3, 361);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(585, 78);
+            this.panel1.TabIndex = 17;
+            // 
             // FormCompensationStepTracer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(607, 404);
+            this.ClientSize = new System.Drawing.Size(607, 458);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;

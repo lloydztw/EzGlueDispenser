@@ -259,15 +259,17 @@ namespace JetEazy.GdxCore3.Model
 
             var xplane = (mirrorIndex == 0) ? m_xplaneMirror0 : m_xplaneMirror1;
 
-            // pickerTouchPos: INI 沒有設定 U軸, (INI.AttractPos 只有三軸)
+            // pickerTouchPos: INI 分開設定 U軸, (INI.AttractPos 只有三軸)
             var pickerTouchPos = GdxGlobal.INI.AttractPos;
+            var pickerTouchU = GdxGlobal.INI.Offset_ModuleZ;
 
             // 三軸 to 四軸坐標系
             var pickerTouchPosAx4 = pickerTouchPos.Expand(4);
+            pickerTouchPosAx4[3] = pickerTouchU;
             System.Diagnostics.Debug.Assert(pickerTouchPosAx4[0] == pickerTouchPos[0]);
             System.Diagnostics.Debug.Assert(pickerTouchPosAx4[1] == pickerTouchPos[1]);
             System.Diagnostics.Debug.Assert(pickerTouchPosAx4[2] == pickerTouchPos[2]);
-            System.Diagnostics.Debug.Assert(pickerTouchPosAx4[3] == 0);
+            System.Diagnostics.Debug.Assert(pickerTouchPosAx4[3] == pickerTouchU);
 
             // Offsets
             var centerDiff = xplane.RealSurfaceCenter - m_xplaneGolden.RealSurfaceCenter;
