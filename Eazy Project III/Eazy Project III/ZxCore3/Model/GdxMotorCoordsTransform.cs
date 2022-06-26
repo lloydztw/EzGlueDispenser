@@ -27,11 +27,6 @@ namespace JetEazy.GdxCore3.Model
         }
         #endregion
 
-        public GdxMotorCoordsTransform(QVector mv0, double ud0)
-        {
-            //mv_zero = new QVector(mv0);
-            mv_zero = mv0 + new QVector(0, 0, 0, ud0, 0, 0);
-        }
         public GdxMotorCoordsTransform()
         {
         }
@@ -102,6 +97,11 @@ namespace JetEazy.GdxCore3.Model
         }
         #endregion
 
+        public void Init(QVector mv0, double ud0)
+        {
+            //mv_zero = new QVector(mv0);
+            mv_zero = mv0 + new QVector(0, 0, 0, ud0, 0, 0);
+        }
         public QVector CalcSphereCenterCompensation(QVector mv, QVector delta)
         {
             QVector dst = mv + delta;

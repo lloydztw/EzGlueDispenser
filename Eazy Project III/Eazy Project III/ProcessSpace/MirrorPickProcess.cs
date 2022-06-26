@@ -82,6 +82,7 @@ namespace Eazy_Project_III.ProcessSpace
         }
         #endregion
 
+
         public static MirrorPickProcess Instance
         {
             get
@@ -92,14 +93,13 @@ namespace Eazy_Project_III.ProcessSpace
             }
         }
 
-
         public override void Start(params object[] args)
         {
             base.Start(args);
         }
 
         public override void Tick()
-        {           
+        {
             var Process = this;
 
             if (Process.IsOn)
@@ -170,14 +170,15 @@ namespace Eazy_Project_III.ProcessSpace
                         #endregion
                         break;
 
+
                     #region 测试平面度
 
                     case 10:
                         if (Process.IsTimeup)
                         {
                             //> 开始循环设定 产品 平面度位置
-                            GdxCore.Trace("MirrorPicker.PlanRun", Process, "pointIdx", m_PlaneIndex, "motorPos", m_PlaneRunList[m_PlaneIndex]);
-                            _LOG("雷射量測", "點位", m_PlaneIndex, "寫入PLC馬達控點");
+                            GdxCore.Trace("MirrorPicker.LaserRun", Process, "mirrorIdx", m_PickMirrorIndex, "pointIdx", m_PlaneIndex, "pos", m_PlaneRunList[m_PlaneIndex]);
+                            _LOG("雷射量測", "點位", m_PlaneIndex, "寫入馬達定位目標位置");
 
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 1, m_PlaneRunList[m_PlaneIndex]);
 
@@ -201,12 +202,12 @@ namespace Eazy_Project_III.ProcessSpace
                         break;
                     case 30:
                         if (Process.IsTimeup)
-                        {                            
+                        {
                             if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_PICK, 1))
                             {
                                 //读数据 
-                                //@LETIAN: 雷射讀值(命名 laserZ 以防與 馬達 XYZ 搞混
-                                double laserZ = LEClass.Instance.Snap();
+                                //@LETIAN: 雷射讀值 (命名 laserZ 以防與 馬達 XYZ 搞混)
+                                double laserZ = ax_read_laser();
 
                                 //读数据的xyz位置 提取yz 作为平面度的xy
                                 string[] plane_xyz = m_PlaneRunList[m_PlaneIndex].Split(',').ToArray();
@@ -218,6 +219,8 @@ namespace Eazy_Project_III.ProcessSpace
                                 //> CommonLogClass.Instance.LogMessage("Index=" + m_PlaneIndex.ToString() + ":" + planeNew_xyz, Color.Black);
 
                                 //@LETIAN: LOG 馬達 當下位置 讀值 (for trace and debug)
+                                #region LETIAN_DEBUG
+#if OPT_LETIAN_DEBUG
                                 var curMotorPos = ax_read_current_motor_pos();
                                 _LOG("雷射量測", "點位", m_PlaneIndex, "馬達XYZ", curMotorPos, "Laser量測值", laserZ);
 
@@ -230,11 +233,14 @@ namespace Eazy_Project_III.ProcessSpace
                                     Process.ID = 3010;
                                     return;
                                 }
+#endif
+                                #endregion
 
-                                //@LETIAN: 存入 GdxCore Module 內
+                                //@LETIAN: 把量測到的雷射點位 存入 GdxCore Module 內
                                 GdxCore.CollectLaserPt(m_PickMirrorIndex, m_PlaneIndex, laserZ, m_PlaneRunList[m_PlaneIndex]);
 
                                 //@LETIAN: 下一個雷射測點
+                                GdxCore.Trace("MirrorPicker.LaserNext", Process);
                                 m_PlaneIndex++;
 
                                 Process.NextDuriation = NextDurtimeTmp;
@@ -262,34 +268,12 @@ namespace Eazy_Project_III.ProcessSpace
                                     //@LETIAN: 告知 GdxCore 模組, 已經標測完雷射點位.
                                     GdxCore.BuildLaserCoordsTransform(m_PickMirrorIndex, INI.Instance.Mirror0PlaneHeightPosList);
 
-                                    QPoint3D[] _planeheight = new QPoint3D[INI.Instance.Mirror0PlaneHeightPosList.Count];
-                                    int i = 0;
-                                    while (i < INI.Instance.Mirror0PlaneHeightPosList.Count)
-                                    {
-                                        string _strplane = INI.Instance.Mirror0PlaneHeightPosList[i];
-                                        string[] _strxyz = _strplane.Split(',').ToArray();
-                                        _planeheight[i] = new QPoint3D(double.Parse(_strxyz[0]), double.Parse(_strxyz[1]), double.Parse(_strxyz[2]));
-                                        i++;
-                                    }
+                                    //@GAARA: 平面度計算
+                                    string myHeightStr = ga_calculate_planeness();
 
-                                    QPlane myPlane = new QPlane();
-                                    myPlane.LeastSquareFit(_planeheight);
-
-                                    string myHeightStr = string.Empty;
-
-                                    foreach (string str in m_PlaneRunDataList)
-                                    {
-                                        string[] runStrPlane = str.Split(',').ToArray();
-                                        QPoint3D run = new QPoint3D(double.Parse(runStrPlane[0]), double.Parse(runStrPlane[1]), double.Parse(runStrPlane[2]));
-                                        double runheight = myPlane.GetZLocation(run);
-
-                                        //CommonLogClass.Instance.LogMessage("平面度测试正常", Color.Lime);
-                                        myHeightStr += runheight.ToString() + ",";
-                                    }
-
+                                    //@LETIAN: ? 算完之後, 只顯示於LOG, 沒有其他判定 for Pass/NG ?
                                     CommonLogClass.Instance.LogMessage(myHeightStr, Color.Black);
                                     bOK = true;
-
                                 }
                                 else
                                 {
@@ -316,6 +300,9 @@ namespace Eazy_Project_III.ProcessSpace
 
                     #endregion
 
+
+                    #region 吸料流程_and_移到测试偏移位置_02預備位置
+
                     case 50:
                         if (Process.IsTimeup)
                         {
@@ -339,7 +326,7 @@ namespace Eazy_Project_III.ProcessSpace
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 4, INI.Instance.sMirrorAdjBackLength.ToString() + ",0,0");
 
                             CommonLogClass.Instance.LogMessage("吸嘴 测试偏移 位置写入", Color.Black);
-                            
+
                             GdxCore.Trace("MirrorPicker.SetPostions $$$ end", Process);
                             //GdxCore.Trace("MirrorPicker.IniData", Process, "Mirror1", "PosList", "Pts", INI.Instance.Mirror1PosList);
                             //GdxCore.Trace("MirrorPicker.IniData", Process, "Mirror1", "CaliPos", INI.Instance.Mirror1CaliPos);
@@ -356,12 +343,11 @@ namespace Eazy_Project_III.ProcessSpace
                             //开始启动
 
                             MACHINE.PLCIO.SetIO(IOConstClass.QB1542, true);
-                            MACHINE.PLCIO.ADR_SMALL_LIGHT = true;//測試偏移的燈 提前打開
+                            MACHINE.PLCIO.ADR_SMALL_LIGHT = true;   //測試偏移的燈 提前打開
                             CommonLogClass.Instance.LogMessage("拾取及到达测试位置 启动", Color.Black);
 
                             Process.NextDuriation = NextDurtimeTmp;
                             Process.ID = 70;
-
                         }
                         break;
                     case 70:
@@ -378,6 +364,9 @@ namespace Eazy_Project_III.ProcessSpace
                             }
                         }
                         break;
+
+                    #endregion
+
 
                     #region INITIAL POS
 
@@ -411,13 +400,64 @@ namespace Eazy_Project_III.ProcessSpace
                         break;
 
                         #endregion
-
                 }
             }
         }
 
+
         /// <summary>
-        /// X Y Z (unit: mm)<br/>
+        /// 平面度計算 <br/>
+        /// 將 gaara 的源碼搬移至此, 以方便閱讀
+        /// </summary>
+        /// <returns></returns>
+        private string ga_calculate_planeness()
+        {
+            QPoint3D[] _planeheight = new QPoint3D[INI.Instance.Mirror0PlaneHeightPosList.Count];
+            int i = 0;
+            while (i < INI.Instance.Mirror0PlaneHeightPosList.Count)
+            {
+                string _strplane = INI.Instance.Mirror0PlaneHeightPosList[i];
+                string[] _strxyz = _strplane.Split(',').ToArray();
+                _planeheight[i] = new QPoint3D(double.Parse(_strxyz[0]), double.Parse(_strxyz[1]), double.Parse(_strxyz[2]));
+                i++;
+            }
+
+            QPlane myPlane = new QPlane();
+            myPlane.LeastSquareFit(_planeheight);
+
+            string myHeightStr = string.Empty;
+
+            foreach (string str in m_PlaneRunDataList)
+            {
+                string[] runStrPlane = str.Split(',').ToArray();
+                QPoint3D run = new QPoint3D(double.Parse(runStrPlane[0]), double.Parse(runStrPlane[1]), double.Parse(runStrPlane[2]));
+                double runheight = myPlane.GetZLocation(run);
+
+                //CommonLogClass.Instance.LogMessage("平面度测试正常", Color.Lime);
+                myHeightStr += runheight.ToString() + ",";
+            }
+            return myHeightStr;
+        }
+
+        /// <summary>
+        /// 讀取雷測量測距離 <br/>
+        /// @LETIAN: 包裝為 function 準備將來模擬使用
+        /// </summary>
+        private double ax_read_laser()
+        {
+            if (!GdxGlobal.Facade.IsSimPLC())
+            {
+                return LEClass.Instance.Snap();
+            }
+            else
+            {
+                var laser = GdxGlobal.Facade.GetLaser();
+                return laser.Snap();
+            }
+        }
+
+        /// <summary>
+        /// 讀取馬達XYZ位置 (單位 mm)<br/>
         /// @LETIAN: 2022/06/25
         /// </summary>
         private QVector ax_read_current_motor_pos()

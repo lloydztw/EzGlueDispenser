@@ -6,6 +6,10 @@ using System.Collections.Generic;
 
 namespace JetEazy.GdxCore3.Model
 {
+    /// <summary>
+    /// 局域平面座標系統 <br/>
+    /// @LETIAN: 20220625 creation
+    /// </summary>
     class GdxLocalPlaneCoord
     {
         public bool IsBuilt
@@ -190,19 +194,23 @@ namespace JetEazy.GdxCore3.Model
     }
 
 
+    /// <summary>
+    /// 雷射量測中心補償 <br/>
+    /// @LETIAN: 20220625 creation
+    /// </summary>
     public class GdxLaserCenterCompensator : IDisposable
     {
         #region PRIVATE_DATA
         /// <summary>
         /// (X,Y,Z,L)
         /// </summary>
-        List<QVector>[] _runPtsCollection = new List<QVector>[] { 
+        List<QVector>[] _laserRunPts = new List<QVector>[] { 
             new List<QVector>(),
             new List<QVector>(),
         };
         #endregion
 
-        #region PUBLIC_DATA
+        #region PRIVATE_PLANE_COORDS
         GdxLocalPlaneCoord m_xplaneGolden = new GdxLocalPlaneCoord();
         GdxLocalPlaneCoord m_xplaneMirror0 = new GdxLocalPlaneCoord();
         GdxLocalPlaneCoord m_xplaneMirror1 = new GdxLocalPlaneCoord();
@@ -218,25 +226,22 @@ namespace JetEazy.GdxCore3.Model
 
         public void ResetLaserPtsOnMirror(int mirrorIdx)
         {
-            _runPtsCollection[mirrorIdx].Clear();
+            _laserRunPts[mirrorIdx].Clear();
         }
         public void AddLaserPtOnMirror(int mirrorIdx, QVector pos)
         {
-            _runPtsCollection[mirrorIdx].Add(pos);
+            _laserRunPts[mirrorIdx].Add(pos);
         }
-        public bool BuildMirrorPlaneTransform(int mirrorIdx)
+        public void BuildMirrorPlaneTransform(int mirrorIdx)
         {
+            BuildGoldenPlaneFormula();
             var xplane = mirrorIdx == 0 ? m_xplaneMirror0 : m_xplaneMirror1;
-            xplane.BuildTransform(_runPtsCollection[mirrorIdx]);
+            xplane.BuildTransform(_laserRunPts[mirrorIdx]);
             Save();
-            return false;
         }
-        public bool BuildGoldenPlaneFormula()
+        public void BuildGoldenPlaneFormula()
         {
-            //(0) Golden Source List<(X, Y, Z, Laser)>
-            m_xplaneGolden.BuildTransform(GdxGlobal.INI.GaugeBlockPlanePoses);
-            //Save();
-            return true;
+            m_xplaneGolden.BuildTransform(GdxGlobal.INI.GaugeBlockPlanePoints);
         }
         
         public bool CanCompensate(int mirrorIdx)
@@ -246,27 +251,38 @@ namespace JetEazy.GdxCore3.Model
             else
                 return m_xplaneGolden.IsBuilt && m_xplaneMirror1.IsBuilt;
         }
-        public QVector Compensate(int mirrorIndex, QVector currentXYZU)
+        public QVector CalcCompensation(int mirrorIndex, QVector currentMotorPosAx6)
         {
+            int N6 = currentMotorPosAx6.Dimensions;
             if (!CanCompensate(mirrorIndex))
-                return new QVector(currentXYZU.Dimensions); // no increment
+                return new QVector(N6); // no increment
 
             var xplane = (mirrorIndex == 0) ? m_xplaneMirror0 : m_xplaneMirror1;
 
-            // pickerTouchPos 沒有設定 U
+            // pickerTouchPos: INI 沒有設定 U軸, (INI.AttractPos 只有三軸)
             var pickerTouchPos = GdxGlobal.INI.AttractPos;
-            var pickerTouchPosU = new QVector(4);
-            pickerTouchPosU[0] = pickerTouchPos[0];
-            pickerTouchPosU[1] = pickerTouchPos[1];
-            pickerTouchPosU[2] = pickerTouchPos[2];
-            pickerTouchPosU[3] = 0;
 
+            // 三軸 to 四軸坐標系
+            var pickerTouchPosAx4 = pickerTouchPos.Expand(4);
+            System.Diagnostics.Debug.Assert(pickerTouchPosAx4[0] == pickerTouchPos[0]);
+            System.Diagnostics.Debug.Assert(pickerTouchPosAx4[1] == pickerTouchPos[1]);
+            System.Diagnostics.Debug.Assert(pickerTouchPosAx4[2] == pickerTouchPos[2]);
+            System.Diagnostics.Debug.Assert(pickerTouchPosAx4[3] == 0);
+
+            // Offsets
             var centerDiff = xplane.RealSurfaceCenter - m_xplaneGolden.RealSurfaceCenter;
-            var target = pickerTouchPosU + centerDiff;
-            var targetLD = target[3];
-            var currU = currentXYZU[3];
-            var incrU = (targetLD - currU) * 0.999;
-            var incr = target - currentXYZU;
+            var targetAx4 = pickerTouchPosAx4 + centerDiff;
+
+            // Laser and U
+            double laserD = targetAx4[3];
+            double currU = currentMotorPosAx6[3];
+            double incrU = (laserD - currU) * 0.999;
+
+            // 四軸 to 六軸坐標系
+            var targetAx6 = targetAx4.Expand(N6);
+            var incr = targetAx6 - currentMotorPosAx6;
+
+            // Adjust U axis
             incr[3] = incrU;
             return incr;
         }
@@ -299,10 +315,14 @@ namespace JetEazy.GdxCore3.Model
             if (fileName == null)
                 fileName = getDefaultFileName();
 
+            // RESERVED
         }
+
+        #region PRIVATE_FUNCTIONS
         string getDefaultFileName()
         {
             return @"D:\EVENTLOG\Nlogs\" + GetType().Name + ".json";
         }
+        #endregion
     }
 }

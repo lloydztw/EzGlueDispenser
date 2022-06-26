@@ -214,76 +214,84 @@ namespace Eazy_Project_III.ProcessSpace
         }
 
         /// <summary>
-        /// 補償控制, 所有可能用到的馬達軸編號 
+        /// 補償控制, 所有可能用到的馬達軸編號 <br/>
+        /// X, Y, Z, U, θy, θz
         /// </summary>
         protected readonly static int[] COMP_MOTORS_IDS = new int[] { 0, 1, 2, 6, 7, 8 };
         protected readonly static int N_MOTORS = COMP_MOTORS_IDS.Length;
 
-        public class PlcUnitConvert
+        /// <summary>
+        /// Axis 單位尺度轉換 for X, Y, Z, U, θy, θz <br/>
+        /// 物理世界數學運算的 單位尺度 必須是 ( 1mm, 1mm, 1mm, 1mm, 1deg, 1deg ) <br/>
+        /// Gaara IAxis 單位尺度 是 ( 1mm, 1mm, 1mm, 0.001 mm, 0.0167 deg, 0.0167 deg ) <br/>
+        /// </summary>
+        public class AxisUnitConvert
         {
-            /// <summary>
-            /// 數學運算的 物理單位 必須是 ( mm, mm, mm, mm, degree, degree ) <br/>
-            /// Gaara IAxis 單位是 ( 0.01 mm, 0.01 mm, 0.01 mm, 0.001 mm, 0.0167 deg, 0.0167 deg ) <br/>
-            /// </summary>
-            public static QVector PHYSIC_PER_STEP = new QVector(0.01, 0.01, 0.01, 0.001, 0.0167, 0.0167);
-            public static int[] STEPS_PER_PHYSIC_UNIT = new int[] { 100, 100, 100, 1000, (int)(1 / 0.0167f), (int)(1 / 0.0167f) };
-            public static QVector ROUND(QVector physic, bool inplace = false)
+            public readonly static double[] AXIS_TO_WORLD = new double[]
             {
-                var u = inplace ? physic : new QVector(physic);
+                1, 1, 1, 0.001, 0.0167, 0.0167
+            };
+            public readonly static double[] PERCISIONS = new double[]
+            {
+                0.01, 0.01, 0.01, 0.001, 0.0167, 0.0167
+            };
+            public static QVector Round(QVector world, bool inplace = false)
+            {
+                var u = inplace ? world : new QVector(world);
                 for (int i = 0; i < N_MOTORS; i++)
                 {
-                    int N = STEPS_PER_PHYSIC_UNIT[i];
-                    //int N = (int)(1 / (float)PHYSIC_PER_STEP[i]);
-                    int steps = (int)((float)physic[i] * N);
-                    u[i] = (float)steps / N;
+                    // 搭配 PLCMotionClass 實作
+                    // 中轉 float
+                    int N = (int)Math.Round((float)world[i] / (float)PERCISIONS[i]);
+                    u[i] = (double)Math.Round((float)PERCISIONS[i] * N, 4);
                 }
                 return u;
             }
-            public static QVector ToPLC(QVector v, bool inplace = false)
+            public static QVector ToAxis(QVector world, bool inplace = false)
             {
-                var u = inplace ? v : new QVector(v);
+                var u = inplace ? world : new QVector(world);
                 for (int i = 0; i < N_MOTORS; i++)
                 {
-                    int N = STEPS_PER_PHYSIC_UNIT[i];
-                    //int N = (int)(1 / (float)PHYSIC_PER_STEP[i]);
-                    int steps = (int)((float)v[i] * N);
-                    u[i] = steps;
-                }
-                return u;
-            }
-            public static QVector FromPLC(QVector v, bool inplace = false)
-            {
-                var u = inplace ? v : new QVector(v);
-                for (int i = 0; i < N_MOTORS; i++)
-                {
-                    int N = STEPS_PER_PHYSIC_UNIT[i];
-                    //int N = (int)(1 / (float)PHYSIC_PER_STEP[i]);
-                    float value = ((float)((int)v[i]) / N);
+                    double value = world[i] / AXIS_TO_WORLD[i];
+                    value = Math.Round(value, 4);
                     u[i] = value;
                 }
                 return u;
             }
-            public static bool AreAllSmalSteps(QVector incr, int steps = 2)
+            public static QVector ToWorld(QVector v, bool inplace = false)
+            {
+                var u = inplace ? v : new QVector(v);
+                for (int i = 0; i < N_MOTORS; i++)
+                {
+                    //int N = STEPS_PER_PHYSIC_UNIT[i];
+                    //float value = ((float)((int)v[i]) / N);
+                    //u[i] = value;
+                    double value = v[i] * AXIS_TO_WORLD[i];
+                    value = Math.Round(value, 4);
+                    u[i] = value;
+                }
+                return u;
+            }
+            public static bool IsSmallVector(QVector incr, int steps = 2)
             {
                 bool yes = true;
                 for (int i = 0; i < N_MOTORS; i++)
                 {
-                    int N = STEPS_PER_PHYSIC_UNIT[i];
+                    //int N = STEPS_PER_PHYSIC_UNIT[i];
                     //int N = (int)(1 / (float)PHYSIC_PER_STEP[i]);
-                    int p = (int)((float)incr[i] * N);
-                    yes &= (Math.Abs(p) < steps);
+                    //int p = (int)((float)incr[i] * N);
+                    //yes &= (Math.Abs(p) < steps);
+                    if (Math.Abs(incr[i]) >= PERCISIONS[i] * steps)
+                        return false;
                 }
                 return yes;
             }
         }
-        protected static double DEGREES_PER_PLC_STEP
-        {
-            get { return 1f / PlcUnitConvert.STEPS_PER_PHYSIC_UNIT[5]; }
-        }
         protected static QVector MAX_DELTA = new QVector(0.25, 0.25, 0.25, 0.25, 2.0, 2.0);
-        protected static QVector MIN_DELTA = new QVector(0.010, 0.010, 0.010, 0.010, 0.0167, 0.0167);
-        protected static double STEP_XYZU = MAX_DELTA[0] * 0.2;
-        protected static double STEP_A = PlcUnitConvert.PHYSIC_PER_STEP[5] * 5;
+        protected static QVector MIN_DELTA = new QVector(AxisUnitConvert.PERCISIONS);
+        protected static QVector COMP_STEP = new QVector(AxisUnitConvert.PERCISIONS) * 5;
+        //protected static double STEP_XYZU = MAX_DELTA[0] * 0.2;
+        //protected static double STEP_A = Math.Round(AxisUnitConvert.PERCISIONS[5] * 5, 4);
 
         volatile int m_motorWaitCount = 0;
         IAxis[] _blackboxMotors = null;
@@ -304,56 +312,53 @@ namespace Eazy_Project_III.ProcessSpace
             }
         }
 
+#if(false)
         protected QVector ax_convert_to_physical_unit(QVector pos)
         {
-            // physical_unit == plc_unit (1:1)
-            //////var v = new QVector(pos);
-            //////v[4] = (v[4] * DEGREES_PER_PLC_STEP);
-            //////v[5] = (v[5] * DEGREES_PER_PLC_STEP);
-            //////return v;
-            var v = PlcUnitConvert.FromPLC(pos);
-            return v;
+            pos[4] = pos[4];
+            return pos;
         }
         protected QVector ax_convert_to_plc_unit(QVector pos)
         {
-            //// XYZU
-            //// physical_unit == plc_unit (1:1)
-            //var v = new QVector(pos);
-            //v[4] = Math.Round(v[4] / DEGREES_PER_PLC_STEP);
-            //v[5] = Math.Round(v[5] / DEGREES_PER_PLC_STEP);
-            //return v;
-            var u = PlcUnitConvert.ToPLC(pos);
+            var u = AxisUnitConvert.ToAxis(pos);
             return u;
         }
+#endif
+
+        /// <summary>
+        /// X, Y, Z, U, θy, θz
+        /// </summary>
         protected QVector ax_read_current_pos()
         {
             var pos = new QVector(N_MOTORS);
             for (int i = 0; i < N_MOTORS; i++)
                 pos[i] = BlackBoxMotors[i].GetPos();
-            return ax_convert_to_physical_unit(pos);
+            //> return ax_convert_to_physical_unit(pos);
+            return AxisUnitConvert.ToWorld(pos);
         }
         protected void ax_start_move(QVector pos)
         {
-            var plcPos = ax_convert_to_plc_unit(pos);
+            //var plcPos = ax_convert_to_plc_unit(pos);
+            var ax_pos = AxisUnitConvert.ToAxis(pos);
             if (GdxGlobal.Facade.IsSimMotor())
             {
                 for (int i = 0; i < N_MOTORS; i++)
                 {
                     //BlackBoxMotors[i].Go(plcPos[i], 0);
                     int axisID = COMP_MOTORS_IDS[i];
-                    GdxGlobal.IO.sim_motor_pos(axisID, plcPos[i]);
+                    GdxGlobal.IO.sim_axis_to_pos(axisID, ax_pos[i]);
                 }
             }
             else
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    BlackBoxMotors[i].Go(plcPos[i], 0);
+                    BlackBoxMotors[i].Go(ax_pos[i], 0);
                 }
 
                 for (int i = 4; i < N_MOTORS; i++)
                 {
-                    BlackBoxMotors[i].Go(plcPos[i], 0);
+                    BlackBoxMotors[i].Go(ax_pos[i], 0);
                 }
             }
         }

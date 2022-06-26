@@ -199,6 +199,7 @@
     <Compile Include="ZxCore3\Drivers\IO\Vender_HCFA\GxIoAddress.cs" />
     <Compile Include="ZxCore3\Drivers\IO\Victor_Gaara_Bridges\GdxIoAddressConvertor.cs" />
     <Compile Include="ZxCore3\Drivers\Laser\Interface\IxLaser.cs" />
+    <Compile Include="ZxCore3\Drivers\Laser\Sim\GdxLaserSim.cs" />
     <Compile Include="ZxCore3\Drivers\Laser\Victor_Gaara_Bridges\GdxLaser.cs" />
     <Compile Include="ZxCore3\GdxCore.cs" />
     <Compile Include="ZxCore3\Model\GdxGlobal.cs" />

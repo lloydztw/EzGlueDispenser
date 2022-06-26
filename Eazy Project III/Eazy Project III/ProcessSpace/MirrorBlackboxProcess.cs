@@ -226,12 +226,11 @@ namespace Eazy_Project_III.ProcessSpace
             }
         }
 
-        //static QVector MAX_DELTA = new QVector(0.25, 0.25, 0.25, 0.25, 2, 2);
-        //static QVector MIN_DELTA = new QVector(0.0015, 0.0015, 0.0015, 0.0015, 0.0167, 0.0167);
-        //static double STEP_XYZU = MIN_DELTA[0] * 2;
-        //static double STEP_A = MIN_DELTA[5] * 5;
 
-        static double[] THETA_DIR = new double[] { -1, 1 };         // theta_y, theta_z
+        /// <summary>
+        /// θy, θz 補償方向
+        /// </summary>
+        static double[] THETA_DIR = new double[] { -1, 1 };         // θy, θz
         int[] m_motorParams = new int[2];                           // from coretronics dll
         //double _decay_rate = 0.9;                                 // reserved for smart compensation
         GdxMotorCoordsTransform m_trf;
@@ -240,6 +239,7 @@ namespace Eazy_Project_III.ProcessSpace
         {
             get { return m_phase1.InitMotorPos; }
         }
+
         QVector m_initMotorPos = new QVector(N_MOTORS);
         QVector m_currMotorPos = new QVector(N_MOTORS);
         QVector m_nextMotorPos = new QVector(N_MOTORS);
@@ -260,6 +260,10 @@ namespace Eazy_Project_III.ProcessSpace
             m_phase1.StepFunc = phase1_run_one_step;
             m_phase1.InitMotorPos = new QVector(m_initMotorPos);
             m_phase1.Reset();
+
+            //(2) LOG
+            _LOG("單步最大補償量", COMP_STEP);
+
             return m_phase1;
         }
         void phase1_run_one_step(XRunContext runCtrl)
@@ -311,13 +315,17 @@ namespace Eazy_Project_III.ProcessSpace
                 if (_clip_into_safe_box(m_nextMotorPos))
                     m_incr = m_nextMotorPos - m_currMotorPos;
 
-                //(6.0) delta 小於馬達解析度, 當作完成.
+                //(6) delta 小於馬達解析度, 當作完成.
                 if (false)
+                {
                     runCtrl.IsCompleted = _is_almost_zero(m_incr);
+                }
+
                 //(6.1) 調試模式
                 if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
                     return;
-                //(6.2) Completed
+
+                //(6.2) IsCompleted ?
                 if (runCtrl.IsCompleted)
                     return;
 
@@ -353,9 +361,9 @@ namespace Eazy_Project_III.ProcessSpace
             for (int i = 4, k = 0; i < N_MOTORS; i++, k++)
             {
                 if (motorParams[k] > 0)
-                    incr[i] = STEP_A * THETA_DIR[k];
+                    incr[i] = (COMP_STEP[i] * THETA_DIR[k]);
                 else if (motorParams[k] < 0)
-                    incr[i] = -STEP_A * THETA_DIR[k];
+                    incr[i] = -(COMP_STEP[i] * THETA_DIR[k]);
                 else
                     incr[i] = 0;
             }
@@ -379,14 +387,14 @@ namespace Eazy_Project_III.ProcessSpace
             double sphereCenterOffsetU = (m_mirrorIndex == 0) ?
                         Ini.Mirror1_Offset_Adj :
                         Ini.Mirror2_Offset_Adj;
-
             double u0 = MotorCfg.VirtureZero;
             double theta_z0 = MotorCfg.TheaZVirtureZero;
             double theta_y0 = MotorCfg.TheaYVirtureZero;
 
-            //(3) 
+            //(3) Transform 
             QVector mv0 = this.CompensationInitPos;
-            m_trf = new GdxMotorCoordsTransform(mv0, sphereCenterOffsetU);
+            m_trf = GdxGlobal.Facade.MotorCoordsTransform;
+            m_trf.Init(mv0, sphereCenterOffsetU);
             return m_phase2;
         }
         QVector phase2_calc_target()
@@ -396,9 +404,9 @@ namespace Eazy_Project_III.ProcessSpace
             m_currMotorPos = ax_read_current_pos();
             var cxDelta = m_currMotorPos - initPos;
 
-            //JEZ 補償 目標值
-            var ezDelta = m_trf.CalcSphereCenterCompensation(initPos, cxDelta);
-            var targetPos = m_currMotorPos + ezDelta;
+            //JEZ 球心偏移 補償 目標值
+            var delta = m_trf.CalcSphereCenterCompensation(initPos, cxDelta);
+            var targetPos = m_currMotorPos + delta;
             return targetPos;
         }
         void phase2_run_one_step(XRunContext runCtrl)
@@ -433,7 +441,7 @@ namespace Eazy_Project_III.ProcessSpace
                 m_incr = m_nextMotorPos - m_currMotorPos;
 
             //(5) delta 小於馬達解析度, 當作完成.
-            runCtrl.IsCompleted = PlcUnitConvert.AreAllSmalSteps(m_incr);
+            runCtrl.IsCompleted = AxisUnitConvert.IsSmallVector(m_incr);
 
             //(5.1) 調試模式
             if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
@@ -454,25 +462,14 @@ namespace Eazy_Project_III.ProcessSpace
         QVector phase2_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {
             var incr = target - cur;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < N_MOTORS; i++)
             {
-                double delta = incr[i];
-                if (Math.Abs(delta) > STEP_XYZU)
+                if (Math.Abs(incr[i]) > COMP_STEP[i])
                 {
-                    incr[i] = delta > 0 ? STEP_XYZU : -STEP_XYZU;
+                    incr[i] = incr[i] < 0 ? -COMP_STEP[i] : COMP_STEP[i];
                 }
             }
-            for (int i = 4; i < N_MOTORS; i++)
-            {
-                double delta = incr[i];
-                if (Math.Abs(delta) > STEP_A)
-                {
-                    incr[i] = delta > 0 ? STEP_A : -STEP_A;
-                }
-            }
-
-            PlcUnitConvert.ROUND(incr, true);
-            return incr;
+            return AxisUnitConvert.Round(incr, true);
         }
 
 

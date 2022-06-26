@@ -34,6 +34,7 @@ namespace JetEazy.GdxCore3
             return GdxGlobal.GetLaser(id);
         }
 
+
         public static string GetDllVersion()
         {
             try
@@ -131,6 +132,7 @@ namespace JetEazy.GdxCore3
             }
         }
 
+
         public static void CollectLaserPt(int mirrorIdx, int pointIdx, double laserDist, string ga_motorPt)
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
@@ -153,6 +155,7 @@ namespace JetEazy.GdxCore3
             trf.BuildMirrorPlaneTransform(mirrorIdx);
             System.Diagnostics.Debug.WriteLine(GdxGlobal.INI.GaugeBlockPlanePoints);
         }
+
 
         public static void Trace(string tag, object process, params object[] args)
         {
@@ -184,7 +187,8 @@ namespace JetEazy.GdxCore3
             }
         }
 
-        #region PRIVATE_FUNCTION
+
+        #region PRIVATE_TRACE_FUNCTIONS
         class XWait
         {
             public string Name;
@@ -214,6 +218,34 @@ namespace JetEazy.GdxCore3
                                 LOG.Trace("{0}, ps={1}, mirror={2}", tag, ps_state, args[0]);
                             break;
                         }
+
+                    case "LaserRun":
+                        {
+                            LOG.Trace("{0}, ps={1}, {2}", tag, ps_state, pack(args));
+                            int mirrorIdx = (int)args[1];
+                            int pointIdx = (int)args[3];
+                            // QVector pos = QVector.Parse((string)args[5]);
+                            var laser = GdxGlobal.Facade.GetLaser();
+                            if (laser is Sim.GdxLaser)
+                            {
+                                var mirrorInfo = mirrorIdx == 0 ?
+                                    GdxGlobal.INI.Mirror1 :
+                                    GdxGlobal.INI.Mirror2 ;
+                                var planePt = mirrorInfo.PlanePosList[pointIdx];
+                                double ld = planePt.Z;
+                                ((Sim.GdxLaser)laser).set_simulation_dist(ld);
+                            }
+                        }
+                        break;
+
+                    case "LaserNext":
+                        {
+                            LOG.Trace("{0}, ps={1}, {2}", tag, ps_state, pack(args));
+                            var laser = GdxGlobal.Facade.GetLaser();
+                            if (laser is Sim.GdxLaser)
+                                ((Sim.GdxLaser)laser).set_simulation_dist(-9999);
+                        }
+                        break;
 
                     case "Compensate":
                         {
@@ -305,7 +337,7 @@ namespace JetEazy.GdxCore3
                 }
             }
         }
-        static void sim_motors(ModuleName module, int index, string posStr)
+        static void sim_motors(ModuleName module, int index, string ga_pos_str)
         {
             int axisID;
             switch (module)
@@ -320,10 +352,10 @@ namespace JetEazy.GdxCore3
                     return;
             }
 
-            var pos = QVector.Parse(posStr);
+            var pos = QVector.Parse(ga_pos_str);
             for (int i = 0; i < pos.Dimensions; i++, axisID++)
             {
-                GdxGlobal.IO.sim_motor_pos(axisID, pos[i]);
+                GdxGlobal.IO.sim_axis_to_pos(axisID, pos[i]);
             }
         }
         static int check_wait_count(XWait last_wait, string tag, string[] strs)

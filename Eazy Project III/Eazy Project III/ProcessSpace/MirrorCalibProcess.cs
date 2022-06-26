@@ -16,7 +16,7 @@ namespace Eazy_Project_III.ProcessSpace
 {
     /// <summary>
     /// 中心點偏移補償流程
-    /// @LETIAN: 20220624 加入Phase3 線程支援 互動式調試模式.
+    /// @LETIAN: 20220624 加入Phase3 線程 支援 互動式調試模式.
     /// @LETIAN: 20220619 重新包裝
     /// </summary>
     public class MirrorCalibProcess : MirrorAbsImageProcess
@@ -30,11 +30,6 @@ namespace Eazy_Project_III.ProcessSpace
         /// 判断校正组 跑哪一个Mirror 左边还是右边
         /// </summary>
         int m_mirrorIndex = 0;
-        int Mirror_CalibrateProcessIndex
-        {
-            get { return m_mirrorIndex; }
-            set { m_mirrorIndex = value; }
-        }
         #endregion
 
         #region SINGLETON
@@ -194,7 +189,9 @@ namespace Eazy_Project_III.ProcessSpace
                         if (Process.IsTimeup)
                         {
                             _LOG(PHASE_2);
-                            //> ==============================================
+                            //> =====================================================
+                            //@LETIAN: 現在 中光電已經改成 Go/NoGO 是否還要使用此步驟?
+                            //> =====================================================
                             // 计算偏移值 
                             // 参数中算的解析度或是手动输入
                             // 参数中先记录Mirror的中心位置
@@ -202,7 +199,7 @@ namespace Eazy_Project_III.ProcessSpace
                             // 计算两个中心位置之差
                             // 补偿的是吸嘴模组的y和z轴 相当于画面中的 x和y 
                             // 画面中向左为正 向下为正
-                            //> ==============================================
+                            //> =====================================================
                             PointF ptfOffset = new PointF(0, 0);
                             ptfOffset.X -= RecipeCHClass.Instance.CaliPicCenter.X;
                             ptfOffset.Y -= RecipeCHClass.Instance.CaliPicCenter.Y;
@@ -223,16 +220,9 @@ namespace Eazy_Project_III.ProcessSpace
                                     break;
                             }
 #else
-                            string mirrorPutPos = string.Empty;
-                            switch (Mirror_CalibrateProcessIndex)
-                            {
-                                case 0:
-                                    mirrorPutPos = INI.Instance.Mirror1PutPos;
-                                    break;
-                                case 1:
-                                    mirrorPutPos = INI.Instance.Mirror2PutPos;
-                                    break;
-                            }
+                            string mirrorPutPos = m_mirrorIndex == 0 ?
+                                    INI.Instance.Mirror1PutPos :
+                                    INI.Instance.Mirror2PutPos ;
                             string posPutAdjust = ToolAdjustData(mirrorPutPos, ptfOffset.X, ptfOffset.Y);
 #endif
                             GdxCore.Trace("MirrorCalibration.MoveToPut", Process, "putPos", mirrorPutPos);
@@ -240,7 +230,7 @@ namespace Eazy_Project_III.ProcessSpace
                             GdxCore.Trace("MirrorCalibration.MoveToPut", Process, "adjPos", posPutAdjust);
 
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 3, posPutAdjust);
-                            //MACHINE.PLCIO.ADR_SMALL_LIGHT = false; //<<< 已經於 state (15.4) 關掉
+                            // MACHINE.PLCIO.ADR_SMALL_LIGHT = false; //<<< 已經於 state (15.4) 關掉
 
                             Process.NextDuriation = NextDurtimeTmp;
                             Process.ID = 301;
@@ -268,11 +258,13 @@ namespace Eazy_Project_III.ProcessSpace
                                 //CommonLogClass.Instance.LogMessage("吸嘴模组到达位置", Color.Black);
                                 _LOG("吸嘴模组到达位置");
 
-                                //微調Z=0 thetaY=ready thetaZ=ready
+                                //微調 Z=0 thetaY=ready thetaZ=ready
 
                                 string posStr = "0,";
                                 posStr += MACHINECollection.GetSingleAXISPositionForReady(7) + ",";
                                 posStr += MACHINECollection.GetSingleAXISPositionForReady(8);
+
+                                GdxCore.Trace("MirrorCalibration.Adjust", Process, "Pos", posStr);
                                 MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 1, posStr);
 
                                 //switch (Mirror_CalibrateProcessIndex)
@@ -316,7 +308,8 @@ namespace Eazy_Project_III.ProcessSpace
                                 // CommonLogClass.Instance.LogMessage("校正完成", Color.Black);
                                 // GdxCore.Trace("MirrorCalibration.Completed", Process);
                                 // FireCompleted();
-                                SetNextState(300);
+                                // 進入 PHASE_III
+                                SetNextState(300);  
                             }
                         }
                         break;
@@ -402,6 +395,13 @@ namespace Eazy_Project_III.ProcessSpace
             return res;
         }
 
+        
+        #region CENTER_COMPENSATION_MODULE
+        
+        protected override QVector CompensationInitPos
+        {
+            get { return m_phase3.InitMotorPos; }
+        }
 
         QVector m_initMotorPos = new QVector(N_MOTORS);
         QVector m_currMotorPos = new QVector(N_MOTORS);
@@ -409,10 +409,6 @@ namespace Eazy_Project_III.ProcessSpace
         QVector m_target = new QVector(N_MOTORS);
         QVector m_incr = new QVector(N_MOTORS);
 
-        protected override QVector CompensationInitPos
-        {
-            get { return m_phase3.InitMotorPos; }
-        }
         XRunContext m_phase3 = new XRunContext(PHASE_3, 3000);
         XRunContext phase3_init()
         {
@@ -426,8 +422,12 @@ namespace Eazy_Project_III.ProcessSpace
             m_phase3.Reset();
 
             //(2) Configuration and Calculation
-            //var Ini = INI.Instance;
-            //var MotorCfg = MotorConfig.Instance;
+            var comp = GdxGlobal.Facade.LaserCoordsTransform;
+            if (comp.CanCompensate(m_mirrorIndex))
+            {
+                var delta = comp.CalcCompensation(m_mirrorIndex, m_initMotorPos);
+                m_target = m_initMotorPos + delta;
+            }
 
             //(*) Simulation
             #region SIMULATION
@@ -440,7 +440,7 @@ namespace Eazy_Project_III.ProcessSpace
                     m_target[i] += MAX_DELTA[i] * (rnd.NextDouble() * 0.5 - 1);
                 }
                 _clip_into_safe_box(m_target);
-                PlcUnitConvert.ROUND(m_target, true);
+                AxisUnitConvert.Round(m_target, true);
             }
             #endregion
 
@@ -473,11 +473,13 @@ namespace Eazy_Project_III.ProcessSpace
                 m_incr = m_nextMotorPos - m_currMotorPos;
 
             //(5) delta 小於馬達解析度, 當作完成.
-            runCtrl.IsCompleted = PlcUnitConvert.AreAllSmalSteps(m_incr);
+            runCtrl.IsCompleted = AxisUnitConvert.IsSmallVector(m_incr);
+
             //(5.1) 調試模式
             if (!check_debug_mode(runCtrl, m_currMotorPos, m_incr))
                 return;
-            //(5.2) Completed
+
+            //(5.2) IsCompleted ?
             if (runCtrl.IsCompleted)
                 return;
 
@@ -491,27 +493,20 @@ namespace Eazy_Project_III.ProcessSpace
         }
         QVector phase3_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {
-            return new QVector(N_MOTORS);
+            // DEBUG
+            // return new QVector(N_MOTORS);
 
             var incr = target - cur;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < N_MOTORS; i++)
             {
-                double delta = incr[i];
-                if (Math.Abs(delta) > STEP_XYZU)
+                if (Math.Abs(incr[i]) > COMP_STEP[i])
                 {
-                    incr[i] = delta > 0 ? STEP_XYZU : -STEP_XYZU;
+                    incr[i] = incr[i] < 0 ? -COMP_STEP[i] : COMP_STEP[i];
                 }
             }
-            for (int i = 4; i < N_MOTORS; i++)
-            {
-                double delta = incr[i];
-                if (Math.Abs(delta) > STEP_A)
-                {
-                    incr[i] = delta > 0 ? STEP_A : -STEP_A;
-                }
-            }
-            PlcUnitConvert.ROUND(incr, true);
-            return incr;
-        }        
+            return AxisUnitConvert.Round(incr, true);
+        }
+
+        #endregion
     }
 }

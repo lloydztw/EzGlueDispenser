@@ -1,14 +1,13 @@
-﻿using Eazy_Project_Measure;
-using JetEazy.Drivers.Laser;
+﻿using JetEazy.Drivers.Laser;
 using JetEazy.GdxCore3.Model;
 using System;
 using System.Threading;
 
 
-namespace JetEazy.GdxCore3
+namespace JetEazy.GdxCore3.Sim
 {
     /// <summary>
-    /// 對 Gaara LEClass 的包裝
+    /// IxLaser 之模擬
     /// </summary>
     public class GdxLaser : IxLaser
     {
@@ -26,12 +25,12 @@ namespace JetEazy.GdxCore3
         #endregion
 
         #region PRIVATE_LASER_IMPLEMENT
-        LEClass _ga_laser;
+        private Random _rnd = new Random();
+        private bool _goRandom = true;
         #endregion
 
-        public GdxLaser(LEClass ga_laser)
+        public GdxLaser()
         {
-            _ga_laser = ga_laser;
         }
         public double Distance
         {
@@ -48,7 +47,6 @@ namespace JetEazy.GdxCore3
             Interlocked.Exchange(ref _distance, dist);
             return dist;
         }
-
         public bool IsAutoScanning()
         {
             return (_runFlag || _thread != null);
@@ -64,6 +62,13 @@ namespace JetEazy.GdxCore3
         public void Dispose()
         {
             StopAutoScan();
+        }
+
+        internal void set_simulation_dist(double dist)
+        {
+            dist = Math.Round(dist, PERCISION);
+            Interlocked.Exchange(ref _distance, dist);
+            _goRandom = dist <= -9999;
         }
 
 
@@ -135,19 +140,22 @@ namespace JetEazy.GdxCore3
         #region PRIVATE_HW_ACCESS_FUNCTIONS
         double read_dist_from_hardware()
         {
-            if (_ga_laser != null)
+            if (_goRandom)
             {
-                double d = _ga_laser.Snap();
+                double d = _rnd.NextDouble() * 0.009;
                 d = Math.Round(d, PERCISION);
                 return d;
             }
-            return 0;
+            else
+            {
+                return _distance;
+            }
         }
         void quit_gaara_laser()
         {
             // 加快退出時間
-            if (_ga_laser != null)
-                _ga_laser.CaptureCnt = 1;
+            //if (_ga_laser != null)
+            //    _ga_laser.CaptureCnt = 1;
         }
         #endregion
     }

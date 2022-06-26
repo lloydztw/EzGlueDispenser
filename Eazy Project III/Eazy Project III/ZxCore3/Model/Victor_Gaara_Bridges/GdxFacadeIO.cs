@@ -62,11 +62,12 @@ namespace JetEazy.GdxCore3.Model
         }
 
         #region SIMULATION_FUNCTIONS
-        internal void sim_motor_pos(int axisID, double pos)
+        internal void sim_axis_to_pos(int axisID, double axis_pos)
         {
+            // 此處 axis_pos 是以 gaara PLCMotionClass 設定為單位.
             var motor = GdxGlobal.Facade.GetMotor(axisID);
-            var pmotor = (PLCMotionClass)motor;
-            pmotor.Go((float)pos);
+            var ga_axis = (PLCMotionClass)motor;
+            ga_axis.Go((float)axis_pos);
         }
         void OnPlcSim_WriteUint16(short[] readbuffer, string operationstring, string myname)
         {

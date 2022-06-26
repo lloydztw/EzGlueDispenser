@@ -8,7 +8,7 @@ namespace JetEazy.Drivers.Laser
     {
         event EventHandler<double> OnScanned;
         double Distance { get; }
-        double Scan();
+        double Snap();
         bool IsAutoScanning();
         void StartAutoScan();
         void StopAutoScan();

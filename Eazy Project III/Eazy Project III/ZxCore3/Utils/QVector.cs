@@ -1,6 +1,6 @@
 /****************************************************************************
  *                                                                          
- * Copyright (c) 2009 Jet Eazy Corp. All rights reserved.        
+ * Copyright (c) 2022 Jet Eazy Corp. All rights reserved.        
  *                                                                          
  ***************************************************************************/
 
@@ -11,8 +11,8 @@
  *
  * HISTORY
  *      $Id:$    
+ *      2022/06/26 @LETIAN: ¥[¤J Slice, Expand functions
  *	    2008/12/01 The class is created by LeTian Chang
- *
  * DESCRIPTION
  *      
  *
@@ -60,6 +60,23 @@ namespace JetEazy.QMath
             for (int k = 0, i = start; i < end; i++, k++)
                 v[k] = this[i];
             return v;
+        }
+        public QVector Expand(int dimensions)
+        {
+            if (dimensions > Dimensions)
+            {
+                QVector dst = new QVector(dimensions);
+                Array.Copy(this.m_VD, dst.m_VD, this.m_VD.Length);
+                return dst;
+            }
+            else if(dimensions < Dimensions)
+            {
+                return Slice(0, dimensions);
+            }
+            else
+            {
+                return new QVector(this);
+            }
         }
 
         /// <summary>

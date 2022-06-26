@@ -4,7 +4,7 @@ using Eazy_Project_Interface;
 using Eazy_Project_Measure;
 using JetEazy.ControlSpace.PLCSpace;
 using JetEazy.Drivers.Laser;
-
+using System.Collections.Generic;
 
 namespace JetEazy.GdxCore3.Model
 {
@@ -16,6 +16,7 @@ namespace JetEazy.GdxCore3.Model
     {
         #region PRIVATE_MEMBER
         private IxLaser _laser = null;
+        //private IAxis[] _motors = new IAxis[9];
         #endregion
 
         #region SINGLETON
@@ -55,7 +56,10 @@ namespace JetEazy.GdxCore3.Model
 
             if (_laser == null)
             {
-                _laser = new GdxLaser(getGaaraLaser());
+                if (IsSimPLC())
+                    _laser = new Sim.GdxLaser();
+                else
+                    _laser = new GdxLaser(getGaaraLaser());
             }
 
             if (LaserCoordsTransform == null)
@@ -117,8 +121,24 @@ namespace JetEazy.GdxCore3.Model
         }
         public IAxis GetMotor(int axisID)
         {
+#if(false)
+            if (axisID < _motors.Length)
+            {
+                var motor = _motors[axisID];
+                if (motor == null)
+                {
+                    var machine = (DispensingMachineClass)Eazy_Project_III.Universal.MACHINECollection.MACHINE;
+                    var ga_axis = machine.PLCMOTIONCollection[axisID];
+                    //> motor = new GdxMotor(ga_axis, axisID);
+                    _motors[axisID] = ga_axis;
+                }
+                return motor;
+            }
+            return null;
+#endif
             var machine = (DispensingMachineClass)Eazy_Project_III.Universal.MACHINECollection.MACHINE;
-            return machine.PLCMOTIONCollection[axisID];
+            var ga_axis = machine.PLCMOTIONCollection[axisID];
+            return ga_axis;
         }
 
 

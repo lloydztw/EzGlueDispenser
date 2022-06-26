@@ -3,6 +3,8 @@ using Eazy_Project_III.ControlSpace.MachineSpace;
 using Eazy_Project_III.OPSpace;
 using Eazy_Project_Interface;
 using JetEazy.BasicSpace;
+using JetEazy.Drivers.Laser;
+using JetEazy.GdxCore3;
 using JetEazy.GdxCore3.Model;
 using JetEazy.ProcessSpace;
 using System;
@@ -34,20 +36,17 @@ namespace Eazy_Project_III.ProcessSpace
         {
             get { return Universal.CAMERAS[0]; }
         }
-
         protected ICam ICamForBlackBox
         {
             get { return Universal.CAMERAS[1]; }
         }
-
-        protected IUV m_UV
+        protected IUV UvActuactor
         {
             get { return UV.Instance; }
         }
-
-        protected IAxis GetAxis(int i)
+        protected IAxis GetAxis(int axisID)
         {
-            return ((DispensingMachineClass)MACHINECollection.MACHINE).PLCMOTIONCollection[i];
+            return ((DispensingMachineClass)MACHINECollection.MACHINE).PLCMOTIONCollection[axisID];
         }
 
         protected MachineCollectionClass MACHINECollection
