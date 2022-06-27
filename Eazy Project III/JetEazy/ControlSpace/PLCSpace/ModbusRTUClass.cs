@@ -207,6 +207,8 @@ namespace JetEazy.ControlSpace.PLCSpace
         }
         protected override void WriteCommand()
         {
+            if (IsSimulater)
+                return;
             if (COMPort == null)
                 return;
             if (!COMPort.IsOpen)

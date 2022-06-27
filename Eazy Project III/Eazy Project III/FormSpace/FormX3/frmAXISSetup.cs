@@ -5,6 +5,8 @@ using Eazy_Project_III.OPSpace;
 using Eazy_Project_Measure;
 using JetEazy;
 using JetEazy.BasicSpace;
+using JetEazy.GdxCore3;
+using JetEazy.GdxCore3.Model;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -32,6 +34,7 @@ namespace Eazy_Project_III.FormSpace
         TextBox txtHeightData;
         Button btnCapturePlaneHeight;
         Button btnLEAttractMeasure;
+        Button btnQCLaserMeasure;
 
 
         #region 点胶模组操作
@@ -98,12 +101,13 @@ namespace Eazy_Project_III.FormSpace
             btnDispeningManual = button7;
             cboDispensingTimeList = comboBox1;
             btnOnekeyDispensing = button8;
-
+            btnQCLaserMeasure = button9;
 
             btnManualAuto.Click += BtnManualAuto_Click;
             btnLESnap.Click += BtnLESnap_Click;
             btnCapturePlaneHeight.Click += BtnCapturePlaneHeight_Click;
             btnLEAttractMeasure.Click += BtnLEAttractMeasure_Click;
+            btnQCLaserMeasure.Click += BtnQCLaserMeasure_Click;
 
             btnDispeningGo.Click += BtnDispeningGo_Click;
             btnDispeningHome.Click += BtnDispeningHome_Click;
@@ -149,6 +153,44 @@ namespace Eazy_Project_III.FormSpace
             //FillDisplay();
 
             //LanguageExClass.Instance.EnumControls(this);
+        }
+
+        int MainMirrorIndex = 0;//左邊還是右邊  0左邊 1右邊
+
+        private void BtnQCLaserMeasure_Click(object sender, EventArgs e)
+        {
+            //判断是否在手动状态
+            if (MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 0 && !Universal.IsNoUseIO)
+            {
+                VsMSG.Instance.Warning("手动模式下，无法启动，请检查。");
+                return;
+            }
+
+            string onStrMsg = "是否要進行QC鐳射量測？";
+            string offStrMsg = "是否要停止QC鐳射量測？";
+            string msg = (qclasermeasureprocess.IsOn ? offStrMsg : onStrMsg);
+
+            if (VsMSG.Instance.Question(msg) == DialogResult.OK)
+            {
+                if (!qclasermeasureprocess.IsOn)
+                {
+                    frmUserSelect myUserSelectForm = new frmUserSelect(false);
+                    this.TopMost = false;
+                    if (myUserSelectForm.ShowDialog() == DialogResult.OK)
+                    {
+                        //MainGroupIndex = myUserSelectForm.GetIndex;
+                        MainMirrorIndex = myUserSelectForm.PutIndex;
+                        //MainAloneToMirror = myUserSelectForm.IsAloneToMirror;
+
+                        qclasermeasureprocess.Start();
+                    }
+                    this.TopMost = true;
+                    myUserSelectForm.Dispose();
+                    myUserSelectForm = null;
+                }
+                else
+                    qclasermeasureprocess.Stop();
+            }
         }
 
         private void BtnOnekeyDispensing_Click(object sender, EventArgs e)
@@ -784,6 +826,110 @@ namespace Eazy_Project_III.FormSpace
                 }
             }
         }
+        ProcessClass qclasermeasureprocess = new ProcessClass();
+        void QcLaserMeasureTick()
+        {
+            ProcessClass Process = qclasermeasureprocess;
+
+            if (Process.IsOn)
+            {
+                switch (Process.ID)
+                {
+                    case 5:
+
+                        double x = 0;
+                        double y = 0;
+                        double z = 0;
+
+                        //獲取坐標
+                        GdxCore.GetQCMotorPos(MainMirrorIndex, out x, out y, out z);
+                        CommonLogClass.Instance.LogMessage("QC鐳射量測 " + (MainMirrorIndex == 0 ? "左邊" : "右邊"), Color.Black);
+                        CommonLogClass.Instance.LogMessage("QC鐳射量測 讀取坐標={" + x.ToString() + "," + y.ToString() + "," + z.ToString() + "}", Color.Black);
+
+                        //BY PASS  先看坐標是否正常 確定沒問題再實作  Gaara
+                        Process.Stop();
+                        return;
+                        
+                        MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 1, x.ToString() + "," + y.ToString() + "," + z.ToString());
+
+                        Process.NextDuriation = 500;
+                        Process.ID = 10;
+
+                        break;
+                    case 10:
+                        if (Process.IsTimeup)
+                        {
+                            MACHINE.PLCIO.ModulePositionGO(ModuleName.MODULE_PICK, 1);
+
+                            Process.NextDuriation = 500;
+                            Process.ID = 15;
+                        }
+                        break;
+                    case 15:
+                        if (Process.IsTimeup)
+                        {
+                            if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_PICK, 1) && !Universal.IsNoUseMotor)
+                            {
+                                //读数据 
+                                //@LETIAN: 雷射讀值 (命名 laserZ 以防與 馬達 XYZ 搞混)
+                                double laserZ = ax_read_laser();
+                                if (Math.Abs(laserZ) < 0.0001)
+                                {
+                                    CommonLogClass.Instance.LogMessage("雷射讀值異常", Color.Red);
+                                    //_LOG("雷射讀值異常", Color.Red);
+                                    Process.NextDuriation = 500;
+                                    Process.ID = 3020;
+                                    return;
+                                }
+
+                                if (MainMirrorIndex == 0)
+                                {
+                                    INI.Instance.Mirror1_Offset_Adj = laserZ;
+                                }
+                                else
+                                {
+                                    INI.Instance.Mirror2_Offset_Adj = laserZ;
+                                }
+                                INI.Instance.SaveQCLaser();
+
+                                Process.NextDuriation = 500;
+                                Process.ID = 4010;
+
+                            }
+                        }
+                        break;
+
+                    #region INITIAL POS
+
+                    case 3010:  //@LETIAN: 馬達定位沒到達 INI 所指定位置 (重複利用 4010 退出程序)
+                    case 3020:  //@LETIAN: 雷射讀值異常 
+                    case 4010:  //平面度超標
+                        if (Process.IsTimeup)
+                        {
+                            Process.NextDuriation = 500;
+                            Process.ID = 4020;
+
+                            MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_PICK, 6);
+                            //MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_DISPENSING, 6);
+                            //MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_ADJUST, 6);
+                            CommonLogClass.Instance.LogMessage("吸嘴模组回待命启动", Color.Black);
+                        }
+                        break;
+                    case 4020:  //吸嘴模组待命完成
+                        if (Process.IsTimeup)
+                        {
+                            if (MACHINE.PLCIO.ModulePositionIsReadyComplete(ModuleName.MODULE_PICK, 6) || Universal.IsNoUseIO)
+                            {
+                                CommonLogClass.Instance.LogMessage("吸嘴模组待命完成", Color.Black);
+                                Process.Stop();
+                            }
+                        }
+                        break;
+
+                        #endregion
+                }
+            }
+        }
 
         ProcessClass baseprocess = new ProcessClass();
         void BaseTick()
@@ -813,6 +959,7 @@ namespace Eazy_Project_III.FormSpace
         public void StopAllProcess(string eStrMode = "")
         {
             m_PlaneHeightprocess.Stop();
+            qclasermeasureprocess.Stop();
         }
 
         private void MMotorTimer_Tick(object sender, EventArgs e)
@@ -831,6 +978,7 @@ namespace Eazy_Project_III.FormSpace
 
             PlaneHeightTick();
             LEAttractTick();
+            QcLaserMeasureTick();
 
             DispensingHomeTick();
             DispensingGoTick();
@@ -913,5 +1061,30 @@ namespace Eazy_Project_III.FormSpace
         {
             this.Close();
         }
+
+
+
+        #region PRIVATE FUNTION
+
+        /// <summary>
+        /// 讀取雷測量測距離 <br/>
+        /// @LETIAN: 包裝為 function 準備將來模擬使用
+        /// </summary>
+        private double ax_read_laser()
+        {
+            if (!GdxGlobal.Facade.IsSimPLC())
+            {
+                return LEClass.Instance.Snap();
+            }
+            else
+            {
+                //@ Gaara 看以後是否由 LEClass 直接 Math.Round
+                var laser = GdxGlobal.Facade.GetLaser();
+                double dist = laser.Snap();
+                return System.Math.Round(dist, 4);
+            }
+        }
+
+        #endregion
     }
 }

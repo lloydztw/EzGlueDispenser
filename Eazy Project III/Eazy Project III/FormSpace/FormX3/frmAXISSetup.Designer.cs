@@ -46,6 +46,7 @@ namespace Eazy_Project_III.FormSpace
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.button8 = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -64,7 +65,7 @@ namespace Eazy_Project_III.FormSpace
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnTopMost = new System.Windows.Forms.ToolStripButton();
             this.btnExit = new System.Windows.Forms.ToolStripButton();
-            this.button8 = new System.Windows.Forms.Button();
+            this.button9 = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -214,6 +215,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.button9);
             this.groupBox1.Controls.Add(this.groupBox2);
             this.groupBox1.Controls.Add(this.button4);
             this.groupBox1.Controls.Add(this.button3);
@@ -244,6 +246,17 @@ namespace Eazy_Project_III.FormSpace
             this.groupBox2.TabIndex = 28;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "点胶相关操作";
+            // 
+            // button8
+            // 
+            this.button8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button8.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button8.Location = new System.Drawing.Point(6, 188);
+            this.button8.Name = "button8";
+            this.button8.Size = new System.Drawing.Size(105, 50);
+            this.button8.TabIndex = 35;
+            this.button8.Text = "一鍵點膠測試";
+            this.button8.UseVisualStyleBackColor = false;
             // 
             // label3
             // 
@@ -315,7 +328,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button4.Location = new System.Drawing.Point(37, 230);
+            this.button4.Location = new System.Drawing.Point(8, 208);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(105, 50);
             this.button4.TabIndex = 27;
@@ -326,7 +339,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button3.Location = new System.Drawing.Point(37, 174);
+            this.button3.Location = new System.Drawing.Point(8, 152);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(105, 50);
             this.button3.TabIndex = 26;
@@ -336,7 +349,7 @@ namespace Eazy_Project_III.FormSpace
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(355, 137);
+            this.label1.Location = new System.Drawing.Point(326, 115);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(17, 12);
             this.label1.TabIndex = 25;
@@ -344,7 +357,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(148, 134);
+            this.textBox1.Location = new System.Drawing.Point(119, 112);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(201, 21);
             this.textBox1.TabIndex = 24;
@@ -353,7 +366,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button2.Location = new System.Drawing.Point(37, 118);
+            this.button2.Location = new System.Drawing.Point(8, 96);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(105, 50);
             this.button2.TabIndex = 23;
@@ -364,7 +377,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button1.Location = new System.Drawing.Point(37, 62);
+            this.button1.Location = new System.Drawing.Point(8, 40);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(105, 50);
             this.button1.TabIndex = 22;
@@ -434,16 +447,16 @@ namespace Eazy_Project_III.FormSpace
             this.btnExit.Text = "退出";
             this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
-            // button8
+            // button9
             // 
-            this.button8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button8.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button8.Location = new System.Drawing.Point(6, 188);
-            this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(105, 50);
-            this.button8.TabIndex = 35;
-            this.button8.Text = "一鍵點膠測試";
-            this.button8.UseVisualStyleBackColor = false;
+            this.button9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button9.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button9.Location = new System.Drawing.Point(8, 264);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(105, 50);
+            this.button9.TabIndex = 29;
+            this.button9.Text = "QC Laser量测";
+            this.button9.UseVisualStyleBackColor = false;
             // 
             // frmAXISSetup
             // 
@@ -511,5 +524,6 @@ namespace Eazy_Project_III.FormSpace
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button button8;
+        private System.Windows.Forms.Button button9;
     }
 }

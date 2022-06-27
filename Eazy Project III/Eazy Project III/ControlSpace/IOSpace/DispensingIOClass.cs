@@ -476,9 +476,9 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
         private void MotorPickPosition(int eindex, string epos)
         {
             string[] mypos = epos.Split(',').ToArray();
-            int ix = (int)(float.Parse(mypos[0]) * ONEMMSTEP);
-            int iy = (int)(float.Parse(mypos[1]) * ONEMMSTEP);
-            int iz = (int)(float.Parse(mypos[2]) * ONEMMSTEP);
+            int ix = (int)(double.Parse(mypos[0]) * ONEMMSTEP);
+            int iy = (int)(double.Parse(mypos[1]) * ONEMMSTEP);
+            int iz = (int)(double.Parse(mypos[2]) * ONEMMSTEP);
 
             int iaddressx = 1100 + eindex;
             AddressClass addressx = new AddressClass("0:MW" + iaddressx.ToString());
@@ -556,9 +556,9 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
         private void MotorDispensingPosition(int eindex, string epos)
         {
             string[] mypos = epos.Split(',').ToArray();
-            int ix = (int)(float.Parse(mypos[0]) * ONEMMSTEP);
-            int iy = (int)(float.Parse(mypos[1]) * ONEMMSTEP);
-            int iz = (int)(float.Parse(mypos[2]) * ONEMMSTEP);
+            int ix = (int)(double.Parse(mypos[0]) * ONEMMSTEP);
+            int iy = (int)(double.Parse(mypos[1]) * ONEMMSTEP);
+            int iz = (int)(double.Parse(mypos[2]) * ONEMMSTEP);
 
             int iaddressx = 1130 + eindex;
             AddressClass addressx = new AddressClass("0:MW" + iaddressx.ToString());

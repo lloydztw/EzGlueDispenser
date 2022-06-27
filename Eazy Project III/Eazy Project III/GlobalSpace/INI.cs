@@ -288,12 +288,12 @@ namespace Eazy_Project_III
 
         [CategoryAttribute(Cat00), DescriptionAttribute("")]
         //[Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
-        [DisplayName("05Mirror1相對位置補償")]
+        [DisplayName("05Mirror1 QC laser 量測值")]
         [Browsable(X3Visable)]
         public double Mirror1_Offset_Adj { get; set; } = 0;
         [CategoryAttribute(Cat00), DescriptionAttribute("")]
         //[Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
-        [DisplayName("06Mirror2相對位置補償")]
+        [DisplayName("06Mirror2 QC laser 量測值")]
         [Browsable(X3Visable)]
         public double Mirror2_Offset_Adj { get; set; } = 0;
         #endregion
@@ -715,6 +715,11 @@ namespace Eazy_Project_III
         {
             WriteINIValue("Basic", "sMirror0PlaneHeightPosList", sMirror0PlaneHeightPosList.ToString(), INIFILE);
             Mirror0PlaneHeightPosList = sMirror0PlaneHeightPosList.Split(';').ToList();
+        }
+        public void SaveQCLaser()
+        {
+            WriteINIValue("Basic", "Mirror1_Offset_Adj", Mirror1_Offset_Adj.ToString(), INIFILE);
+            WriteINIValue("Basic", "Mirror2_Offset_Adj", Mirror2_Offset_Adj.ToString(), INIFILE);
         }
     }
 }

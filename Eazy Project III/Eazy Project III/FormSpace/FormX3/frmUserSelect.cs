@@ -46,10 +46,15 @@ namespace Eazy_Project_III.FormSpace
             get { return checkBox1.Checked; }
         }
 
-        public frmUserSelect()
+        public frmUserSelect(bool eVisable = true)
         {
             InitializeComponent();
             this.Load += FrmUserSelect_Load;
+
+            label1.Visible = eVisable;
+            label2.Visible = eVisable;
+            groupBox1.Visible = eVisable;
+            checkBox1.Visible = eVisable;
         }
 
         private void FrmUserSelect_Load(object sender, EventArgs e)

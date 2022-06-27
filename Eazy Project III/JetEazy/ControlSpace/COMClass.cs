@@ -522,12 +522,12 @@ namespace JetEazy.ControlSpace
             return retStr;
         }
 
-        public virtual bool Open(string FileName,bool issimulator)
-        {   
+        public virtual bool Open(string FileName, bool issimulator)
+        {
             bool ret = false;
 
             string Str = "";
-            string [] strs;
+            string[] strs;
             string[] valstr;
 
             IsSimulater = issimulator;
@@ -563,7 +563,7 @@ namespace JetEazy.ControlSpace
 
                     myReadStatus = ReadStatus.INITIAL;
                     continue;
-                } 
+                }
                 else if (str.IndexOf("[Normal") > -1)
                 {
                     NormalIndex = InitialIndex;
@@ -633,7 +633,7 @@ namespace JetEazy.ControlSpace
                         break;
                     case ReadStatus.NORMAL:
                         CommandList.Add(new CMDClass(str));
-                        NormalIndex ++;
+                        NormalIndex++;
 
                         //CommandListToTemp.Add(new CMDClass(str));
                         //NormalTempIndex++;
@@ -646,7 +646,7 @@ namespace JetEazy.ControlSpace
                         CommandListToTemp.Add(new CMDClass(str));
                         NormalTempIndex++;
                         break;
-                        
+
                     case ReadStatus.OTHER:
                         valstr = str.Split('=');
                         switch (valstr[0].Trim())
@@ -657,12 +657,18 @@ namespace JetEazy.ControlSpace
                             case "Retry":
                                 RetryCount = int.Parse(valstr[1].Trim());
                                 break;
+                            case "IsDebug":
+                                IsSimulater = valstr[1].Trim() == "1";
+                                break;
                         }
                         break;
                 }
             }
 
-            ret = Connect();
+            if (!IsSimulater)
+                ret = Connect();
+            else
+                ret = true;
 
             return ret;
         }
@@ -817,6 +823,8 @@ namespace JetEazy.ControlSpace
 
         public virtual void Close()
         {
+            if (IsSimulater)
+                return;
             if (COMPort != null)
             {
                 if (COMPort.IsOpen)
