@@ -14,8 +14,8 @@ namespace Eazy_Project_III
     public class Universal : JetEazy.Universal
     {
         public static bool IsNoUseCCD = false;      //<<< 無效改由 ICam.ISim() 判斷
-        public static bool IsNoUseIO = true;
-        public static bool IsNoUseMotor = true;
+        public static bool IsNoUseIO = false;
+        public static bool IsNoUseMotor = false;
 
         public static string VersionDate = "2022/06/21";
 

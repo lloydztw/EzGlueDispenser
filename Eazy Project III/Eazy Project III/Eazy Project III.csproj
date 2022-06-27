@@ -22,7 +22,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;OPT_LETIAN_DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;OPT_LETIAN_DEBUG | OPT_LIVE_IMAGE_STRESS_TEST</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -176,6 +176,7 @@
     <Compile Include="ProcessSpace\BaseProcess.cs" />
     <Compile Include="ProcessSpace\MirrorAbsImageProcess.cs" />
     <Compile Include="ProcessSpace\MirrorBlackboxProcess.cs" />
+    <Compile Include="ProcessSpace\TestLiveImageProcess.cs" />
     <Compile Include="ProcessSpace\MirrorCalibProcess.cs" />
     <Compile Include="ProcessSpace\MirrorDispenseProcess.cs" />
     <Compile Include="ProcessSpace\MirrorPickProcess.cs" />

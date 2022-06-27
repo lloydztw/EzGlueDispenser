@@ -48,9 +48,10 @@
             this.button3 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.x3INPUTUI1 = new Eazy_Project_III.UISpace.IOSpace.X3INPUTUI();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.x3INPUTUI1 = new Eazy_Project_III.UISpace.IOSpace.X3INPUTUI();
+            this.btnTestLiveImaging = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -237,6 +238,7 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.btnTestLiveImaging);
             this.tabPage3.Controls.Add(this.button10);
             this.tabPage3.Controls.Add(this.button5);
             this.tabPage3.Controls.Add(this.button3);
@@ -244,7 +246,7 @@
             this.tabPage3.Location = new System.Drawing.Point(4, 25);
             this.tabPage3.Margin = new System.Windows.Forms.Padding(4);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(792, 263);
+            this.tabPage3.Size = new System.Drawing.Size(804, 263);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "調試";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -305,9 +307,18 @@
             this.tabPage2.Margin = new System.Windows.Forms.Padding(4);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(4);
-            this.tabPage2.Size = new System.Drawing.Size(792, 263);
+            this.tabPage2.Size = new System.Drawing.Size(804, 263);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "PLC輸入狀態";
+            // 
+            // x3INPUTUI1
+            // 
+            this.x3INPUTUI1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.x3INPUTUI1.Location = new System.Drawing.Point(4, 4);
+            this.x3INPUTUI1.Margin = new System.Windows.Forms.Padding(5);
+            this.x3INPUTUI1.Name = "x3INPUTUI1";
+            this.x3INPUTUI1.Size = new System.Drawing.Size(796, 255);
+            this.x3INPUTUI1.TabIndex = 0;
             // 
             // groupBox1
             // 
@@ -332,14 +343,17 @@
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
             // 
-            // x3INPUTUI1
+            // btnTestLiveImaging
             // 
-            this.x3INPUTUI1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.x3INPUTUI1.Location = new System.Drawing.Point(4, 4);
-            this.x3INPUTUI1.Margin = new System.Windows.Forms.Padding(5);
-            this.x3INPUTUI1.Name = "x3INPUTUI1";
-            this.x3INPUTUI1.Size = new System.Drawing.Size(784, 255);
-            this.x3INPUTUI1.TabIndex = 0;
+            this.btnTestLiveImaging.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
+            this.btnTestLiveImaging.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnTestLiveImaging.Location = new System.Drawing.Point(603, 25);
+            this.btnTestLiveImaging.Margin = new System.Windows.Forms.Padding(4);
+            this.btnTestLiveImaging.Name = "btnTestLiveImaging";
+            this.btnTestLiveImaging.Size = new System.Drawing.Size(140, 62);
+            this.btnTestLiveImaging.TabIndex = 20;
+            this.btnTestLiveImaging.Text = "05. 單獨測試連續取像";
+            this.btnTestLiveImaging.UseVisualStyleBackColor = false;
             // 
             // MainGdx3UI
             // 
@@ -388,5 +402,6 @@
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Button button2;
         private IOSpace.X3INPUTUI x3INPUTUI1;
+        private System.Windows.Forms.Button btnTestLiveImaging;
     }
 }

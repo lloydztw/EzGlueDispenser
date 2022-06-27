@@ -121,7 +121,6 @@ namespace Eazy_Project_III.UISpace.MainSpace
             btnManual_Auto = button1;
             btnManual_Auto.Click += BtnManual_Auto_Click;
 
-
             btnStart.Click += BtnStart_Click;
             btnStop.Click += BtnStop_Click;
             btnClearAlarm.Click += BtnClearAlarm_Click;
@@ -132,6 +131,13 @@ namespace Eazy_Project_III.UISpace.MainSpace
             btnCalibrateProcess.Click += BtnCalibrateProcess_Click;
             btnPutProcess.Click += BtnPutProcess_Click;
             btnDispensingProcess.Click += BtnDispensingProcess_Click;
+
+#if OPT_LIVE_IMAGE_STRESS_TEST
+            btnTestLiveImaging.Click += btnTestLiveImaging_Click;
+            btnTestLiveImaging.Visible = true;
+#else
+            btnTestLiveImaging.Visible = false;
+#endif
 
             //MACHINE.EVENT.Initial(lsbEvent);
             MACHINE.EVENT.Initial(lblAlarm);
@@ -196,20 +202,22 @@ namespace Eazy_Project_III.UISpace.MainSpace
             //_INPUTUI.Tick();
             _X3INPUTUI.Tick();
 
-            //ResetTick();
-            //PickTick();
-            //CalibrateTick();
-            //BlackboxTick();
-            //DispensingTick();
-            //MainProcessTick();
+            ////ResetTick();
+            ////PickTick();
+            ////CalibrateTick();
+            ////BlackboxTick();
+            ////DispensingTick();
+            ////MainProcessTick();
 
-            m_resetprocess.Tick();
-            m_pickprocess.Tick();
-            m_calibrateprocess.Tick();
-            m_blackboxprocess.Tick();
-            m_dispensingprocess.Tick();
-            m_mainprocess.Tick();
-            //> m_BuzzerProcess.Tick();
+            ////m_resetprocess.Tick();
+            ////m_pickprocess.Tick();
+            ////m_calibrateprocess.Tick();
+            ////m_blackboxprocess.Tick();
+            ////m_dispensingprocess.Tick();
+            ////m_mainprocess.Tick();
+            //////> m_BuzzerProcess.Tick();
+            
+            TickAllProcesses();
 
 
             btnManual_Auto.BackColor = (MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 1 ? Color.Red : Color.Lime);
@@ -222,6 +230,8 @@ namespace Eazy_Project_III.UISpace.MainSpace
             btnCalibrateProcess.BackColor = (m_calibrateprocess.IsOn ? Color.Red : Color.FromArgb(192, 255, 192));
             btnPutProcess.BackColor = (m_blackboxprocess.IsOn ? Color.Red : Color.FromArgb(192, 255, 192));
             btnDispensingProcess.BackColor = (m_dispensingprocess.IsOn ? Color.Red : Color.FromArgb(192, 255, 192));
+
+            btnTestLiveImaging.BackColor = (m_testLiveImageProcess.IsOn ? Color.Red : Color.FromArgb(255, 224, 192));
 
             AlarmUITick();
         }
@@ -431,6 +441,26 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     m_resetprocess.Start();
                 else
                     m_resetprocess.Stop();
+            }
+        }
+        private void btnTestLiveImaging_Click(object sender, EventArgs e)
+        {
+            var ts = m_testLiveImageProcess;
+            if (ts.IsOn)
+            {
+                ts.Stop();
+                System.Threading.Thread.Sleep(100);
+            }
+            else
+            {
+                int camID = 0;
+                var tag = btnTestLiveImaging.Tag;
+                if (tag != null)
+                    int.TryParse(tag.ToString(), out camID);
+                camID = (camID + 1) % 2;
+                btnTestLiveImaging.Tag = camID;
+                ts.Start(camID);
+                System.Threading.Thread.Sleep(100);
             }
         }
 
@@ -749,6 +779,10 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 return MirrorDispenseProcess.Instance;
             }
         }
+        BaseProcess m_testLiveImageProcess
+        {
+            get { return TestLiveImageProcess.Instance; }
+        }
         #endregion
 
 
@@ -761,6 +795,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             m_dispensingprocess.Stop();
             m_resetprocess.Stop();
             m_BuzzerProcess.Stop();
+            m_testLiveImageProcess.Stop();
 
             switch (reason)
             {
@@ -790,6 +825,22 @@ namespace Eazy_Project_III.UISpace.MainSpace
             ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveImage += process_OnLiveImage;
             ((MirrorCalibProcess)m_calibrateprocess).OnLiveCompensating += process_OnLiveCompensating;
             ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveCompensating += process_OnLiveCompensating;
+
+            //TEST
+#if OPT_LIVE_IMAGE_STRESS_TEST
+            ((TestLiveImageProcess)m_testLiveImageProcess).OnLiveImage += process_OnLiveImage;
+#endif
+        }
+        void TickAllProcesses()
+        {
+            m_resetprocess.Tick();
+            m_pickprocess.Tick();
+            m_calibrateprocess.Tick();
+            m_blackboxprocess.Tick();
+            m_dispensingprocess.Tick();
+            m_mainprocess.Tick();
+            //> m_BuzzerProcess.Tick();
+            m_testLiveImageProcess.Tick();
         }
 
 
@@ -844,7 +895,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     else
                     {
                         var bmp = (Bitmap)e.Tag;
-                        m_DispUI.SetDisplayImage(bmp);
+                        var bmpShow = new Bitmap(bmp);
+                        m_DispUI.SetDisplayImage(bmpShow);
+                        bmp.Dispose();
                     }
                 }
                 catch (Exception ex)
@@ -988,5 +1041,6 @@ namespace Eazy_Project_III.UISpace.MainSpace
             }
         }
         #endregion
+
     }
 }
