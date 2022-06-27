@@ -1036,7 +1036,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 c.Width = rcc.Width;
                 if(c is PictureBox)
                 {
-                    c.Height = rcc.Bottom - c.Top;
+                    c.Height = dispUI1.Bottom - c.Top;
                 }
             }
         }
