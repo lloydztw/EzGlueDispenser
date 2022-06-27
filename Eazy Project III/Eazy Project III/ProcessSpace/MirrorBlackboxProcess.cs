@@ -233,6 +233,8 @@ namespace Eazy_Project_III.ProcessSpace
         }
 
 
+        #region COMPENSATION_MODULES
+
         /// <summary>
         /// θy, θz 補償方向
         /// </summary>
@@ -260,6 +262,7 @@ namespace Eazy_Project_III.ProcessSpace
         {
             //(0) Read Motors Current Position as InitPos
             m_initMotorPos = ax_read_current_pos();
+            m_showIDs = new int[] { 3, 4, 5 };
             ax_set_motor_speed(SpeedTypeEnum.GOSLOW);
 
             //(1) Phase Run Context
@@ -381,6 +384,7 @@ namespace Eazy_Project_III.ProcessSpace
         {
             //(0) Read Motors Current Position as InitPos
             m_initMotorPos = ax_read_current_pos();
+            m_showIDs = new int[] { 0, 1, 2, 3 };
 
             //(1) Phase Run Context
             m_phase2.StepFunc = phase2_run_one_step;
@@ -408,6 +412,8 @@ namespace Eazy_Project_III.ProcessSpace
         }
         QVector phase2_calc_target()
         {
+            double cosFactor = 0.8;
+
             //取出 中光電貢獻的補償量
             var initPos = this.CompensationInitPos;
             m_currMotorPos = ax_read_current_pos();
@@ -415,7 +421,7 @@ namespace Eazy_Project_III.ProcessSpace
 
             //JEZ 球心偏移 補償 目標值
             var delta = m_trf.CalcSphereCenterCompensation(initPos, cxDelta);
-            var targetPos = m_currMotorPos + delta;
+            var targetPos = m_currMotorPos + delta * cosFactor;
             return targetPos;
         }
         void phase2_run_one_step(XRunContext runCtrl)
@@ -452,9 +458,13 @@ namespace Eazy_Project_III.ProcessSpace
             //(5) delta 小於馬達解析度, 當作完成.
             runCtrl.IsCompleted = AxisUnitConvert.IsSmallVector(m_incr);
 
-            //(5.1) 調試模式
+            //(5.1) 調試模式 (X,Y,Z,U)
             if (!check_debug_mode(runCtrl, m_targetPos, m_currMotorPos, m_incr))
+            {
+                m_showIDs = null;
                 return;
+            }
+            m_showIDs = null;
 
             //(5.2) Completed
             if (runCtrl.IsCompleted)
@@ -481,6 +491,8 @@ namespace Eazy_Project_III.ProcessSpace
             }
             return AxisUnitConvert.Round(incr, true);
         }
+
+        #endregion
 
 
         void set_projector_light(bool on)

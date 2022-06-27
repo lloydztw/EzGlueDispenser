@@ -22,7 +22,7 @@ namespace Eazy_Project_III.FormSpace
             Load += FormCompensationStepTracer_Load;
             FormClosed += FormCompensationStepTracer_FormClosed;
             lblTitleName.Text = e.PhaseName;
-            
+            adjust_columns();
         }
 
         private void FormCompensationStepTracer_Load(object sender, EventArgs e)
@@ -64,6 +64,34 @@ namespace Eazy_Project_III.FormSpace
             }
         }
 
+        private void adjust_columns()
+        {
+            var dv = dataGridView1;
+            if (false && m_blackboxArgs.ShowIDs != null)
+            {
+                var showIDs = m_blackboxArgs.ShowIDs;
+                int minWidth = 300 / showIDs.Length;
+                for (int c = 1; c < dv.Columns.Count; c++)
+                {
+                    int id = c - 1;
+                    if (Array.IndexOf(showIDs, id) < 0)
+                    {
+                        dv.Columns[c].Visible = false;
+                    }
+                    else
+                    {
+                        dv.Columns[c].MinimumWidth = minWidth;
+                    }
+                }
+            }
+            else
+            {
+                for (int c = 1; c < dv.Columns.Count; c++)
+                {
+                    dv.Columns[c].MinimumWidth = 80;
+                }
+            }
+        }
         private void update_data()
         {
             var e = m_blackboxArgs;
@@ -72,9 +100,6 @@ namespace Eazy_Project_III.FormSpace
             dv.Rows.Add(7);
             var update_row = new Action<int, string, QVector>((rid, txt, vec) =>
             {
-                if (vec != null)
-                    vec = vec.Slice(3, 3);
-
                 var row = dv.Rows[rid];
                 row.Cells[0].Value = txt;
                 for (int c = 1; c < Cols - 1; c++)
@@ -87,7 +112,6 @@ namespace Eazy_Project_III.FormSpace
                 var row = dv.Rows[rid];
                 if (vec != null)
                 {
-                    vec = vec.Slice(3, 3);
                     for (int c = 1; c < Cols - 1; c++)
                     {
                         var v = vec[c - 1];

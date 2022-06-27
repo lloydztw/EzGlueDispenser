@@ -21,6 +21,7 @@ namespace Eazy_Project_III.ProcessSpace
         public QVector Delta;
         public QVector MaxDelta;
         public bool ContinueToDebug;
+        public int[] ShowIDs = null;
     }
 
 
@@ -160,6 +161,9 @@ namespace Eazy_Project_III.ProcessSpace
         }
         #endregion
 
+        #region PROTECTED_DATA
+        protected int[] m_showIDs = new int[] { 3, 4, 5 };
+        #endregion
 
         void init_dirs()
         {
@@ -189,7 +193,8 @@ namespace Eazy_Project_III.ProcessSpace
                 CurrentPos = new QVector(cur),
                 Delta = new QVector(delta),
                 MaxDelta = new QVector(MAX_DELTA),
-                ContinueToDebug = true
+                ContinueToDebug = true,
+                ShowIDs = m_showIDs
             };
 
             OnLiveCompensating?.Invoke(this, e);

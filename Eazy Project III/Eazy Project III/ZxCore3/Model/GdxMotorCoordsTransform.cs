@@ -6,6 +6,8 @@ namespace JetEazy.GdxCore3.Model
 {
     public class GdxMotorCoordsTransform : IDisposable
     {
+        static int MODE = 0;
+
         #region PRIVATE_DATA
         QVector mv_zero = new QVector(6);
         double alpha = -45;
@@ -130,12 +132,24 @@ namespace JetEazy.GdxCore3.Model
                 //double dGY = Y;
                 //double dGZ = Z * cos(a) + u * sin(a);
                 //--------------------------------------------
-                // Let Z == u
-                double u = dGz / (cos + sin) / 2;
-                double Z = u;
-                double X = dGx + Z * sin + u * cos;
-                double Y = dGy;
-                return new QVector(X, Y, Z, u, 0, 0);
+                if (MODE == 0 && Math.Abs(sin) > 0.1)
+                {
+                    // Let Z == 0
+                    double u = dGz / (sin);
+                    double Z = 0;
+                    double Y = dGy;
+                    double X = dGx + Z * sin - u * cos;
+                    return new QVector(X, Y, Z, u, 0, 0);
+                }
+                else
+                {
+                    // Let Z == 0.5 u
+                    double u = dGz / (0.5 * cos + sin);
+                    double Z = u;
+                    double Y = dGy;
+                    double X = dGx + Z * sin - u * cos;
+                    return new QVector(X, Y, Z, u, 0, 0);
+                }
             }
         }
         public QVector MotorToWorld(double X, double Y, double Z, double u)

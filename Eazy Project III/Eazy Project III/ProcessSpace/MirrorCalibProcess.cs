@@ -408,6 +408,7 @@ namespace Eazy_Project_III.ProcessSpace
         XRunContext phase3_init()
         {
             //(0) Read Motors Current Position as InitPos
+            m_showIDs = new int[] { 3, 4, 5 };
             m_initMotorPos = ax_read_current_pos();
             ax_set_motor_speed(SpeedTypeEnum.GOSLOW);
 
@@ -422,21 +423,29 @@ namespace Eazy_Project_III.ProcessSpace
             {
                 var delta = comp.CalcCompensation(m_mirrorIndex, m_initMotorPos);
                 m_targetPos = m_initMotorPos + delta;
+                _clip_into_safe_box(m_targetPos);
+            }
+            else
+            {
+                _LOG("中心偏移補償", "沒有建好雷射量測點", "忽略中...", Color.OrangeRed);
+                m_targetPos = m_initMotorPos;
+                m_phase3.IsDebugMode = false;
+                return m_phase3;
             }
 
             //(*) Simulation
             #region SIMULATION
-            if (GdxGlobal.Facade.IsSimMotor() || GdxGlobal.Facade.IsSimPLC())
-            {
-                var rnd = new Random();
-                m_targetPos = new QVector(m_initMotorPos);
-                for (int i = 0; i < 4; i++)
-                {
-                    m_targetPos[i] += MAX_DELTA[i] * (rnd.NextDouble() * 0.5 - 1);
-                }
-                _clip_into_safe_box(m_targetPos);
-                AxisUnitConvert.Round(m_targetPos, true);
-            }
+            //////if (false && (GdxGlobal.Facade.IsSimMotor() || GdxGlobal.Facade.IsSimPLC()))
+            //////{
+            //////    var rnd = new Random();
+            //////    m_targetPos = new QVector(m_initMotorPos);
+            //////    for (int i = 0; i < 4; i++)
+            //////    {
+            //////        m_targetPos[i] += MAX_DELTA[i] * (rnd.NextDouble() * 0.5 - 1);
+            //////    }
+            //////    _clip_into_safe_box(m_targetPos);
+            //////    AxisUnitConvert.Round(m_targetPos, true);
+            //////}
             #endregion
 
             // U compensation step 增大
