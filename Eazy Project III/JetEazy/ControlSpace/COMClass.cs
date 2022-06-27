@@ -817,8 +817,11 @@ namespace JetEazy.ControlSpace
 
         public virtual void Close()
         {
-
-
+            if (COMPort != null)
+            {
+                if (COMPort.IsOpen)
+                    COMPort.Close();
+            }
         }
         public virtual void SetNormalTemp(bool ebTemp)
         {

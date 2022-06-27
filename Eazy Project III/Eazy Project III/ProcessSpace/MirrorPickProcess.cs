@@ -227,11 +227,11 @@ namespace Eazy_Project_III.ProcessSpace
                                 //> CommonLogClass.Instance.LogMessage("Index=" + m_PlaneIndex.ToString() + ":" + planeNew_xyz, Color.Black);
 
                                 //@LETIAN: LOG 馬達 當下位置 讀值 (for trace and debug)
+                                var curMotorPos = ax_read_current_motor_pos();
+                                _LOG("雷射量測", "點位", m_PlaneIndex, "馬達XYZ", curMotorPos, "Laser量測值", laserZ.ToString("0.000"));
+
                                 #region LETIAN_DEBUG
 #if OPT_LETIAN_DEBUG
-                                var curMotorPos = ax_read_current_motor_pos();
-                                _LOG("雷射量測", "點位", m_PlaneIndex, "馬達XYZ", curMotorPos, "Laser量測值", laserZ);
-
                                 //@LETIAN: 比對 馬達 與 ini 設定值 (比對精度 0.001 mm)
                                 var iniMotorPos = QVector.Parse(m_PlaneRunList[m_PlaneIndex]);
                                 if (!QVector.AreEqual(curMotorPos, iniMotorPos, 3))

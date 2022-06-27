@@ -95,11 +95,14 @@ namespace JetEazy.GdxCore3
                 }
 
                 CoretronicsAPI.CenterCompProcess();
+
+                // True: go
+                // False: no-go
                 go = CoretronicsAPI.getCenterCompInfo();
 
                 //暫時跳過 no-go
-                CommonLogClass.Instance.LogMessage("Coretronics, CenterComp, 暫時跳過 go/no-go !");
-                go = true;
+                // CommonLogClass.Instance.LogMessage("Coretronics, CenterComp, 暫時跳過 go/no-go !");
+                // go = true;
 
                 return go;
             }

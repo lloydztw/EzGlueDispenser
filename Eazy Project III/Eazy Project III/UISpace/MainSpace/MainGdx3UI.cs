@@ -10,6 +10,7 @@ using JetEazy.BasicSpace;
 using JetEazy.ControlSpace;
 using JetEazy.DBSpace;
 using JetEazy.GdxCore3;
+using JetEazy.GdxCore3.Model;
 using JetEazy.ProcessSpace;
 using JzDisplay;
 using JzDisplay.UISpace;
@@ -829,19 +830,26 @@ namespace Eazy_Project_III.UISpace.MainSpace
         {
             if (e.Tag != null && e.Tag is Bitmap)
             {
-                //@LETIAN: 2022/06/20 (for backgroud thread)
-                // bmp 由 sender maintains life cycle.
-                // 由於 DispUI 內部會另行複製 bmp
-                // 所以 在此 Handler Function 內不用 Dispose()
-                if (InvokeRequired)
+                try
                 {
-                    EventHandler<ProcessEventArgs> h = process_OnLiveImage;
-                    this.Invoke(h, sender, e);
+                    //@LETIAN: 2022/06/20 (for backgroud thread)
+                    // bmp 由 sender maintains life cycle.
+                    // 由於 DispUI 內部會另行複製 bmp
+                    // 所以 在此 Handler Function 內不用 Dispose()
+                    if (InvokeRequired)
+                    {
+                        EventHandler<ProcessEventArgs> h = process_OnLiveImage;
+                        this.Invoke(h, sender, e);
+                    }
+                    else
+                    {
+                        var bmp = (Bitmap)e.Tag;
+                        m_DispUI.SetDisplayImage(bmp);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    var bmp = (Bitmap)e.Tag;
-                    m_DispUI.SetDisplayImage(bmp);
+                    GdxGlobal.LOG.Error(ex, "OnLiveImage");
                 }
             }
         }

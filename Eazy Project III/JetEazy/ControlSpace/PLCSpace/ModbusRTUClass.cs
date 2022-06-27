@@ -207,6 +207,11 @@ namespace JetEazy.ControlSpace.PLCSpace
         }
         protected override void WriteCommand()
         {
+            if (COMPort == null)
+                return;
+            if (!COMPort.IsOpen)
+                return;
+
             byte[] bytecmd = StrToHexByte(LastCommad.GetSite() + LastCommad.GetPLCCommad());
             byte[] crc = Crc(bytecmd, 0, (UInt32)bytecmd.Length);
             string strCrc = ByteToHexStr(crc);
@@ -332,6 +337,10 @@ namespace JetEazy.ControlSpace.PLCSpace
         public override void Tick()
         {
             base.Tick();
+        }
+        public override void Close()
+        {
+            base.Close();
         }
 
         //當有Input Trigger時，產生OnTrigger

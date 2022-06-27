@@ -106,10 +106,14 @@ namespace Eazy_Project_III.ProcessSpace
                     case 10:
                         if (Process.IsTimeup)
                         {
+                            _LOG("設定相機非連續模式");
+                            ICamForCali.StopCapture();
+                            ICamForBlackBox.StopCapture();
+
                             int expo = RecipeCHClass.Instance.JudgeCamExpo;
                             _LOG("提前設定曝光時間", expo);
                             ICamForBlackBox.SetExposure(expo);
-                            SetNextState(100);
+                            SetNextState(100, 1000);
                         }
                         break;
 
@@ -476,9 +480,6 @@ namespace Eazy_Project_III.ProcessSpace
 
         void set_projector_light(bool on)
         {
-            // BYPASS
-            return;
-
             var projector = base.ProjectorActuactor;
             if (m_mirrorIndex == 0)
             {
@@ -488,7 +489,7 @@ namespace Eazy_Project_III.ProcessSpace
             else
             {
                 projector.SetColor(Eazy_Project_Interface.ProjectColor.LightGreen, on);
-                projector.SetColor(Eazy_Project_Interface.ProjectColor.LightBlue, on);
+                //projector.SetColor(Eazy_Project_Interface.ProjectColor.LightBlue, on);
                 _LOG(on ? "打藍綠光" : "關藍綠光");
             }
             //MACHINE.PLCIO.ADR_POGO_PIN = on;//調試先不用

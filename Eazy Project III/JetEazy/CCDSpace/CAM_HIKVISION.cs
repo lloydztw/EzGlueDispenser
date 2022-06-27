@@ -37,7 +37,7 @@ namespace JetEazy.ControlSpace
         private bool m_triggerModeOn = false;
         private PictureBox picForMyCameraHandle;// = new PictureBox();
         private int m_number_no = 0;
-
+        private bool m_SanpOK = false;//Get Image OK Sign
 
         public CAM_HIKVISION(PictureBox pbx, int icam_no)
         {
@@ -112,6 +112,7 @@ namespace JetEazy.ControlSpace
         }
         public void TriggerSoftwareX()
         {
+            m_SanpOK = false;//Get Image Start.
             // ch:触发命令 | en:Trigger command
             int nRet = m_MyCamera.MV_CC_SetCommandValue_NET("TriggerSoftware");
             if (MyCamera.MV_OK != nRet)
@@ -121,6 +122,11 @@ namespace JetEazy.ControlSpace
         }
         public Bitmap CaptureBmp(int roattion)
         {
+            if(false == m_SanpOK)
+            {
+                ShowErrorMsg("Get Image Error", 0);
+                return null;
+            }
             if (false == m_bGrabbing)
             {
                 ShowErrorMsg("Not Start Grabbing", 0);
@@ -360,6 +366,7 @@ namespace JetEazy.ControlSpace
 
             AcquisitionMode(MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
             TriggerMode2(MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_ON);
+            TriggerSource(MyCamera.MV_CAM_TRIGGER_SOURCE.MV_TRIGGER_SOURCE_SOFTWARE);
 
             //bnGetParam_Click(null, null);// ch:获取参数 | en:Get parameters
 
@@ -472,6 +479,7 @@ namespace JetEazy.ControlSpace
                     if (nRet == MyCamera.MV_OK)
                     {
                         m_stFrameInfo = stFrameInfo;
+                        m_SanpOK = true;//Get Image Complete.
                     }
                 }
 

@@ -155,6 +155,7 @@ namespace Eazy_Project_III.ProcessSpace
                     case 15:
                         if (Process.IsTimeup)
                         {
+#if (True)
                             _LOG(PHASE_1, "擷取影像");
                             //(15.0) 拍照
                             var cam = ICamForCali;
@@ -175,6 +176,7 @@ namespace Eazy_Project_III.ProcessSpace
                                     return;
                                 }
                             }
+#endif
                             //(15.4) 關燈
                             MACHINE.PLCIO.ADR_SMALL_LIGHT = false;
                             //(15.5) Move Motors (goto 20)
@@ -182,9 +184,9 @@ namespace Eazy_Project_III.ProcessSpace
                         }
                         break;
 
-                    #endregion
+#endregion
 
-                    #region PHASE_II
+#region PHASE_II
                     case 20:
                         if (Process.IsTimeup)
                         {
@@ -313,9 +315,9 @@ namespace Eazy_Project_III.ProcessSpace
                             }
                         }
                         break;
-                    #endregion
+#endregion
 
-                    #region PHASE_III_CETER_COMPENSATION
+#region PHASE_III_CETER_COMPENSATION
 
                     case 300:
                         if (Process.IsTimeup)
@@ -363,9 +365,9 @@ namespace Eazy_Project_III.ProcessSpace
                         }
                         break;
 
-                    #endregion
+#endregion
 
-                    #region EXCEPTIONS
+#region EXCEPTIONS
                     case 9999:
                         if (Process.IsTimeup)
                         {
@@ -374,7 +376,7 @@ namespace Eazy_Project_III.ProcessSpace
                             break;
                         }
                         break;
-                        #endregion
+#endregion
                 }
             }
         }
@@ -396,7 +398,7 @@ namespace Eazy_Project_III.ProcessSpace
         }
 
         
-        #region CENTER_COMPENSATION_MODULE
+#region CENTER_COMPENSATION_MODULE
         
         protected override QVector CompensationInitPos
         {
@@ -430,7 +432,7 @@ namespace Eazy_Project_III.ProcessSpace
             }
 
             //(*) Simulation
-            #region SIMULATION
+#region SIMULATION
             if (GdxGlobal.Facade.IsSimMotor() || GdxGlobal.Facade.IsSimPLC())
             {
                 var rnd = new Random();
@@ -442,7 +444,7 @@ namespace Eazy_Project_III.ProcessSpace
                 _clip_into_safe_box(m_targetPos);
                 AxisUnitConvert.Round(m_targetPos, true);
             }
-            #endregion
+#endregion
 
             // U compensation step 增大
             COMP_STEP[3] = AxisUnitConvert.PERCISIONS[3] * 10;
@@ -509,6 +511,6 @@ namespace Eazy_Project_III.ProcessSpace
             return AxisUnitConvert.Round(incr, true);
         }
 
-        #endregion
+#endregion
     }
 }
