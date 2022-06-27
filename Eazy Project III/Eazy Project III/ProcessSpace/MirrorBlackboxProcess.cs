@@ -97,7 +97,7 @@ namespace Eazy_Project_III.ProcessSpace
                             else
                             {
                                 _LOG("Start", "Mirror", m_mirrorIndex);
-                                set_light(true);
+                                set_projector_light(true);
                                 SetNextState(10);
                             }
                         }
@@ -204,6 +204,7 @@ namespace Eazy_Project_III.ProcessSpace
                             else if (isReady && check_completed(phase))
                             {
                                 _LOG(phase.Name, "完成");
+                                set_projector_light(false);
                                 Stop();
                                 FireCompleted();
                             }
@@ -216,7 +217,7 @@ namespace Eazy_Project_III.ProcessSpace
                         if (Process.IsTimeup)
                         {
                             _LOG("補償中止!", Color.Purple);
-                            set_light(false);
+                            set_projector_light(false);
                             Terminate();
                             break;
                         }
@@ -473,9 +474,23 @@ namespace Eazy_Project_III.ProcessSpace
         }
 
 
-        void set_light(bool on)
+        void set_projector_light(bool on)
         {
-            _LOG(on ? "打光" : "關光");
+            // BYPASS
+            return;
+
+            var projector = base.ProjectorActuactor;
+            if (m_mirrorIndex == 0)
+            {
+                projector.SetColor(Eazy_Project_Interface.ProjectColor.LightRed, on);
+                _LOG(on ? "打紅光" : "關紅光");
+            }
+            else
+            {
+                projector.SetColor(Eazy_Project_Interface.ProjectColor.LightGreen, on);
+                projector.SetColor(Eazy_Project_Interface.ProjectColor.LightBlue, on);
+                _LOG(on ? "打藍綠光" : "關藍綠光");
+            }
             //MACHINE.PLCIO.ADR_POGO_PIN = on;//調試先不用
         }
     }

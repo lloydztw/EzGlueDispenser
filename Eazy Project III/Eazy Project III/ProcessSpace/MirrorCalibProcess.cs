@@ -444,6 +444,9 @@ namespace Eazy_Project_III.ProcessSpace
             }
             #endregion
 
+            // U compensation step 增大
+            COMP_STEP[3] = AxisUnitConvert.PERCISIONS[3] * 10;
+
             return m_phase3;
         }
         void phase3_run_one_step(XRunContext runCtrl)
@@ -488,6 +491,7 @@ namespace Eazy_Project_III.ProcessSpace
             //(8) 下指令
             log_motor_command(runCtrl, m_nextMotorPos, m_incr);
             ax_start_move(m_nextMotorPos);
+            System.Threading.Thread.Sleep(100);
         }
         QVector phase3_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {

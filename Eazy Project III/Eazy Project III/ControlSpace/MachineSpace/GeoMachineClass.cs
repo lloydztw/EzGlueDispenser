@@ -43,9 +43,11 @@ namespace VsCommon.ControlSpace.MachineSpace
     {
         protected int PLCCount = 0;
         protected int MotionCount = 0;
+        protected int ProjectorCount = 0;
 
         public VsCommPLC[] PLCCollection;
         public PLCMotionClass[] PLCMOTIONCollection;
+        public ModbusRTUClass[] ModbusRTUClassCollection;
 
         protected string WORKPATH;
 

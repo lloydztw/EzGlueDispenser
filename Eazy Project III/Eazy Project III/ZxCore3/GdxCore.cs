@@ -18,6 +18,9 @@ namespace JetEazy.GdxCore3
 {
     public class GdxCore
     {
+        static bool OPT_BYPASS_CORETRON_1 = false;
+        static bool OPT_BYPASS_CORETRON_2 = false;
+
         public static void Init()
         {
             GdxGlobal.Init();
@@ -70,9 +73,11 @@ namespace JetEazy.GdxCore3
         }
         public static bool CheckCompensate(Bitmap bmpSrc)
         {
-            // BYPASS
-            // CommonLogClass.Instance.LogMessage("GdxCore.CheckCompensate BYPASS", Color.Yellow);
-            // return true;
+            if (OPT_BYPASS_CORETRON_1)
+            {
+                CommonLogClass.Instance.LogMessage("GdxCore.CheckCompensate BYPASS", Color.Orange);
+                return true;
+            }
 
             try
             {
@@ -106,9 +111,12 @@ namespace JetEazy.GdxCore3
         }
         public static void CalcProjCompensation(Bitmap bmpSrc, int[] motorParams, int projCompType)
         {
-            // BYPASS
-            // CommonLogClass.Instance.LogMessage("GdxCore.CalcProjCompensation BYPASS", Color.Yellow);
-            // return;
+            if (OPT_BYPASS_CORETRON_2)
+            {
+                CommonLogClass.Instance.LogMessage("GdxCore.CalcProjCompensation BYPASS", Color.Orange);
+                return;
+            }
+
 
             try
             {

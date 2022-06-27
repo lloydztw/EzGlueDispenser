@@ -93,6 +93,7 @@
     <Compile Include="ControlSpace\AlarmsClass.cs" />
     <Compile Include="ControlSpace\PLCAlarmsClass.cs" />
     <Compile Include="ControlSpace\PLCSpace\FatekClass.cs" />
+    <Compile Include="ControlSpace\PLCSpace\ModbusRTUClass.cs" />
     <Compile Include="ControlSpace\PLCSpace\Modbus_From_HSL.cs" />
     <Compile Include="ControlSpace\PLCSpace\PLCComm.cs" />
     <Compile Include="DBSpace\AccDBClass.cs" />

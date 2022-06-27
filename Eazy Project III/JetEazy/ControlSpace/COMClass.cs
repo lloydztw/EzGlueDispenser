@@ -397,6 +397,7 @@ namespace JetEazy.ControlSpace
         protected int ReadStart = 0;
         protected char[] ReadBuffer = new char[300];
         protected byte[] ReadBufferByte = new byte[1024];
+        protected string ReadString = "";
 
         public IODataClass IODataBase = new IODataClass();
 
@@ -674,6 +675,7 @@ namespace JetEazy.ControlSpace
             ReadStart = 0;
             ReadBuffer = new char[300];
             ReadBufferByte = new byte[1024];
+            ReadString = "";
         }
 
         protected bool Connect()

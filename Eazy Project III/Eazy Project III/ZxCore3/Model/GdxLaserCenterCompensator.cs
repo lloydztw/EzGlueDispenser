@@ -261,7 +261,7 @@ namespace JetEazy.GdxCore3.Model
 
             // pickerTouchPos: INI 分開設定 U軸, (INI.AttractPos 只有三軸)
             var pickerTouchPos = GdxGlobal.INI.AttractPos;
-            var pickerTouchU = GdxGlobal.INI.Offset_ModuleZ;
+            var pickerTouchU = 0;   // GdxGlobal.INI.Offset_ModuleZ;
 
             // 三軸 to 四軸坐標系
             var pickerTouchPosAx4 = pickerTouchPos.Expand(4);
@@ -271,9 +271,27 @@ namespace JetEazy.GdxCore3.Model
             System.Diagnostics.Debug.Assert(pickerTouchPosAx4[2] == pickerTouchPos[2]);
             System.Diagnostics.Debug.Assert(pickerTouchPosAx4[3] == pickerTouchU);
 
-            // Offsets
+            GdxGlobal.LOG.Trace("pickerTouchPosAx4 {0}", pickerTouchPosAx4);
+            GdxGlobal.LOG.Trace("currentMotorPosAx6 {0}", currentMotorPosAx6);
+            
+            GdxGlobal.LOG.Trace("golden FacadeCenter {0}", m_xplaneGolden.FacadeCenter);
+            GdxGlobal.LOG.Trace("golden RealSurfaceCenter {0}", m_xplaneGolden.RealSurfaceCenter);
+            GdxGlobal.LOG.Trace("golden theta_y {0:0.0000}", m_xplaneGolden.ThetaY);
+            GdxGlobal.LOG.Trace("golden theta_z {0:0.0000}", m_xplaneGolden.ThetaZ);
+
+            GdxGlobal.LOG.Trace("conbiner FacadeCenter {0}", xplane.FacadeCenter);
+            GdxGlobal.LOG.Trace("conbiner RealSurfaceCenter {0}", xplane.RealSurfaceCenter);
+            GdxGlobal.LOG.Trace("conbiner theta_y {0:0.0000}", xplane.ThetaY);
+            GdxGlobal.LOG.Trace("conbiner theta_z {0:0.0000}", xplane.ThetaZ);
+
+
+            // Center Offsets
             var centerDiff = xplane.RealSurfaceCenter - m_xplaneGolden.RealSurfaceCenter;
             var targetAx4 = pickerTouchPosAx4 + centerDiff;
+
+            // Angle Offsets
+            var d_theta_y = m_xplaneGolden.ThetaY - xplane.ThetaY;
+            var d_theta_z = m_xplaneGolden.ThetaZ - xplane.ThetaZ;
 
             // Laser and U
             double laserD = targetAx4[3];
@@ -285,7 +303,22 @@ namespace JetEazy.GdxCore3.Model
             var incr = targetAx6 - currentMotorPosAx6;
 
             // Adjust U axis
+            incr[0] = incr[1] = incr[2] = 0; 
             incr[3] = incrU;
+            incr[4] = d_theta_y;
+            incr[5] = d_theta_z;
+
+            double gPickerU = GdxGlobal.INI.Offset_ModuleZ;
+            double gL = m_xplaneGolden.Lmin + m_xplaneGolden.LcDepth;
+            double cL = xplane.Lmin + xplane.LcDepth;
+            double dL = cL - gL;
+            double targetU = gPickerU + dL;
+            
+            incr = new QVector(currentMotorPosAx6.Dimensions);
+            double dU1 = targetU - currentMotorPosAx6[3];
+            double dU0 = dL;
+            incr[3] = dU0;
+
             return incr;
         }
 
@@ -320,11 +353,11 @@ namespace JetEazy.GdxCore3.Model
             // RESERVED
         }
 
-        #region PRIVATE_FUNCTIONS
+#region PRIVATE_FUNCTIONS
         string getDefaultFileName()
         {
             return @"D:\EVENTLOG\Nlogs\" + GetType().Name + ".json";
         }
-        #endregion
+#endregion
     }
 }

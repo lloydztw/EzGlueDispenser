@@ -48,6 +48,10 @@ namespace Eazy_Project_III.ProcessSpace
         {
             return ((DispensingMachineClass)MACHINECollection.MACHINE).PLCMOTIONCollection[axisID];
         }
+        protected IProjector ProjectorActuactor
+        {
+            get { return Projector.Instance; }
+        }
 
         protected MachineCollectionClass MACHINECollection
         {

@@ -266,6 +266,39 @@ namespace Eazy_Project_III.OPSpace
             return false;
         }
 
+        /// <summary>
+        /// 控制光機的顔色及開與関
+        /// </summary>
+        /// <param name="eLightColor">設定光機使用的顔色</param>
+        /// <param name="on">開關 true:開 false:関</param>
+        public void SetColor(ProjectColor eLightColor, bool on)
+        {
+            if (MACHINE.ModbusRTUClassCollection.Length <= 0)
+                return;
+            switch (eLightColor)
+            {
+                case ProjectColor.LightRed:
+                    MACHINE.ModbusRTUClassCollection[0].SetOnOff("0000", on);
+                    break;
+                case ProjectColor.LightGreen:
+                    MACHINE.ModbusRTUClassCollection[0].SetOnOff("0001", on);
+                    break;
+                case ProjectColor.LightBlue:
+                    MACHINE.ModbusRTUClassCollection[0].SetOnOff("0002", on);
+                    break;
+            }
+        }
+        /// <summary>
+        /// 設定光機輸出的GAIN值
+        /// </summary>
+        /// <param name="eGainValue">範圍0-100 eg.設定值5 即5%</param>
+        public void SetGain(int eGainValue)
+        {
+            if (MACHINE.ModbusRTUClassCollection.Length <= 0)
+                return;
+            MACHINE.ModbusRTUClassCollection[0].WriteData("0001", eGainValue);
+        }
+
     }
     public class Light : ModuleClass, ILight
     {

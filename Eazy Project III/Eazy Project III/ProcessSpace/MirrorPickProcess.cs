@@ -4,6 +4,7 @@ using JetEazy.BasicSpace;
 using JetEazy.GdxCore3;
 using JetEazy.GdxCore3.Model;
 using JetEazy.QMath;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -208,12 +209,19 @@ namespace Eazy_Project_III.ProcessSpace
                                 //读数据 
                                 //@LETIAN: 雷射讀值 (命名 laserZ 以防與 馬達 XYZ 搞混)
                                 double laserZ = ax_read_laser();
+                                if(Math.Abs(laserZ) < 0.0001)
+                                {
+                                    _LOG("雷射讀值異常", Color.Red);
+                                    Process.NextDuriation = NextDurtimeTmp;
+                                    Process.ID = 3020;
+                                    return;
+                                }
 
                                 //读数据的xyz位置 提取yz 作为平面度的xy
                                 string[] plane_xyz = m_PlaneRunList[m_PlaneIndex].Split(',').ToArray();
 
                                 //组合新位置 用于计算平面度
-                                string planeNew_xyz = plane_xyz[1] + "," + plane_xyz[2] + "," + laserZ.ToString();
+                                string planeNew_xyz = plane_xyz[1] + "," + plane_xyz[2] + "," + laserZ.ToString("0.000");
                                 m_PlaneRunDataList.Add(planeNew_xyz);
 
                                 //> CommonLogClass.Instance.LogMessage("Index=" + m_PlaneIndex.ToString() + ":" + planeNew_xyz, Color.Black);
@@ -371,6 +379,7 @@ namespace Eazy_Project_III.ProcessSpace
                     #region INITIAL POS
 
                     case 3010:  //@LETIAN: 馬達定位沒到達 INI 所指定位置 (重複利用 4010 退出程序)
+                    case 3020:  //@LETIAN: 雷射讀值異常 
                     case 4010:  //平面度超標
                         if (Process.IsTimeup)
                         {
@@ -451,8 +460,10 @@ namespace Eazy_Project_III.ProcessSpace
             }
             else
             {
+                //@ Gaara 看以後是否由 LEClass 直接 Math.Round
                 var laser = GdxGlobal.Facade.GetLaser();
-                return laser.Snap();
+                double dist = laser.Snap();
+                return System.Math.Round(dist, 4);
             }
         }
 

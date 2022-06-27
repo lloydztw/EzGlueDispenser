@@ -14,8 +14,8 @@ namespace Eazy_Project_III
     public class Universal : JetEazy.Universal
     {
         public static bool IsNoUseCCD = false;      //<<< 無效改由 ICam.ISim() 判斷
-        public static bool IsNoUseIO = true;
-        public static bool IsNoUseMotor = true;
+        public static bool IsNoUseIO = false;
+        public static bool IsNoUseMotor = false;
 
         public static string VersionDate = "2022/06/21";
 
@@ -213,6 +213,7 @@ namespace Eazy_Project_III
 
                             opstr += "1,";  //1個 PLC  
                             opstr += "9,";   //9個軸
+                            opstr += "1,";   //1 Projector
 
                             DispensingMachineClass machine = new DispensingMachineClass(Machine_EA.DISPENSING, opstr, WORKPATH, IsNoUseIO);
                             ret = machine.Initial(IsNoUseIO, IsNoUseMotor);

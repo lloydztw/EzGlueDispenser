@@ -33,7 +33,7 @@ namespace Eazy_Project_III.ProcessSpace
     public abstract class MirrorAbsImageProcess : BaseProcess
     {
         protected const string IMAGE_SAVE_PATH = @"D:\EVENTLOG\Nlogs\images";
-        protected static int MOTOR_TIMEOUT_WAIT_COUNT = 1000;
+        protected static int MOTOR_TIMEOUT_WAIT_COUNT = 5000;
         protected static int MAX_RUN_COUNT = int.MaxValue;
 
         #region ACCESS_TO_OTHER_PROCESSES
@@ -209,6 +209,11 @@ namespace Eazy_Project_III.ProcessSpace
             // 檢查馬達位置是否被 user 移動
             var cur2 = ax_read_current_pos();
             isMotorPosChangedByClient = !QVector.AreEqual(cur, cur2, 4);
+            if (isMotorPosChangedByClient)
+            {
+                _LOG("dCur", cur2 - cur, Color.Red);
+                isMotorPosChangedByClient = false;
+            }
 
             return phase.Go;
         }
@@ -341,6 +346,7 @@ namespace Eazy_Project_III.ProcessSpace
         {
             //var plcPos = ax_convert_to_plc_unit(pos);
             var ax_pos = AxisUnitConvert.ToAxis(pos);
+
             if (GdxGlobal.Facade.IsSimMotor())
             {
                 for (int i = 0; i < N_MOTORS; i++)
@@ -352,12 +358,7 @@ namespace Eazy_Project_III.ProcessSpace
             }
             else
             {
-                for (int i = 0; i < 4; i++)
-                {
-                    BlackBoxMotors[i].Go(ax_pos[i], 0);
-                }
-
-                for (int i = 4; i < N_MOTORS; i++)
+                for (int i = 0; i < N_MOTORS; i++)
                 {
                     BlackBoxMotors[i].Go(ax_pos[i], 0);
                 }

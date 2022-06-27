@@ -43,7 +43,8 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
 
             PLCCount = int.Parse(strs[0]);
             MotionCount = int.Parse(strs[1]);
-
+            if (strs.Length > 2)
+                ProjectorCount = int.Parse(strs[2]);
             if (PLCCount > 0)
                 PLCCollection = new VsCommPLC[PLCCount];
 
@@ -52,6 +53,8 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
 
             if (MotionCount > 0)
                 PLCMOTIONCollection = new PLCMotionClass[MotionCount];
+            if (ProjectorCount > 0)
+                ModbusRTUClassCollection = new ModbusRTUClass[ProjectorCount];
         }
         public override bool Initial(bool isnouseio, bool isnousemotor)
         {
@@ -84,6 +87,18 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
                 PLCMOTIONCollection[i] = new PLCMotionClass();
                 PLCMOTIONCollection[i].Intial(WORKPATH + "\\" + myMachineEA.ToString(), (MotionEnum)i, PLCCollection, IsNoUseMotor);
 
+                i++;
+            }
+            i = 0;
+            while (i < ProjectorCount)
+            {
+                ModbusRTUClassCollection[i] = new ModbusRTUClass();
+
+                //@LETIAN: for off-line simulation
+                if (true || !isnouseio)
+                    ret &= ModbusRTUClassCollection[i].Open(WORKPATH + "\\" + myMachineEA.ToString() + "\\PROJECTORCONTROL" + i.ToString() + ".INI", isnouseio);
+
+                ModbusRTUClassCollection[i].Name = "PROJECTOR" + i.ToString();
                 i++;
             }
 
@@ -519,6 +534,10 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
             {
                 plc.Tick();
             }
+            foreach (ModbusRTUClass plc in ModbusRTUClassCollection)
+            {
+                plc.Tick();
+            }
         }
         public override void GetStart(bool isdirect, bool isnouseplc)
         {
@@ -538,11 +557,19 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
             {
                 plc.RetryConn();
             }
+            foreach (ModbusRTUClass plc in ModbusRTUClassCollection)
+            {
+                plc.RetryConn();
+            }
         }
 
         public override void Close()
         {
             foreach (VsCommPLC plc in PLCCollection)
+            {
+                plc.Close();
+            }
+            foreach (ModbusRTUClass plc in ModbusRTUClassCollection)
             {
                 plc.Close();
             }
