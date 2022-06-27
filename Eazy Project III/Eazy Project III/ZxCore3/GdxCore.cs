@@ -95,14 +95,11 @@ namespace JetEazy.GdxCore3
                 }
 
                 CoretronicsAPI.CenterCompProcess();
-
-                // True: go
-                // False: no-go
                 go = CoretronicsAPI.getCenterCompInfo();
 
-                //暫時跳過 no-go
-                // CommonLogClass.Instance.LogMessage("Coretronics, CenterComp, 暫時跳過 go/no-go !");
-                // go = true;
+                ////暫時跳過 no-go
+                //CommonLogClass.Instance.LogMessage("Coretronics, CenterComp, 暫時跳過 go/no-go !");
+                //go = true;
 
                 return go;
             }
@@ -143,7 +140,22 @@ namespace JetEazy.GdxCore3
             }
         }
 
-
+        /// <summary>
+        /// 取的 QC 雷射複檢的 馬達位置 X Y Z 座標
+        /// 單位 mm
+        /// </summary>
+        /// <param name="mirrorIndex">Mirror Index</param>
+        /// <param name="X">馬達 X 座標</param>
+        /// <param name="Y">馬達 Y 座標</param>
+        /// <param name="Z">馬達 Z 座標</param>
+        public static void GetQCMotorPos(int mirrorIndex, out double X, out double Y, out double Z)
+        {
+            var trf = GdxGlobal.Facade.LaserCoordsTransform;
+            var motorPos = trf.GetQCMotorPos(mirrorIndex);
+            X = motorPos.X;
+            Y = motorPos.Y;
+            Z = motorPos.Z;
+        }
         public static void CollectLaserPt(int mirrorIdx, int pointIdx, double laserDist, string ga_motorPt)
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
@@ -236,25 +248,14 @@ namespace JetEazy.GdxCore3
                             int mirrorIdx = (int)args[1];
                             int pointIdx = (int)args[3];
                             // QVector pos = QVector.Parse((string)args[5]);
-                            var laser = GdxGlobal.Facade.GetLaser();
-                            if (laser is Sim.GdxLaser)
-                            {
-                                var mirrorInfo = mirrorIdx == 0 ?
-                                    GdxGlobal.INI.Mirror1 :
-                                    GdxGlobal.INI.Mirror2 ;
-                                var planePt = mirrorInfo.PlanePosList[pointIdx];
-                                double ld = planePt.Z;
-                                ((Sim.GdxLaser)laser).set_simulation_dist(ld);
-                            }
+                            sim_laser(mirrorIdx, pointIdx);
                         }
                         break;
 
                     case "LaserNext":
                         {
                             LOG.Trace("{0}, ps={1}, {2}", tag, ps_state, pack(args));
-                            var laser = GdxGlobal.Facade.GetLaser();
-                            if (laser is Sim.GdxLaser)
-                                ((Sim.GdxLaser)laser).set_simulation_dist(-9999);
+                            sim_laser(-1, -1);
                         }
                         break;
 
@@ -345,6 +346,27 @@ namespace JetEazy.GdxCore3
                     {
                         GdxGlobal.Facade.IO.setIO(ioname, targetValue);
                     }
+                }
+            }
+        }
+        static void sim_laser(int mirrorIdx, int pointIdx, string ga_str = null)
+        {
+            var ga_laser = GdxGlobal.Facade.GetLaser();
+            if (ga_laser is Sim.GdxLaser)
+            {
+                var sim_laser = (Sim.GdxLaser)ga_laser;
+                if (mirrorIdx >= 0 && pointIdx >= 0)
+                {
+                    var mirrorInfo = mirrorIdx == 0 ?
+                        GdxGlobal.INI.Mirror1 :
+                        GdxGlobal.INI.Mirror2;
+                    var planePt = mirrorInfo.PlanePosList[pointIdx];
+                    double ld = planePt.Z;
+                    sim_laser.set_simulation_dist(ld);
+                }
+                else
+                {
+                    sim_laser.set_simulation_dist(-9999);
                 }
             }
         }

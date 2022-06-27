@@ -22,7 +22,7 @@ namespace Eazy_Project_III.ProcessSpace
     public class MirrorCalibProcess : MirrorAbsImageProcess
     {
         const string PHASE_1 = "02-1 中光電 Center Comp";
-        const string PHASE_2 = "02-2 MoveToPut";
+        const string PHASE_2 = "02-2 移動吸嘴模组";
         const string PHASE_3 = "02-3 中心偏移補償";
 
         #region PRIVATE_DATA
@@ -52,6 +52,7 @@ namespace Eazy_Project_III.ProcessSpace
         {
             get { return "Mirror校正"; }
         }
+
 
         /// <summary>
         /// 第一個參數 args[0] 為 Mirror_CalibrateProcessIndex
@@ -155,7 +156,6 @@ namespace Eazy_Project_III.ProcessSpace
                     case 15:
                         if (Process.IsTimeup)
                         {
-#if (True)
                             _LOG(PHASE_1, "擷取影像");
                             //(15.0) 拍照
                             var cam = ICamForCali;
@@ -176,7 +176,6 @@ namespace Eazy_Project_III.ProcessSpace
                                     return;
                                 }
                             }
-#endif
                             //(15.4) 關燈
                             MACHINE.PLCIO.ADR_SMALL_LIGHT = false;
                             //(15.5) Move Motors (goto 20)
@@ -184,13 +183,15 @@ namespace Eazy_Project_III.ProcessSpace
                         }
                         break;
 
-#endregion
+                    #endregion
 
-#region PHASE_II
+                    #region PHASE_II
                     case 20:
                         if (Process.IsTimeup)
                         {
                             _LOG(PHASE_2);
+
+#if (false)
                             //> =====================================================
                             //@LETIAN: 現在 中光電已經改成 Go/NoGO 是否還要使用此步驟?
                             //> =====================================================
@@ -207,33 +208,22 @@ namespace Eazy_Project_III.ProcessSpace
                             ptfOffset.Y -= RecipeCHClass.Instance.CaliPicCenter.Y;
 
                             //补偿放入的位置
-#if (false)
-                            string posPutAdjust = string.Empty;
-                            string mirrorPutPos = string.Empty;
-                            switch (Mirror_CalibrateProcessIndex)
-                            {
-                                case 0:
-                                    mirrorPutPos = INI.Instance.Mirror1PutPos;
-                                    posPutAdjust = ToolAdjustData(INI.Instance.Mirror1PutPos, ptfOffset.X, ptfOffset.Y);
-                                    break;
-                                case 1:
-                                    mirrorPutPos = INI.Instance.Mirror2PutPos;
-                                    posPutAdjust = ToolAdjustData(INI.Instance.Mirror2PutPos, ptfOffset.X, ptfOffset.Y);
-                                    break;
-                            }
-#else
                             string mirrorPutPos = m_mirrorIndex == 0 ?
                                     INI.Instance.Mirror1PutPos :
-                                    INI.Instance.Mirror2PutPos ;
+                                    INI.Instance.Mirror2PutPos;
                             string posPutAdjust = ToolAdjustData(mirrorPutPos, ptfOffset.X, ptfOffset.Y);
-#endif
                             GdxCore.Trace("MirrorCalibration.MoveToPut", Process, "putPos", mirrorPutPos);
                             GdxCore.Trace("MirrorCalibration.MoveToPut", Process, "ofset", ptfOffset);
                             GdxCore.Trace("MirrorCalibration.MoveToPut", Process, "adjPos", posPutAdjust);
-
                             MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 3, posPutAdjust);
-                            // MACHINE.PLCIO.ADR_SMALL_LIGHT = false; //<<< 已經於 state (15.4) 關掉
+#else
+                            string mirrorPutPos = m_mirrorIndex == 0 ?
+                                        INI.Instance.Mirror1PutPos :
+                                        INI.Instance.Mirror2PutPos;
+                            MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 3, mirrorPutPos);
+#endif
 
+                            // MACHINE.PLCIO.ADR_SMALL_LIGHT = false; //<<< 已經於 state (15.4) 關掉
                             Process.NextDuriation = NextDurtimeTmp;
                             Process.ID = 301;
                         }
@@ -289,7 +279,6 @@ namespace Eazy_Project_III.ProcessSpace
                                 //        break;
                                 //}
 
-
                                 //MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 1, INI.Instance.sMirrorPutAdjDeep1Length + ",0,0");
                                 MACHINE.PLCIO.ModulePositionGO(ModuleName.MODULE_ADJUST, 1);
 
@@ -305,19 +294,20 @@ namespace Eazy_Project_III.ProcessSpace
                             if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_ADJUST, 1))
                             {
                                 _LOG("微调模组到达位置");
-                                // CommonLogClass.Instance.LogMessage("微调模组到达位置", Color.Black);
-                                // Process.Stop();
-                                // CommonLogClass.Instance.LogMessage("校正完成", Color.Black);
-                                // GdxCore.Trace("MirrorCalibration.Completed", Process);
-                                // FireCompleted();
+                                ////// CommonLogClass.Instance.LogMessage("微调模组到达位置", Color.Black);
+                                ////// Process.Stop();
+                                ////// CommonLogClass.Instance.LogMessage("校正完成", Color.Black);
+                                ////// GdxCore.Trace("MirrorCalibration.Completed", Process);
+                                ////// FireCompleted();
+                                //---------------------
                                 // 進入 PHASE_III
-                                SetNextState(300);  
+                                SetNextState(300);
                             }
                         }
                         break;
-#endregion
+                    #endregion
 
-#region PHASE_III_CETER_COMPENSATION
+                    #region PHASE_III_CETER_COMPENSATION
 
                     case 300:
                         if (Process.IsTimeup)
@@ -365,9 +355,9 @@ namespace Eazy_Project_III.ProcessSpace
                         }
                         break;
 
-#endregion
+                    #endregion
 
-#region EXCEPTIONS
+                    #region EXCEPTIONS
                     case 9999:
                         if (Process.IsTimeup)
                         {
@@ -376,11 +366,13 @@ namespace Eazy_Project_III.ProcessSpace
                             break;
                         }
                         break;
-#endregion
+                        #endregion
                 }
             }
         }
 
+
+        #region NONE_USED_FUNCTIONS
         /// <summary>
         /// 工具 对位置进行补偿
         /// </summary>
@@ -396,10 +388,11 @@ namespace Eazy_Project_III.ProcessSpace
             string res = orgs[0] + "," + x.ToString() + "," + y.ToString();
             return res;
         }
+        #endregion
 
-        
-#region CENTER_COMPENSATION_MODULE
-        
+
+        #region CENTER_COMPENSATION_MODULE
+
         protected override QVector CompensationInitPos
         {
             get { return m_phase3.InitMotorPos; }
@@ -432,7 +425,7 @@ namespace Eazy_Project_III.ProcessSpace
             }
 
             //(*) Simulation
-#region SIMULATION
+            #region SIMULATION
             if (GdxGlobal.Facade.IsSimMotor() || GdxGlobal.Facade.IsSimPLC())
             {
                 var rnd = new Random();
@@ -444,7 +437,7 @@ namespace Eazy_Project_III.ProcessSpace
                 _clip_into_safe_box(m_targetPos);
                 AxisUnitConvert.Round(m_targetPos, true);
             }
-#endregion
+            #endregion
 
             // U compensation step 增大
             COMP_STEP[3] = AxisUnitConvert.PERCISIONS[3] * 10;
@@ -511,6 +504,6 @@ namespace Eazy_Project_III.ProcessSpace
             return AxisUnitConvert.Round(incr, true);
         }
 
-#endregion
+        #endregion
     }
 }

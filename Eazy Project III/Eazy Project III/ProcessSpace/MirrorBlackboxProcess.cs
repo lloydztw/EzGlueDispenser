@@ -18,6 +18,7 @@ namespace Eazy_Project_III.ProcessSpace
     /// </summary>
     public class MirrorBlackboxProcess : MirrorAbsImageProcess
     {
+        static bool OPT_BYPASS_BALL_CENTER_COMP = false;
         const string PHASE_1 = "03-1 光斑投影補償";
         const string PHASE_2 = "03-2 轉軸球心補償";
 
@@ -386,15 +387,18 @@ namespace Eazy_Project_III.ProcessSpace
             m_phase2.InitMotorPos = new QVector(m_initMotorPos);
             m_phase2.Reset();
 
-            //(2) Configuration
-            var Ini = INI.Instance;
-            var MotorCfg = MotorConfig.Instance;
-            double sphereCenterOffsetU = (m_mirrorIndex == 0) ?
-                        Ini.Mirror1_Offset_Adj :
-                        Ini.Mirror2_Offset_Adj;
-            double u0 = MotorCfg.VirtureZero;
-            double theta_z0 = MotorCfg.TheaZVirtureZero;
-            double theta_y0 = MotorCfg.TheaYVirtureZero;
+            //(2) 球心偏移 U 值
+            double sphereCenterOffsetU = 0;
+            if (!OPT_BYPASS_BALL_CENTER_COMP)
+            {
+                var trf = GdxGlobal.Facade.LaserCoordsTransform;
+                var lastCenterComp = trf.GetLastCompensation(m_mirrorIndex);
+                if (lastCenterComp != null)
+                {
+                    sphereCenterOffsetU = lastCenterComp[3];
+                }
+                _LOG(m_phase2.Name, "球心偏移 ΔU", sphereCenterOffsetU);
+            }
 
             //(3) Transform 
             QVector mv0 = this.CompensationInitPos;
@@ -463,6 +467,7 @@ namespace Eazy_Project_III.ProcessSpace
             //(8) 下指令
             log_motor_command(runCtrl, m_nextMotorPos, m_incr);
             ax_start_move(m_nextMotorPos);
+            System.Threading.Thread.Sleep(100);
         }
         QVector phase2_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {
