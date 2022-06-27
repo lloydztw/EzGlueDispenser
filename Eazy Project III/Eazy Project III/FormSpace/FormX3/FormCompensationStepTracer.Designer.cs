@@ -34,17 +34,14 @@ namespace Eazy_Project_III.FormSpace
             this.btnOpenMotorsTool = new System.Windows.Forms.Button();
             this.btnContinueRun = new System.Windows.Forms.Button();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.lblTitleName = new System.Windows.Forms.Label();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.Column0 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.X = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Y = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Z = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.U = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.theta_y = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.theta_z = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.lblTitleName = new System.Windows.Forms.Label();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.panel1 = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -106,12 +103,9 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.ColumnHeadersHeight = 29;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Column0,
-            this.X,
-            this.Y,
-            this.Z,
             this.U,
             this.theta_y,
             this.theta_z,
@@ -128,65 +122,6 @@ namespace Eazy_Project_III.FormSpace
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridView1.Size = new System.Drawing.Size(583, 319);
             this.dataGridView1.TabIndex = 12;
-            // 
-            // Column0
-            // 
-            this.Column0.HeaderText = "項目";
-            this.Column0.MinimumWidth = 6;
-            this.Column0.Name = "Column0";
-            this.Column0.Width = 66;
-            // 
-            // X
-            // 
-            this.X.HeaderText = "X";
-            this.X.MinimumWidth = 6;
-            this.X.Name = "X";
-            this.X.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.X.Width = 23;
-            // 
-            // Y
-            // 
-            this.Y.HeaderText = "Y";
-            this.Y.MinimumWidth = 6;
-            this.Y.Name = "Y";
-            this.Y.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.Y.Width = 23;
-            // 
-            // Z
-            // 
-            this.Z.HeaderText = "Z";
-            this.Z.MinimumWidth = 6;
-            this.Z.Name = "Z";
-            this.Z.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.Z.Width = 22;
-            // 
-            // U
-            // 
-            this.U.HeaderText = "U";
-            this.U.MinimumWidth = 6;
-            this.U.Name = "U";
-            this.U.Width = 46;
-            // 
-            // theta_y
-            // 
-            this.theta_y.HeaderText = "θ_y";
-            this.theta_y.MinimumWidth = 6;
-            this.theta_y.Name = "theta_y";
-            this.theta_y.Width = 65;
-            // 
-            // theta_z
-            // 
-            this.theta_z.HeaderText = "θ_z";
-            this.theta_z.MinimumWidth = 6;
-            this.theta_z.Name = "theta_z";
-            this.theta_z.Width = 64;
-            // 
-            // Column2
-            // 
-            this.Column2.HeaderText = "備註";
-            this.Column2.MinimumWidth = 6;
-            this.Column2.Name = "Column2";
-            this.Column2.Width = 66;
             // 
             // lblTitleName
             // 
@@ -233,6 +168,39 @@ namespace Eazy_Project_III.FormSpace
             this.panel1.Size = new System.Drawing.Size(585, 78);
             this.panel1.TabIndex = 17;
             // 
+            // Column0
+            // 
+            this.Column0.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.Column0.HeaderText = "項目";
+            this.Column0.MinimumWidth = 6;
+            this.Column0.Name = "Column0";
+            this.Column0.Width = 66;
+            // 
+            // U
+            // 
+            this.U.HeaderText = "U";
+            this.U.MinimumWidth = 100;
+            this.U.Name = "U";
+            // 
+            // theta_y
+            // 
+            this.theta_y.HeaderText = "θy";
+            this.theta_y.MinimumWidth = 100;
+            this.theta_y.Name = "theta_y";
+            // 
+            // theta_z
+            // 
+            this.theta_z.HeaderText = "θz";
+            this.theta_z.MinimumWidth = 100;
+            this.theta_z.Name = "theta_z";
+            // 
+            // Column2
+            // 
+            this.Column2.HeaderText = "備註";
+            this.Column2.MinimumWidth = 6;
+            this.Column2.Name = "Column2";
+            this.Column2.Width = 66;
+            // 
             // FormCompensationStepTracer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -262,9 +230,6 @@ namespace Eazy_Project_III.FormSpace
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column0;
-        private System.Windows.Forms.DataGridViewTextBoxColumn X;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Y;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Z;
         private System.Windows.Forms.DataGridViewTextBoxColumn U;
         private System.Windows.Forms.DataGridViewTextBoxColumn theta_y;
         private System.Windows.Forms.DataGridViewTextBoxColumn theta_z;

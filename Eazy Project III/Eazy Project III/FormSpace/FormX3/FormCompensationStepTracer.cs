@@ -72,6 +72,9 @@ namespace Eazy_Project_III.FormSpace
             dv.Rows.Add(7);
             var update_row = new Action<int, string, QVector>((rid, txt, vec) =>
             {
+                if (vec != null)
+                    vec = vec.Slice(3, 3);
+
                 var row = dv.Rows[rid];
                 row.Cells[0].Value = txt;
                 for (int c = 1; c < Cols - 1; c++)
@@ -84,6 +87,7 @@ namespace Eazy_Project_III.FormSpace
                 var row = dv.Rows[rid];
                 if (vec != null)
                 {
+                    vec = vec.Slice(3, 3);
                     for (int c = 1; c < Cols - 1; c++)
                     {
                         var v = vec[c - 1];

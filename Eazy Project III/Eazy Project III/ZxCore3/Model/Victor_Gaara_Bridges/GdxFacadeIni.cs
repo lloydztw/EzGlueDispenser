@@ -152,16 +152,16 @@ namespace JetEazy.GdxCore3.Model
         public List<QVector> PosList;
         public QVector PutPos;
         public List<QVector> UVPosList;
-        public double QC_Offset_Adj;
         public int AdjBackLength;
         public int AdjDeepLength;
         public int PutAdjDeepLength;
         public double GetQcLaserMeasuredDist()
         {
-            QC_Offset_Adj = (_index == 0) ?
+            double laserQC = (_index == 0) ?
                 ini.Mirror1_Offset_Adj:
                 ini.Mirror2_Offset_Adj;
-            return QC_Offset_Adj;
+            laserQC = Math.Round(laserQC, 4);
+            return laserQC;
         }
 
         #region CONSTRUCTOR_AND_SYNC
@@ -181,7 +181,7 @@ namespace JetEazy.GdxCore3.Model
                 Mirror1.PosList = Parse(ini.Mirror1PosList);
                 Mirror1.PutPos = Parse(ini.Mirror1PutPos);
                 Mirror1.UVPosList = Parse(ini.Mirror1UVPosList);
-                Mirror1.QC_Offset_Adj = ini.Mirror1_Offset_Adj;
+                //Mirror1.QC_Offset_Adj = ini.Mirror1_Offset_Adj;
                 //
                 Mirror1.PutAdjDeepLength = ini.sMirrorPutAdjDeep1Length;
                 Mirror1.AdjDeepLength = ini.sMirrorAdjDeep1Length;
@@ -196,7 +196,7 @@ namespace JetEazy.GdxCore3.Model
                 Mirror2.PosList = Parse(ini.Mirror2PosList);
                 Mirror2.PutPos = Parse(ini.Mirror2PutPos);
                 Mirror2.UVPosList = Parse(ini.Mirror2UVPosList);
-                Mirror2.QC_Offset_Adj = ini.Mirror2_Offset_Adj;
+                //Mirror2.QC_Offset_Adj = ini.Mirror2_Offset_Adj;
                 //
                 Mirror2.PutAdjDeepLength = ini.sMirrorPutAdjDeep2Length;
                 Mirror2.AdjDeepLength = ini.sMirrorAdjDeep2Length;

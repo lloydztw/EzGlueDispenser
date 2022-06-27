@@ -221,6 +221,11 @@ namespace JetEazy.GdxCore3.Model
 
         public GdxLaserCenterCompensator()
         {
+            for (int i = 0; i < N_MIRRORS; i++)
+            {
+                m_xplaneMirrors[i] = new GdxLocalPlaneCoord();
+                m_xplaneQCs[i] = new GdxLocalPlaneCoord();
+            }
         }
         public void Dispose()
         {
@@ -254,6 +259,9 @@ namespace JetEazy.GdxCore3.Model
         public void BuildGoldenPlaneFormula()
         {
             m_xplaneGolden.BuildTransform(GdxGlobal.INI.GaugeBlockPlanePoints);
+            expand_dimensions(GdxGlobal.INI.Mirror1.PlanePosList, 4);               // (XYZ) -> (XYZL)
+            expand_dimensions(GdxGlobal.INI.Mirror2.PlanePosList, 4);               // (XYZ) -> (XYZL)
+            
             m_xplaneQCs[0].BuildTransform(GdxGlobal.INI.Mirror1.PlanePosList);      // 1-base-index
             m_xplaneQCs[1].BuildTransform(GdxGlobal.INI.Mirror2.PlanePosList);      // 1-base-index
             m_qcLaserDists[0] = GdxGlobal.INI.Mirror1.GetQcLaserMeasuredDist();     // 1-base-index
@@ -302,6 +310,8 @@ namespace JetEazy.GdxCore3.Model
         }
         public QVector CalcCompensation(int mirrorIdx, QVector currentMotorPosAx6)
         {
+            BuildGoldenPlaneFormula();
+
             double cosFactor = 0.981;
             int N6 = currentMotorPosAx6.Dimensions;
             if (!CanCompensate(mirrorIdx) && mirrorIdx < N_MIRRORS)
@@ -381,6 +391,17 @@ namespace JetEazy.GdxCore3.Model
 
 
         #region PRIVATE_FUNCTIONS
+        void expand_dimensions(List<QVector> vectors, int Dims)
+        {
+            for (int i = 0; i < vectors.Count; i++)
+            {
+                vectors[i] = vectors[i].Expand(Dims);
+            }
+        }
+        #endregion
+
+
+        #region PRIVATE_FILE_FUNCTIONS
         void Save(string fileName = null)
         {
             if (fileName == null)
