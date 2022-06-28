@@ -6,7 +6,7 @@ namespace JetEazy.GdxCore3.Model
 {
     public class GdxMotorCoordsTransform : IDisposable
     {
-        static int MODE = 0;
+        static int MODE = 2;
 
         #region PRIVATE_DATA
         QVector mv_zero = new QVector(6);
@@ -128,33 +128,64 @@ namespace JetEazy.GdxCore3.Model
                 double dGz = -w.Get<double>(2, 0);
 
                 //--------------------------------------------
-                //double dGX = X - Z * sin(a) + u * cos(a);
-                //double dGY = Y;
-                //double dGZ = Z * cos(a) + u * sin(a);
+                // double dGX = X - Z * sin(a) + U * cos(a);
+                // double dGY = Y;
+                // double dGZ = Z * cos(a) + U * sin(a);
                 //--------------------------------------------
+                double X, Y, Z, U;
                 if (MODE == 0 && Math.Abs(cos) > 0.1)
                 {
-                    // Let u == 0
-                    double u = 0;
-                    double Z = dGz / cos;
-                    double Y = dGy;
-                    double X = dGx + Z * sin - u * cos;
-                    //@LETIAN: Disable Y
-                    Y = 0;
-                    return new QVector(X, Y, Z, u, 0, 0);
+                    U = 0;
+                    Z = dGz / cos;
+                    Y = dGy;
+                    X = dGx + Z * sin - U * cos;
+                }
+                else if (MODE == 1 && Math.Abs(sin) > 0.1)
+                {
+                    U = dGz / sin;
+                    Z = 0;
+                    Y = dGy;
+                    X = dGx + Z * sin - U * cos;
                 }
                 else
                 {
-                    // Let Z == 0.5 u
-                    double u = dGz / (0.5 * cos + sin);
-                    double Z = u;
-                    double Y = dGy;
-                    double X = dGx + Z * sin - u * cos;
-                    //@LETIAN: Disable Y
-                    Y = 0;
-                    return new QVector(X, Y, Z, u, 0, 0);
+                    //================================================
+                    // dGX = -Z * sin(a) + U * cos(a)
+                    // dGZ =  Z * cos(a) + U * sin(a)
+                    //------------------------------------------------
+                    //  c * dGX = -Z * cs + U * cc
+                    //  s * dGZ =  Z * sc + U * ss
+                    //------------------------------------------------
+                    //  c * dGX + s * dGZ = U (cc + ss)
+                    //------------------------------------------------
+                    //  cos(a) * dGX + sin(a) * dGZ = U (c^2 + s^2)
+                    //================================================
+                    // dGX = -Z * sin(a) + U * cos(a)
+                    // dGZ =  Z * cos(a) + U * sin(a)
+                    //------------------------------------------------
+                    // -s * dGX = Z * ss  +  U * (-sc)
+                    //  c * dGZ = Z * cc  +  U * (cs)
+                    //------------------------------------------------
+                    // -s * dGX + c * dGZ = Z * (ss + cc)
+                    //------------------------------------------------
+                    U = ( cos * dGx + sin * dGz);
+                    Z = (-sin * dGx + cos * dGz);
+                    Y = dGy;
+                    X = 0;
                 }
+                return new QVector(X, Y, Z, U);
             }
+        }
+        public QVector SimpleSphereCenterCompensation(double UbcOffset, QVector initPos, QVector finalPos)
+        {
+            // X, Y, Z, U, θy, θz
+            // Ignore dX, dY
+            var dV = finalPos - initPos;
+            double theta_y = dV[4] * Math.PI / 180;
+            double theta_z = dV[5] * Math.PI / 180;
+            double dU = UbcOffset * (1 - Math.Cos(theta_z));
+            double dZ = UbcOffset * Math.Sin(theta_z);
+            return new QVector(0, 0, dZ, dU, 0, 0);
         }
         public QVector MotorToWorld(double X, double Y, double Z, double u)
         {

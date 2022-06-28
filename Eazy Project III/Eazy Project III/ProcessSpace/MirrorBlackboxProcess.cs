@@ -404,8 +404,12 @@ namespace Eazy_Project_III.ProcessSpace
                 if (lastCenterComp != null)
                 {
                     sphereCenterOffsetU = lastCenterComp[3];
+                    _LOG(m_phase2.Name, "球心偏移 ΔU", sphereCenterOffsetU);
                 }
-                _LOG(m_phase2.Name, "球心偏移 ΔU", sphereCenterOffsetU);
+                else
+                {
+                    _LOG("缺少 02中心補償之結果", "球心偏移 ΔU 視為 0");
+                }                
             }
 
             //(3) Transform 
@@ -414,27 +418,25 @@ namespace Eazy_Project_III.ProcessSpace
             m_trf.Init(mv0, sphereCenterOffsetU);
 
             // 計算 & 設定 目標值
-            m_targetPos = phase2_calc_target();
+            m_targetPos = phase2_calc_target(sphereCenterOffsetU);
             _clip_into_safe_box(m_targetPos);
             return m_phase2;
         }
-        QVector phase2_calc_target()
+        QVector phase2_calc_target(double sphereCenterOffsetU)
         {
-            double cosFactor = 0.8;
+            double cosFactor = 0.89;
 
             //取出 中光電貢獻的補償量
             var initPos = this.CompensationInitPos;
             m_currMotorPos = ax_read_current_pos();
             var cxDelta = m_currMotorPos - initPos;
-
-            if (AxisUnitConvert.IsSmallVector(cxDelta))
-            {
-                return new QVector(m_currMotorPos);
-            }
+            _LOG("中光電補償後角度變化", "(Δθy, Δθz)", cxDelta.Slice(4, 2));
 
             //JEZ 球心偏移 補償 目標值
-            var delta = m_trf.CalcSphereCenterCompensation(initPos, cxDelta);
+            //var delta = m_trf.CalcSphereCenterCompensation(initPos, cxDelta);
+            var delta = m_trf.SimpleSphereCenterCompensation(sphereCenterOffsetU, initPos, m_currMotorPos);
             var targetPos = m_currMotorPos + delta * cosFactor;
+
             return targetPos;
         }
         void phase2_run_one_step(XRunContext runCtrl)

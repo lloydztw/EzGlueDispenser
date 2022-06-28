@@ -572,7 +572,7 @@ namespace Eazy_Project_III.ProcessSpace
                     #region ASYNC_DUMP_IMAGE
                     var dump_func = new Action<Bitmap, int>((bmp2, i) =>
                     {
-                        string fileName = string.Format("image_{0}_{1}.bmp", Name, i);
+                        string fileName = string.Format("image_{0}_{1:yyyyMMdd_HHmmss}.jpg", Name, DateTime.Now);
                         fileName = System.IO.Path.Combine(IMAGE_SAVE_PATH, fileName);
                         bmp2.Save(fileName, ImageFormat.Bmp);
                         bmp2.Dispose();
