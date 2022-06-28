@@ -210,13 +210,14 @@ namespace JetEazy.GdxCore3.Model
         /// </summary>
         List<QVector>[] _laserRunPts = new List<QVector>[N_MIRRORS];
         QVector[] _compResult = new QVector[N_MIRRORS];
+        bool[] _isBuiltOk = new bool[N_MIRRORS];
         #endregion
 
         #region PRIVATE_PLANE_COORDS
         GdxLocalPlaneCoord m_xplaneGolden = new GdxLocalPlaneCoord();
-        GdxLocalPlaneCoord[] m_xplaneMirrors = new GdxLocalPlaneCoord[N_MIRRORS];
-        GdxLocalPlaneCoord[] m_xplaneQCs = new GdxLocalPlaneCoord[N_MIRRORS];
-        double[] m_qcLaserDists = new double[N_MIRRORS];
+        GdxLocalPlaneCoord[] m_xplaneMirrors = new GdxLocalPlaneCoord[N_MIRRORS];   // runtime
+        GdxLocalPlaneCoord[] m_xplaneQCs = new GdxLocalPlaneCoord[N_MIRRORS];       // standard
+        double[] m_adjs = new double[N_MIRRORS];
         #endregion
 
         public GdxLaserCenterCompensator()
@@ -238,6 +239,7 @@ namespace JetEazy.GdxCore3.Model
             {
                 _laserRunPts[mirrorIdx] = new List<QVector>();
                 _compResult[mirrorIdx] = null;
+                _isBuiltOk[mirrorIdx] = false;
             }
         }
         public void AddLaserPtOnMirror(int mirrorIdx, QVector pos)
@@ -245,6 +247,7 @@ namespace JetEazy.GdxCore3.Model
             if (mirrorIdx < N_MIRRORS && _laserRunPts[mirrorIdx] != null)
                 _laserRunPts[mirrorIdx].Add(pos);
         }
+        
         public void BuildMirrorPlaneTransform(int mirrorIdx)
         {
             if (mirrorIdx < N_MIRRORS)
@@ -253,6 +256,7 @@ namespace JetEazy.GdxCore3.Model
                 var xplane = m_xplaneMirrors[mirrorIdx];
                 var pts = _laserRunPts[mirrorIdx];
                 xplane.BuildTransform(pts);
+                _isBuiltOk[mirrorIdx] = true;
                 Save();
             }
         }
@@ -260,12 +264,10 @@ namespace JetEazy.GdxCore3.Model
         {
             m_xplaneGolden.BuildTransform(GdxGlobal.INI.GaugeBlockPlanePoints);
             expand_dimensions(GdxGlobal.INI.Mirror1.PlanePosList, 4);               // (XYZ) -> (XYZL)
-            expand_dimensions(GdxGlobal.INI.Mirror2.PlanePosList, 4);               // (XYZ) -> (XYZL)
-            
+            expand_dimensions(GdxGlobal.INI.Mirror2.PlanePosList, 4);               // (XYZ) -> (XYZL)            
             m_xplaneQCs[0].BuildTransform(GdxGlobal.INI.Mirror1.PlanePosList);      // 1-base-index
             m_xplaneQCs[1].BuildTransform(GdxGlobal.INI.Mirror2.PlanePosList);      // 1-base-index
-            m_qcLaserDists[0] = GdxGlobal.INI.Mirror1.GetQcLaserMeasuredDist();     // 1-base-index
-            m_qcLaserDists[1] = GdxGlobal.INI.Mirror2.GetQcLaserMeasuredDist();     // 1-base-index
+            Load();
         }
 
         /// <summary>
@@ -282,21 +284,37 @@ namespace JetEazy.GdxCore3.Model
             }
             return null;
         }
-        private double GetGCAdjustment(int mirrorIdx)
+        public QVector GetLastRunSurfaceCenter(int mirrorIdx)
+        {
+            return m_xplaneMirrors[mirrorIdx].RealSurfaceCenter;
+        }
+
+        public string SetQCLaserMeasurement(int mirrorIdx, double qcLaserMeasurement)
+        {
+            if (!_isBuiltOk[mirrorIdx])
+            {
+                return "Combiner for Mirror " + mirrorIdx + " 尚未掃過三點雷射點位!";
+            }
+            var adj = calcGCAdjustment(mirrorIdx, qcLaserMeasurement);
+            m_adjs[mirrorIdx] = adj;
+            Save();
+            return null;
+        }
+        private double calcGCAdjustment(int mirrorIdx, double qcLaserMeasurement)
         {
             if (mirrorIdx < N_MIRRORS)
             {
                 if (m_xplaneQCs[mirrorIdx] == null)
                     BuildGoldenPlaneFormula();
 
-                double laserQC = mirrorIdx == 0 ?
-                    GdxGlobal.Facade.INI.Mirror1.GetQcLaserMeasuredDist():
-                    GdxGlobal.Facade.INI.Mirror2.GetQcLaserMeasuredDist();
+                //double laserQC = mirrorIdx == 0 ?
+                //    GdxGlobal.Facade.INI.Mirror1.GetQcLaserMeasuredDist():
+                //    GdxGlobal.Facade.INI.Mirror2.GetQcLaserMeasuredDist();
 
                 var plane = m_xplaneMirrors[mirrorIdx];
                 double laserCalc = plane.Lmin + plane.LcDepth;
 
-                double adj = laserQC - laserCalc;
+                double adj = qcLaserMeasurement - laserCalc;
                 return adj;
             }
             return 0;
@@ -371,9 +389,11 @@ namespace JetEazy.GdxCore3.Model
             double goldenL = m_xplaneGolden.Lmin + m_xplaneGolden.LcDepth;
             double combinerL = xplane.Lmin + xplane.LcDepth;
             double dL = combinerL - goldenL;
-            double adj = GetGCAdjustment(mirrorIdx);
+
+            double adj = m_adjs[mirrorIdx];
             double dU = (dL + adj) * cosFactor;
-            GdxGlobal.LOG.Trace("mirror, {0}, QC adj, {1:0.0000}", mirrorIdx, xplane.ThetaZ);
+
+            GdxGlobal.LOG.Trace("mirror, {0}, dL, {1:0.000}, QC adj, {2:0.000}", mirrorIdx, dL, adj);
 
             incr = new QVector(currentMotorPosAx6.Dimensions);
             incr[3] = dU;
@@ -407,15 +427,10 @@ namespace JetEazy.GdxCore3.Model
             if (fileName == null)
                 fileName = getDefaultFileName();
 
-            var list = new List<GdxLocalPlaneCoord>();
-            if (m_xplaneGolden.IsBuilt)
-                list.Add(m_xplaneGolden);
+            //GdxGlobal.INI.Mirror1.QcLaserAdj = m_adjs[0];
+            //GdxGlobal.INI.Mirror2.QcLaserAdj = m_adjs[1];
 
-            foreach (var p in m_xplaneMirrors)
-                if (p != null && p.IsBuilt)
-                    list.Add(p);
-
-            string jstr = JsonConvert.SerializeObject(list, Formatting.Indented);
+            string jstr = JsonConvert.SerializeObject(m_adjs, Formatting.Indented);
             using (var stm = new System.IO.StreamWriter(fileName, false))
             {
                 stm.Write(jstr);
@@ -428,11 +443,40 @@ namespace JetEazy.GdxCore3.Model
             if (fileName == null)
                 fileName = getDefaultFileName();
 
-            // RESERVED
+            //m_adjs[0] = GdxGlobal.INI.Mirror1.QcLaserAdj;                           // 1-base-index
+            //m_adjs[1] = GdxGlobal.INI.Mirror2.QcLaserAdj;                           // 1-base-index
+
+            List<double> adjs = new List<double>();
+
+            try
+            {
+                using (var stm = new System.IO.StreamReader(fileName))
+                {
+                    string jstr = stm.ReadToEnd();
+                    adjs = JsonConvert.DeserializeObject<List<double>>(jstr);
+                    stm.Close();
+                }
+            }
+            catch
+            {
+            }
+
+            if (adjs == null)
+            {
+                adjs = new List<double>();
+            }
+
+            while (adjs.Count < N_MIRRORS)
+            {
+                adjs.Add(0.0);
+            }
+
+            m_adjs = adjs.ToArray();
         }
         string getDefaultFileName()
         {
-            return @"D:\EVENTLOG\Nlogs\" + GetType().Name + ".json";
+            string path = System.IO.Path.GetTempPath();
+            return System.IO.Path.Combine(path, GetType().Name + ".json");
         }
         #endregion
     }

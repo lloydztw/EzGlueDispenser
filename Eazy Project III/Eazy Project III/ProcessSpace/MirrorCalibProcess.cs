@@ -350,8 +350,8 @@ namespace Eazy_Project_III.ProcessSpace
                             else if (isReady && check_completed(phase))
                             {
                                 _LOG(phase.Name, "完成");
-                                GdxCore.GetQCMotorPos(m_mirrorIndex, out double X, out double Y, out double Z);
-                                _LOG("mirror", m_mirrorIndex, "QC 馬達座標", new QVector(X, Y, Z), Color.Purple);
+                                double L = GdxCore.GetQCMotorPos(m_mirrorIndex, out double X, out double Y, out double Z);                                
+                                _LOG("mirror", m_mirrorIndex, "QC 馬達座標", new QVector(X, Y, Z), "Laser 期望值", L.ToString("0.000"), Color.Purple);
                                 Stop();
                                 FireCompleted();
                             }

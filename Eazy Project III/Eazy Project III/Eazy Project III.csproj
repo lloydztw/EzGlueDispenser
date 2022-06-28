@@ -118,6 +118,12 @@
     <Compile Include="FormSpace\FormX1\frmMotor.Designer.cs">
       <DependentUpon>frmMotor.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\FormX3\FormQCLaserMeasurement.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\FormX3\FormQCLaserMeasurement.Designer.cs">
+      <DependentUpon>FormQCLaserMeasurement.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSpace\FormX3\frmAXISSetup.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -300,6 +306,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\FormX3\FormCompensationStepTracer.resx">
       <DependentUpon>FormCompensationStepTracer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\FormX3\FormQCLaserMeasurement.resx">
+      <DependentUpon>FormQCLaserMeasurement.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\FormX3\frmAXISSetup.resx">
       <DependentUpon>frmAXISSetup.cs</DependentUpon>

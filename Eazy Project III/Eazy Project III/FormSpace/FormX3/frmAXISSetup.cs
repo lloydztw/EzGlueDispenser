@@ -166,6 +166,19 @@ namespace Eazy_Project_III.FormSpace
                 return;
             }
 
+            if (!qclasermeasureprocess.IsOn)
+            {
+                string msg0 = "是否要進行QC鐳射量測 (手動輸入)";
+                if (VsMSG.Instance.Question(msg0) == DialogResult.OK)
+                {
+                    using (var frm = new FormQCLaserMeasurement(0))
+                    {
+                        frm.ShowDialog(this);
+                        return;
+                    }
+                }
+            }
+
             string onStrMsg = "是否要進行QC鐳射量測？";
             string offStrMsg = "是否要停止QC鐳射量測？";
             string msg = (qclasermeasureprocess.IsOn ? offStrMsg : onStrMsg);
@@ -189,7 +202,9 @@ namespace Eazy_Project_III.FormSpace
                     myUserSelectForm = null;
                 }
                 else
+                {
                     qclasermeasureprocess.Stop();
+                }
             }
         }
 
@@ -891,6 +906,16 @@ namespace Eazy_Project_III.FormSpace
                                     INI.Instance.Mirror2_Offset_Adj = laserZ;
                                 }
                                 INI.Instance.SaveQCLaser();
+
+                                string err = GdxCore.SetQcLaserMeasurement(MainMirrorIndex, laserZ);
+                                if (err != null)
+                                {
+                                    CommonLogClass.Instance.LogMessage("QC雷射設定異常: " + err, Color.Red);
+                                    //_LOG("雷射讀值異常", Color.Red);
+                                    Process.NextDuriation = 500;
+                                    Process.ID = 3020;
+                                    return;
+                                }
 
                                 Process.NextDuriation = 500;
                                 Process.ID = 4010;

@@ -155,13 +155,23 @@ namespace JetEazy.GdxCore3.Model
         public int AdjBackLength;
         public int AdjDeepLength;
         public int PutAdjDeepLength;
-        public double GetQcLaserMeasuredDist()
+        public double QcLaserAdj
         {
-            double laserQC = (_index == 0) ?
-                ini.Mirror1_Offset_Adj:
-                ini.Mirror2_Offset_Adj;
-            laserQC = Math.Round(laserQC, 4);
-            return laserQC;
+            get
+            {
+                double laserQC = (_index == 0) ?
+                    ini.Mirror1_Offset_Adj :
+                    ini.Mirror2_Offset_Adj;
+                laserQC = Math.Round(laserQC, 4);
+                return laserQC;
+            }
+            set
+            {
+                if (_index == 0)
+                    ini.Mirror1_Offset_Adj = Math.Round(value, 4);
+                else
+                    ini.Mirror2_Offset_Adj = Math.Round(value, 4);
+            }
         }
 
         #region CONSTRUCTOR_AND_SYNC

@@ -37,7 +37,6 @@ namespace JetEazy.GdxCore3
             return GdxGlobal.GetLaser(id);
         }
 
-
         public static string GetDllVersion()
         {
             try
@@ -149,14 +148,22 @@ namespace JetEazy.GdxCore3
         /// <param name="X">馬達 X 座標</param>
         /// <param name="Y">馬達 Y 座標</param>
         /// <param name="Z">馬達 Z 座標</param>
-        public static void GetQCMotorPos(int mirrorIndex, out double X, out double Y, out double Z)
+        public static double GetQCMotorPos(int mirrorIndex, out double X, out double Y, out double Z)
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
             var motorPos = trf.GetQCMotorPos(mirrorIndex);
             X = motorPos.X;
             Y = motorPos.Y;
             Z = motorPos.Z;
+            var runSurfaceCenter = trf.GetLastRunSurfaceCenter(mirrorIndex);
+            return runSurfaceCenter[3];
         }
+        public static string SetQcLaserMeasurement(int mirrorIdx, double value)
+        {
+            var trf = GdxGlobal.Facade.LaserCoordsTransform;
+            return trf.SetQCLaserMeasurement(mirrorIdx, value);
+        }
+
         public static void CollectLaserPt(int mirrorIdx, int pointIdx, double laserDist, string ga_motorPt)
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
@@ -179,7 +186,6 @@ namespace JetEazy.GdxCore3
             trf.BuildMirrorPlaneTransform(mirrorIdx);
             System.Diagnostics.Debug.WriteLine(GdxGlobal.INI.GaugeBlockPlanePoints);
         }
-
 
         public static void Trace(string tag, object process, params object[] args)
         {
@@ -210,7 +216,6 @@ namespace JetEazy.GdxCore3
                 GdxGlobal.LOG.Error(ex, "Trace Error");
             }
         }
-
 
         #region PRIVATE_TRACE_FUNCTIONS
         class XWait
