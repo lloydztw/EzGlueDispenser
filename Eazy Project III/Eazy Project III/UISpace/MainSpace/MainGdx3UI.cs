@@ -903,6 +903,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 catch (Exception ex)
                 {
                     GdxGlobal.LOG.Error(ex, "OnLiveImage");
+                    CommonLogClass.Instance.LogMessage("OnLiveImage 異常", Color.DarkRed);
                 }
             }
         }

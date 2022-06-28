@@ -48,7 +48,7 @@ namespace JetEazy.GdxCore3
             }
             catch (Exception ex)
             {
-                GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
+                GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");                
                 return "unknown";
             }
         }
@@ -106,6 +106,7 @@ namespace JetEazy.GdxCore3
             catch (Exception ex)
             {
                 GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
+                CommonLogClass.Instance.LogMessage("中光電 DLL 調用異常", Color.DarkRed);
                 return false;
             }
         }
@@ -116,7 +117,6 @@ namespace JetEazy.GdxCore3
                 CommonLogClass.Instance.LogMessage("GdxCore.CalcProjCompensation BYPASS", Color.Orange);
                 return;
             }
-
 
             try
             {
@@ -137,6 +137,7 @@ namespace JetEazy.GdxCore3
             catch (Exception ex)
             {
                 GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
+                CommonLogClass.Instance.LogMessage("中光電 DLL 調用異常", Color.DarkRed);
             }
         }
 

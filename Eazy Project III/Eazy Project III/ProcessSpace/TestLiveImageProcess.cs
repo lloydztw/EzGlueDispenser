@@ -172,6 +172,7 @@ namespace Eazy_Project_III.ProcessSpace
             //(1) 檢查馬達狀態
             if (!check_motor_ready(runCtrl, out bool isError))
                 return;
+
             if (!runCtrl.Go || isError)
                 return;
 
@@ -181,7 +182,7 @@ namespace Eazy_Project_III.ProcessSpace
                 //(2.1) 通知 GUI 更新 Image
                 FireLiveImaging(bmp);
                 
-                if(runCtrl.RunCount > 20)
+                if(runCtrl.RunCount > 5)
                 {
                     var tm1 = DateTime.Now;
                     var ts = tm1 - m_tm;
