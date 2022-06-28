@@ -34,6 +34,7 @@ namespace Eazy_Project_III.FormSpace
         TextBox txtHeightData;
         Button btnCapturePlaneHeight;
         Button btnLEAttractMeasure;
+        Button btnQCMoveToMeasurePos;
         Button btnQCLaserMeasure;
 
 
@@ -79,6 +80,9 @@ namespace Eazy_Project_III.FormSpace
 
             //MACHINE.SetNormalTemp(false);
             Universal.IsOpenMotorWindows = false;
+
+            //@LETIAN 中途關了此 Form 其他 Processes 要 Stop 嗎？
+            qclasermeasureprocess.Stop();
         }
 
         private void FrmAXISSetup_Load(object sender, EventArgs e)
@@ -101,12 +105,14 @@ namespace Eazy_Project_III.FormSpace
             btnDispeningManual = button7;
             cboDispensingTimeList = comboBox1;
             btnOnekeyDispensing = button8;
-            btnQCLaserMeasure = button9;
+            btnQCMoveToMeasurePos = button9;
+            btnQCLaserMeasure = button10;
 
             btnManualAuto.Click += BtnManualAuto_Click;
             btnLESnap.Click += BtnLESnap_Click;
             btnCapturePlaneHeight.Click += BtnCapturePlaneHeight_Click;
             btnLEAttractMeasure.Click += BtnLEAttractMeasure_Click;
+            btnQCMoveToMeasurePos.Click += BtnQCMoveToMeasurePos_Click;
             btnQCLaserMeasure.Click += BtnQCLaserMeasure_Click;
 
             btnDispeningGo.Click += BtnDispeningGo_Click;
@@ -155,9 +161,11 @@ namespace Eazy_Project_III.FormSpace
             //LanguageExClass.Instance.EnumControls(this);
         }
 
+        
+
         int MainMirrorIndex = 0;//左邊還是右邊  0左邊 1右邊
 
-        private void BtnQCLaserMeasure_Click(object sender, EventArgs e)
+        private void BtnQCMoveToMeasurePos_Click(object sender, EventArgs e)
         {
             //判断是否在手动状态
             if (MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 0 && !Universal.IsNoUseIO)
@@ -165,21 +173,8 @@ namespace Eazy_Project_III.FormSpace
                 VsMSG.Instance.Warning("手动模式下，无法启动，请检查。");
                 return;
             }
-
-            if (!qclasermeasureprocess.IsOn)
-            {
-                string msg0 = "是否要進行QC鐳射量測 (手動輸入)";
-                if (VsMSG.Instance.Question(msg0) == DialogResult.OK)
-                {
-                    using (var frm = new FormQCLaserMeasurement(0))
-                    {
-                        frm.ShowDialog(this);
-                        return;
-                    }
-                }
-            }
-
-            string onStrMsg = "是否要進行QC鐳射量測？";
+            
+            string onStrMsg = "是否進行QC鐳射量測?";
             string offStrMsg = "是否要停止QC鐳射量測？";
             string msg = (qclasermeasureprocess.IsOn ? offStrMsg : onStrMsg);
 
@@ -187,6 +182,7 @@ namespace Eazy_Project_III.FormSpace
             {
                 if (!qclasermeasureprocess.IsOn)
                 {
+                    bool go = false;
                     frmUserSelect myUserSelectForm = new frmUserSelect(false);
                     this.TopMost = false;
                     if (myUserSelectForm.ShowDialog() == DialogResult.OK)
@@ -195,15 +191,39 @@ namespace Eazy_Project_III.FormSpace
                         MainMirrorIndex = myUserSelectForm.PutIndex;
                         //MainAloneToMirror = myUserSelectForm.IsAloneToMirror;
 
-                        qclasermeasureprocess.Start();
+                        GdxCore.GetQCMotorPos(MainMirrorIndex, out double X, out double Y, out double Z);
+                        msg = string.Format("即將移動到 XYZ=\n\r ({0:0.00},{1:0.00},{2:0.00})", X, Y, Z)
+                                              + "\n\r進行QC鐳射量測\n\r確認是否安全要進行移動？";
+                        go = (VsMSG.Instance.Question(msg) == DialogResult.OK);
+
+                        // qclasermeasureprocess.Start();
                     }
                     this.TopMost = true;
                     myUserSelectForm.Dispose();
                     myUserSelectForm = null;
+
+                    if (go)
+                        qclasermeasureprocess.Start();
                 }
                 else
                 {
                     qclasermeasureprocess.Stop();
+                }
+            }
+        }
+        
+        private void BtnQCLaserMeasure_Click(object sender, EventArgs e)
+        {
+            if (!qclasermeasureprocess.IsOn)
+            {
+                string msg0 = "是否要進行QC鐳射量測?\n\r(手動輸入)";
+                if (VsMSG.Instance.Question(msg0) == DialogResult.OK)
+                {
+                    using (var frm = new FormQCLaserMeasurement(MainMirrorIndex))
+                    {
+                        frm.ShowDialog(this);
+                        return;
+                    }
                 }
             }
         }
@@ -841,6 +861,7 @@ namespace Eazy_Project_III.FormSpace
                 }
             }
         }
+
         ProcessClass qclasermeasureprocess = new ProcessClass();
         void QcLaserMeasureTick()
         {
@@ -851,22 +872,19 @@ namespace Eazy_Project_III.FormSpace
                 switch (Process.ID)
                 {
                     case 5:
-
                         double x = 0;
                         double y = 0;
                         double z = 0;
-
                         //獲取坐標
                         GdxCore.GetQCMotorPos(MainMirrorIndex, out x, out y, out z);
                         CommonLogClass.Instance.LogMessage("QC鐳射量測 " + (MainMirrorIndex == 0 ? "左邊" : "右邊"), Color.Black);
                         CommonLogClass.Instance.LogMessage("QC鐳射量測 讀取坐標={" + x.ToString() + "," + y.ToString() + "," + z.ToString() + "}", Color.Black);
 
                         //BY PASS  先看坐標是否正常 確定沒問題再實作  Gaara
-                        Process.Stop();
-                        return;
-                        
-                        MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 1, x.ToString() + "," + y.ToString() + "," + z.ToString());
+                        //Process.Stop();
+                        //return;                       
 
+                        MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 1, x.ToString() + "," + y.ToString() + "," + z.ToString());
                         Process.NextDuriation = 500;
                         Process.ID = 10;
 

@@ -38,7 +38,7 @@ namespace Eazy_Project_III.FormSpace
 
             if (err != null)
             {
-                MessageBox.Show(err);
+                MessageBox.Show(err, "QC Laser 無法設定");
                 return;
             }
 

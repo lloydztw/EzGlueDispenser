@@ -156,7 +156,7 @@ namespace JetEazy.GdxCore3
             Y = motorPos.Y;
             Z = motorPos.Z;
             var runSurfaceCenter = trf.GetLastRunSurfaceCenter(mirrorIndex);
-            return runSurfaceCenter[3];
+            return runSurfaceCenter != null ? runSurfaceCenter[3] : 0;
         }
         public static string SetQcLaserMeasurement(int mirrorIdx, double value)
         {

@@ -48,7 +48,7 @@ namespace Eazy_Project_III.FormSpace
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(99, 39);
             this.btnCancel.TabIndex = 4;
-            this.btnCancel.Text = "Cancel";
+            this.btnCancel.Text = "Close";
             this.btnCancel.UseVisualStyleBackColor = false;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
@@ -61,7 +61,7 @@ namespace Eazy_Project_III.FormSpace
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(99, 39);
             this.btnOK.TabIndex = 10;
-            this.btnOK.Text = "OK";
+            this.btnOK.Text = "寫入";
             this.btnOK.UseVisualStyleBackColor = false;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
