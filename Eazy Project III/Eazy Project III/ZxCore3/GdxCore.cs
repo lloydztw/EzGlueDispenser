@@ -361,6 +361,19 @@ namespace JetEazy.GdxCore3
             if (ga_laser is Sim.GdxLaser)
             {
                 var sim_laser = (Sim.GdxLaser)ga_laser;
+                if(mirrorIdx==1)
+                {
+                    double[] lds = new double[]
+                    {
+                        0.3115, 0.2916, 0.2571
+                    };
+                    if (pointIdx < lds.Length)
+                    {
+                        double ld = lds[pointIdx];
+                        sim_laser.set_simulation_dist(ld);
+                        return;
+                    }
+                }
                 if (mirrorIdx >= 0 && pointIdx >= 0)
                 {
                     var mirrorInfo = mirrorIdx == 0 ?
