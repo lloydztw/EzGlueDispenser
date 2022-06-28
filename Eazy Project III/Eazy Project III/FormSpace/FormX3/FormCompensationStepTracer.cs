@@ -129,10 +129,11 @@ namespace Eazy_Project_III.FormSpace
             update_row(5, " 預計下一步絕對位置", e.CurrentPos + e.Delta);
             update_row(6, " 最終目標絕對位置", e.FinalTarget);
             update_color(4, e.Delta);
+            update_color(6, e.Delta);
 
             dv.Rows[0].Selected = false;
             dv.Rows[2].Selected = true;
-            dv.Rows[6].Selected = true;
+            //dv.Rows[6].Selected = true;
         }
     }
 }

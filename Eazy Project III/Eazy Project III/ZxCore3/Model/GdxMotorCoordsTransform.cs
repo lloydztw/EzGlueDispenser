@@ -132,13 +132,15 @@ namespace JetEazy.GdxCore3.Model
                 //double dGY = Y;
                 //double dGZ = Z * cos(a) + u * sin(a);
                 //--------------------------------------------
-                if (MODE == 0 && Math.Abs(sin) > 0.1)
+                if (MODE == 0 && Math.Abs(cos) > 0.1)
                 {
-                    // Let Z == 0
-                    double u = dGz / (sin);
-                    double Z = 0;
+                    // Let u == 0
+                    double u = 0;
+                    double Z = dGz / cos;
                     double Y = dGy;
                     double X = dGx + Z * sin - u * cos;
+                    //@LETIAN: Disable Y
+                    Y = 0;
                     return new QVector(X, Y, Z, u, 0, 0);
                 }
                 else
@@ -148,6 +150,8 @@ namespace JetEazy.GdxCore3.Model
                     double Z = u;
                     double Y = dGy;
                     double X = dGx + Z * sin - u * cos;
+                    //@LETIAN: Disable Y
+                    Y = 0;
                     return new QVector(X, Y, Z, u, 0, 0);
                 }
             }

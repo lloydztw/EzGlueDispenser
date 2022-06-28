@@ -162,9 +162,10 @@ namespace Eazy_Project_III.ProcessSpace
                             using (Bitmap bmp = snapshot_image(cam, 0))
                             {
                                 //(15.1) 通知 GUI 更新 Image
-                                FireLiveImaging(bmp);
+                                // FireLiveImaging(bmp);
                                 //(15.2) 中光電 Go-NoGo
                                 bool go = GdxCore.CheckCompensate(bmp);
+                                FireLiveImaging(bmp);
                                 //(15.3) NO-GO
                                 if (!go)
                                 {
@@ -349,6 +350,8 @@ namespace Eazy_Project_III.ProcessSpace
                             else if (isReady && check_completed(phase))
                             {
                                 _LOG(phase.Name, "完成");
+                                GdxCore.GetQCMotorPos(m_mirrorIndex, out double X, out double Y, out double Z);
+                                _LOG("mirror", m_mirrorIndex, "QC 馬達座標", new QVector(X, Y, Z), Color.Purple);
                                 Stop();
                                 FireCompleted();
                             }
@@ -495,7 +498,7 @@ namespace Eazy_Project_III.ProcessSpace
             //(8) 下指令
             log_motor_command(runCtrl, m_nextMotorPos, m_incr);
             ax_start_move(m_nextMotorPos);
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(MOTOR_CMD_DELAY);
         }
         QVector phase3_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {

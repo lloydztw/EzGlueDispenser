@@ -35,6 +35,7 @@ namespace Eazy_Project_III.ProcessSpace
     {
         protected const string IMAGE_SAVE_PATH = @"D:\EVENTLOG\Nlogs\images";
         protected static int MOTOR_TIMEOUT_WAIT_COUNT = 5000;
+        protected static int MOTOR_CMD_DELAY = 10;
         protected static int MAX_RUN_COUNT = int.MaxValue;
 
         #region ACCESS_TO_OTHER_PROCESSES
@@ -565,20 +566,21 @@ namespace Eazy_Project_III.ProcessSpace
             try
             {
                 cam.Snap();
-                Bitmap bmp = cam.GetSnap();
-
-                #region ASYNC_DUMP_IMAGE
-                var dump_func = new Action<Bitmap, int>((bmp2, i) =>
+                using (Bitmap bmp0 = cam.GetSnap())
                 {
-                    string fileName = string.Format("image_{0}_{1}.bmp", Name, i);
-                    fileName = System.IO.Path.Combine(IMAGE_SAVE_PATH, fileName);
-                    bmp2.Save(fileName, ImageFormat.Bmp);
-                    bmp2.Dispose();
-                });
-                dump_func.BeginInvoke((Bitmap)bmp.Clone(), runCount, null, null);
-                #endregion
-
-                return bmp;
+                    Bitmap bmp = new Bitmap(bmp0);
+                    #region ASYNC_DUMP_IMAGE
+                    var dump_func = new Action<Bitmap, int>((bmp2, i) =>
+                    {
+                        string fileName = string.Format("image_{0}_{1}.bmp", Name, i);
+                        fileName = System.IO.Path.Combine(IMAGE_SAVE_PATH, fileName);
+                        bmp2.Save(fileName, ImageFormat.Bmp);
+                        bmp2.Dispose();
+                    });
+                    dump_func.BeginInvoke((Bitmap)bmp.Clone(), runCount, null, null);
+                    #endregion
+                    return bmp;
+                }
             }
             catch (Exception ex)
             {

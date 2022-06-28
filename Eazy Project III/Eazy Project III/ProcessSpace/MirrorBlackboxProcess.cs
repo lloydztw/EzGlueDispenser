@@ -291,13 +291,16 @@ namespace Eazy_Project_III.ProcessSpace
             using (Bitmap bmp = snapshot_image(cam, runCtrl.RunCount))
             {
                 //(2.1) 通知 GUI 更新 Image
-                FireLiveImaging(bmp);
+                // FireLiveImaging(bmp);
 
                 //(2.2) 紅or綠光斑
                 Color color = m_mirrorIndex == 0 ? Color.DarkOrange : Color.Blue;
                 int compType = m_mirrorIndex == 0 ? 1 : 0;
                 GdxCore.CalcProjCompensation(bmp, m_motorParams, compType);
                 _LOG(runCtrl.Name, "Coretronics", "ProjComp", m_motorParams[0], m_motorParams[1], color);
+
+                //(2.2) 通知 GUI 更新 Image
+                FireLiveImaging(bmp);
 
                 //(2.3) m_motorParams == (0,0) => 完成
                 runCtrl.IsCompleted = _is_zero(m_motorParams);
@@ -385,6 +388,7 @@ namespace Eazy_Project_III.ProcessSpace
             //(0) Read Motors Current Position as InitPos
             m_initMotorPos = ax_read_current_pos();
             m_showIDs = new int[] { 0, 1, 2, 3 };
+            _LOG("中光電補償後最終角度", "(θy,θz)", m_initMotorPos.Slice(4, 2));
 
             //(1) Phase Run Context
             m_phase2.StepFunc = phase2_run_one_step;
@@ -408,6 +412,10 @@ namespace Eazy_Project_III.ProcessSpace
             QVector mv0 = this.CompensationInitPos;
             m_trf = GdxGlobal.Facade.MotorCoordsTransform;
             m_trf.Init(mv0, sphereCenterOffsetU);
+
+            // 計算 & 設定 目標值
+            m_targetPos = phase2_calc_target();
+            _clip_into_safe_box(m_targetPos);
             return m_phase2;
         }
         QVector phase2_calc_target()
@@ -418,6 +426,11 @@ namespace Eazy_Project_III.ProcessSpace
             var initPos = this.CompensationInitPos;
             m_currMotorPos = ax_read_current_pos();
             var cxDelta = m_currMotorPos - initPos;
+
+            if (AxisUnitConvert.IsSmallVector(cxDelta))
+            {
+                return new QVector(m_currMotorPos);
+            }
 
             //JEZ 球心偏移 補償 目標值
             var delta = m_trf.CalcSphereCenterCompensation(initPos, cxDelta);
@@ -433,13 +446,6 @@ namespace Eazy_Project_III.ProcessSpace
                 return;
             if (!runCtrl.Go || isError)
                 return;
-
-            // 計算 & 設定 目標值
-            if (runCtrl.RunCount == 0)
-            {
-                m_targetPos = phase2_calc_target();
-                _clip_into_safe_box(m_targetPos);
-            }
 
             // 計算馬達移動
             //(1) Current Pos
@@ -477,7 +483,7 @@ namespace Eazy_Project_III.ProcessSpace
             //(8) 下指令
             log_motor_command(runCtrl, m_nextMotorPos, m_incr);
             ax_start_move(m_nextMotorPos);
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(MOTOR_CMD_DELAY);
         }
         QVector phase2_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {
