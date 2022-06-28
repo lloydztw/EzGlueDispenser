@@ -425,6 +425,7 @@ namespace Eazy_Project_III.ProcessSpace
             if (comp.CanCompensate(m_mirrorIndex))
             {
                 var delta = comp.CalcCompensation(m_mirrorIndex, m_initMotorPos);
+                _LOG("中心偏移補償", "預計補償量", delta);
                 m_targetPos = m_initMotorPos + delta;
                 _clip_into_safe_box(m_targetPos);
             }
