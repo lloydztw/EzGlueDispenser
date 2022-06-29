@@ -161,7 +161,8 @@ namespace JetEazy.GdxCore3
         public static string SetQcLaserMeasurement(int mirrorIdx, double value)
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
-            return trf.SetQCLaserMeasurement(mirrorIdx, value);
+            string err = trf.SetQCLaserMeasurement(mirrorIdx, value);
+            return err;
         }
 
         public static void CollectLaserPt(int mirrorIdx, int pointIdx, double laserDist, string ga_motorPt)

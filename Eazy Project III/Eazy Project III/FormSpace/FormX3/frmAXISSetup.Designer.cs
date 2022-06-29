@@ -32,10 +32,20 @@ namespace Eazy_Project_III.FormSpace
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmAXISSetup));
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.vsTouchMotorUI1 = new Common.VsTouchMotorUI();
+            this.vsTouchMotorUI2 = new Common.VsTouchMotorUI();
+            this.vsTouchMotorUI3 = new Common.VsTouchMotorUI();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.vsTouchMotorUI4 = new Common.VsTouchMotorUI();
+            this.vsTouchMotorUI5 = new Common.VsTouchMotorUI();
+            this.vsTouchMotorUI6 = new Common.VsTouchMotorUI();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.vsTouchMotorUI7 = new Common.VsTouchMotorUI();
+            this.vsTouchMotorUI8 = new Common.VsTouchMotorUI();
+            this.vsTouchMotorUI9 = new Common.VsTouchMotorUI();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.button10 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.button8 = new System.Windows.Forms.Button();
@@ -57,16 +67,6 @@ namespace Eazy_Project_III.FormSpace
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnTopMost = new System.Windows.Forms.ToolStripButton();
             this.btnExit = new System.Windows.Forms.ToolStripButton();
-            this.button10 = new System.Windows.Forms.Button();
-            this.vsTouchMotorUI1 = new Common.VsTouchMotorUI();
-            this.vsTouchMotorUI2 = new Common.VsTouchMotorUI();
-            this.vsTouchMotorUI3 = new Common.VsTouchMotorUI();
-            this.vsTouchMotorUI4 = new Common.VsTouchMotorUI();
-            this.vsTouchMotorUI5 = new Common.VsTouchMotorUI();
-            this.vsTouchMotorUI6 = new Common.VsTouchMotorUI();
-            this.vsTouchMotorUI7 = new Common.VsTouchMotorUI();
-            this.vsTouchMotorUI8 = new Common.VsTouchMotorUI();
-            this.vsTouchMotorUI9 = new Common.VsTouchMotorUI();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -87,11 +87,10 @@ namespace Eazy_Project_III.FormSpace
             this.tabControl1.Controls.Add(this.tabPage5);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.ItemSize = new System.Drawing.Size(100, 30);
-            this.tabControl1.Location = new System.Drawing.Point(0, 31);
-            this.tabControl1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabControl1.Location = new System.Drawing.Point(0, 25);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1699, 784);
+            this.tabControl1.Size = new System.Drawing.Size(1269, 628);
             this.tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.FillToRight;
             this.tabControl1.TabIndex = 0;
             // 
@@ -101,13 +100,39 @@ namespace Eazy_Project_III.FormSpace
             this.tabPage1.Controls.Add(this.vsTouchMotorUI2);
             this.tabPage1.Controls.Add(this.vsTouchMotorUI3);
             this.tabPage1.Location = new System.Drawing.Point(4, 34);
-            this.tabPage1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.tabPage1.Size = new System.Drawing.Size(1691, 746);
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabPage1.Size = new System.Drawing.Size(1261, 590);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "AXIS123";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // vsTouchMotorUI1
+            // 
+            this.vsTouchMotorUI1.BackColor = System.Drawing.SystemColors.Control;
+            this.vsTouchMotorUI1.Location = new System.Drawing.Point(847, 13);
+            this.vsTouchMotorUI1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI1.Name = "vsTouchMotorUI1";
+            this.vsTouchMotorUI1.Size = new System.Drawing.Size(415, 573);
+            this.vsTouchMotorUI1.TabIndex = 8;
+            // 
+            // vsTouchMotorUI2
+            // 
+            this.vsTouchMotorUI2.BackColor = System.Drawing.SystemColors.Control;
+            this.vsTouchMotorUI2.Location = new System.Drawing.Point(426, 13);
+            this.vsTouchMotorUI2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI2.Name = "vsTouchMotorUI2";
+            this.vsTouchMotorUI2.Size = new System.Drawing.Size(415, 573);
+            this.vsTouchMotorUI2.TabIndex = 7;
+            // 
+            // vsTouchMotorUI3
+            // 
+            this.vsTouchMotorUI3.BackColor = System.Drawing.SystemColors.Control;
+            this.vsTouchMotorUI3.Location = new System.Drawing.Point(5, 13);
+            this.vsTouchMotorUI3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI3.Name = "vsTouchMotorUI3";
+            this.vsTouchMotorUI3.Size = new System.Drawing.Size(415, 573);
+            this.vsTouchMotorUI3.TabIndex = 6;
             // 
             // tabPage2
             // 
@@ -115,13 +140,39 @@ namespace Eazy_Project_III.FormSpace
             this.tabPage2.Controls.Add(this.vsTouchMotorUI5);
             this.tabPage2.Controls.Add(this.vsTouchMotorUI6);
             this.tabPage2.Location = new System.Drawing.Point(4, 34);
-            this.tabPage2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.tabPage2.Size = new System.Drawing.Size(1691, 751);
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabPage2.Size = new System.Drawing.Size(1266, 589);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "AXIS456";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // vsTouchMotorUI4
+            // 
+            this.vsTouchMotorUI4.BackColor = System.Drawing.SystemColors.Control;
+            this.vsTouchMotorUI4.Location = new System.Drawing.Point(847, 13);
+            this.vsTouchMotorUI4.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI4.Name = "vsTouchMotorUI4";
+            this.vsTouchMotorUI4.Size = new System.Drawing.Size(415, 573);
+            this.vsTouchMotorUI4.TabIndex = 5;
+            // 
+            // vsTouchMotorUI5
+            // 
+            this.vsTouchMotorUI5.BackColor = System.Drawing.SystemColors.Control;
+            this.vsTouchMotorUI5.Location = new System.Drawing.Point(426, 13);
+            this.vsTouchMotorUI5.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI5.Name = "vsTouchMotorUI5";
+            this.vsTouchMotorUI5.Size = new System.Drawing.Size(415, 573);
+            this.vsTouchMotorUI5.TabIndex = 4;
+            // 
+            // vsTouchMotorUI6
+            // 
+            this.vsTouchMotorUI6.BackColor = System.Drawing.SystemColors.Control;
+            this.vsTouchMotorUI6.Location = new System.Drawing.Point(5, 13);
+            this.vsTouchMotorUI6.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI6.Name = "vsTouchMotorUI6";
+            this.vsTouchMotorUI6.Size = new System.Drawing.Size(415, 573);
+            this.vsTouchMotorUI6.TabIndex = 3;
             // 
             // tabPage3
             // 
@@ -129,20 +180,45 @@ namespace Eazy_Project_III.FormSpace
             this.tabPage3.Controls.Add(this.vsTouchMotorUI8);
             this.tabPage3.Controls.Add(this.vsTouchMotorUI9);
             this.tabPage3.Location = new System.Drawing.Point(4, 34);
-            this.tabPage3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(1691, 751);
+            this.tabPage3.Size = new System.Drawing.Size(1266, 589);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "AXIS789";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // vsTouchMotorUI7
+            // 
+            this.vsTouchMotorUI7.BackColor = System.Drawing.SystemColors.Control;
+            this.vsTouchMotorUI7.Location = new System.Drawing.Point(847, 13);
+            this.vsTouchMotorUI7.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI7.Name = "vsTouchMotorUI7";
+            this.vsTouchMotorUI7.Size = new System.Drawing.Size(415, 573);
+            this.vsTouchMotorUI7.TabIndex = 5;
+            // 
+            // vsTouchMotorUI8
+            // 
+            this.vsTouchMotorUI8.BackColor = System.Drawing.SystemColors.Control;
+            this.vsTouchMotorUI8.Location = new System.Drawing.Point(426, 13);
+            this.vsTouchMotorUI8.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI8.Name = "vsTouchMotorUI8";
+            this.vsTouchMotorUI8.Size = new System.Drawing.Size(415, 573);
+            this.vsTouchMotorUI8.TabIndex = 4;
+            // 
+            // vsTouchMotorUI9
+            // 
+            this.vsTouchMotorUI9.BackColor = System.Drawing.SystemColors.Control;
+            this.vsTouchMotorUI9.Location = new System.Drawing.Point(5, 13);
+            this.vsTouchMotorUI9.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI9.Name = "vsTouchMotorUI9";
+            this.vsTouchMotorUI9.Size = new System.Drawing.Size(415, 573);
+            this.vsTouchMotorUI9.TabIndex = 3;
             // 
             // tabPage4
             // 
             this.tabPage4.Controls.Add(this.groupBox1);
             this.tabPage4.Location = new System.Drawing.Point(4, 34);
-            this.tabPage4.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(1691, 746);
+            this.tabPage4.Size = new System.Drawing.Size(1266, 589);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "調試操作界面";
             this.tabPage4.UseVisualStyleBackColor = true;
@@ -160,22 +236,30 @@ namespace Eazy_Project_III.FormSpace
             this.groupBox1.Controls.Add(this.button1);
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(0, 0);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.groupBox1.Size = new System.Drawing.Size(1691, 746);
+            this.groupBox1.Size = new System.Drawing.Size(1266, 589);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "調試操作";
+            // 
+            // button10
+            // 
+            this.button10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button10.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button10.Location = new System.Drawing.Point(8, 320);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size(105, 50);
+            this.button10.TabIndex = 30;
+            this.button10.Text = "手動 QC Laser量测";
+            this.button10.UseVisualStyleBackColor = false;
             // 
             // button9
             // 
             this.button9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button9.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button9.Location = new System.Drawing.Point(11, 330);
-            this.button9.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button9.Location = new System.Drawing.Point(8, 264);
             this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(140, 62);
+            this.button9.Size = new System.Drawing.Size(105, 50);
             this.button9.TabIndex = 29;
             this.button9.Text = "移動到 QC 位置";
             this.button9.UseVisualStyleBackColor = false;
@@ -189,11 +273,9 @@ namespace Eazy_Project_III.FormSpace
             this.groupBox2.Controls.Add(this.button7);
             this.groupBox2.Controls.Add(this.button6);
             this.groupBox2.Controls.Add(this.button5);
-            this.groupBox2.Location = new System.Drawing.Point(553, 25);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBox2.Location = new System.Drawing.Point(415, 20);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.groupBox2.Size = new System.Drawing.Size(641, 470);
+            this.groupBox2.Size = new System.Drawing.Size(481, 376);
             this.groupBox2.TabIndex = 28;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "点胶相关操作";
@@ -202,10 +284,9 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button8.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button8.Location = new System.Drawing.Point(8, 235);
-            this.button8.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button8.Location = new System.Drawing.Point(6, 188);
             this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(140, 62);
+            this.button8.Size = new System.Drawing.Size(105, 50);
             this.button8.TabIndex = 35;
             this.button8.Text = "一鍵點膠測試";
             this.button8.UseVisualStyleBackColor = false;
@@ -213,10 +294,9 @@ namespace Eazy_Project_III.FormSpace
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(267, 206);
-            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label3.Location = new System.Drawing.Point(200, 165);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(63, 15);
+            this.label3.Size = new System.Drawing.Size(53, 12);
             this.label3.TabIndex = 34;
             this.label3.Text = "毫秒(ms)";
             // 
@@ -229,20 +309,18 @@ namespace Eazy_Project_III.FormSpace
             "10000",
             "15000",
             "20000"});
-            this.comboBox1.Location = new System.Drawing.Point(159, 202);
-            this.comboBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.comboBox1.Location = new System.Drawing.Point(119, 162);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(99, 23);
+            this.comboBox1.Size = new System.Drawing.Size(75, 20);
             this.comboBox1.TabIndex = 33;
             this.comboBox1.Text = "1000";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(156, 170);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label2.Location = new System.Drawing.Point(117, 136);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(67, 15);
+            this.label2.Size = new System.Drawing.Size(53, 12);
             this.label2.TabIndex = 32;
             this.label2.Text = "出胶时间";
             // 
@@ -250,10 +328,9 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button7.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button7.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button7.Location = new System.Drawing.Point(8, 165);
-            this.button7.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button7.Location = new System.Drawing.Point(6, 132);
             this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(140, 62);
+            this.button7.Size = new System.Drawing.Size(105, 50);
             this.button7.TabIndex = 31;
             this.button7.Text = "手動出膠";
             this.button7.UseVisualStyleBackColor = false;
@@ -262,10 +339,9 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button6.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button6.Location = new System.Drawing.Point(8, 95);
-            this.button6.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button6.Location = new System.Drawing.Point(6, 76);
             this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(140, 62);
+            this.button6.Size = new System.Drawing.Size(105, 50);
             this.button6.TabIndex = 30;
             this.button6.Text = "點膠模組\r\n回待命";
             this.button6.UseVisualStyleBackColor = false;
@@ -274,10 +350,9 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button5.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button5.Location = new System.Drawing.Point(8, 25);
-            this.button5.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button5.Location = new System.Drawing.Point(6, 20);
             this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(140, 62);
+            this.button5.Size = new System.Drawing.Size(105, 50);
             this.button5.TabIndex = 29;
             this.button5.Text = "點膠模組\r\n定位至避光槽";
             this.button5.UseVisualStyleBackColor = false;
@@ -286,10 +361,9 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button4.Location = new System.Drawing.Point(11, 260);
-            this.button4.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button4.Location = new System.Drawing.Point(8, 208);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(140, 62);
+            this.button4.Size = new System.Drawing.Size(105, 50);
             this.button4.TabIndex = 27;
             this.button4.Text = "自動校正鐳射頭與吸嘴相對位置";
             this.button4.UseVisualStyleBackColor = false;
@@ -298,10 +372,9 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button3.Location = new System.Drawing.Point(11, 190);
-            this.button3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button3.Location = new System.Drawing.Point(8, 152);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(140, 62);
+            this.button3.Size = new System.Drawing.Size(105, 50);
             this.button3.TabIndex = 26;
             this.button3.Text = "建立塊歸平面流程";
             this.button3.UseVisualStyleBackColor = false;
@@ -309,29 +382,26 @@ namespace Eazy_Project_III.FormSpace
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(435, 144);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Location = new System.Drawing.Point(326, 115);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(29, 15);
+            this.label1.Size = new System.Drawing.Size(17, 12);
             this.label1.TabIndex = 25;
             this.label1.Text = "mm";
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(159, 140);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBox1.Location = new System.Drawing.Point(119, 112);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(267, 25);
+            this.textBox1.Size = new System.Drawing.Size(201, 21);
             this.textBox1.TabIndex = 24;
             // 
             // button2
             // 
             this.button2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button2.Location = new System.Drawing.Point(11, 120);
-            this.button2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button2.Location = new System.Drawing.Point(8, 96);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(140, 62);
+            this.button2.Size = new System.Drawing.Size(105, 50);
             this.button2.TabIndex = 23;
             this.button2.Text = "采集高度";
             this.button2.UseVisualStyleBackColor = false;
@@ -340,10 +410,9 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button1.Location = new System.Drawing.Point(11, 50);
-            this.button1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button1.Location = new System.Drawing.Point(8, 40);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(140, 62);
+            this.button1.Size = new System.Drawing.Size(105, 50);
             this.button1.TabIndex = 22;
             this.button1.Text = "手动/自动";
             this.button1.UseVisualStyleBackColor = false;
@@ -353,9 +422,8 @@ namespace Eazy_Project_III.FormSpace
             this.tabPage5.Controls.Add(this.btnWriteToPlc);
             this.tabPage5.Controls.Add(this.PG_PosSafe);
             this.tabPage5.Location = new System.Drawing.Point(4, 34);
-            this.tabPage5.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabPage5.Name = "tabPage5";
-            this.tabPage5.Size = new System.Drawing.Size(1691, 751);
+            this.tabPage5.Size = new System.Drawing.Size(1266, 589);
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "PLC參數設定";
             this.tabPage5.UseVisualStyleBackColor = true;
@@ -364,10 +432,9 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.btnWriteToPlc.BackColor = System.Drawing.Color.Red;
             this.btnWriteToPlc.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnWriteToPlc.Location = new System.Drawing.Point(733, 4);
-            this.btnWriteToPlc.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnWriteToPlc.Location = new System.Drawing.Point(550, 3);
             this.btnWriteToPlc.Name = "btnWriteToPlc";
-            this.btnWriteToPlc.Size = new System.Drawing.Size(140, 62);
+            this.btnWriteToPlc.Size = new System.Drawing.Size(105, 50);
             this.btnWriteToPlc.TabIndex = 23;
             this.btnWriteToPlc.Text = "寫入參數";
             this.btnWriteToPlc.UseVisualStyleBackColor = false;
@@ -377,9 +444,8 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.PG_PosSafe.Dock = System.Windows.Forms.DockStyle.Left;
             this.PG_PosSafe.Location = new System.Drawing.Point(0, 0);
-            this.PG_PosSafe.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.PG_PosSafe.Name = "PG_PosSafe";
-            this.PG_PosSafe.Size = new System.Drawing.Size(725, 751);
+            this.PG_PosSafe.Size = new System.Drawing.Size(544, 589);
             this.PG_PosSafe.TabIndex = 0;
             // 
             // toolStrip1
@@ -390,7 +456,7 @@ namespace Eazy_Project_III.FormSpace
             this.btnExit});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1699, 31);
+            this.toolStrip1.Size = new System.Drawing.Size(1269, 25);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -399,7 +465,7 @@ namespace Eazy_Project_III.FormSpace
             this.btnTopMost.Image = ((System.Drawing.Image)(resources.GetObject("btnTopMost.Image")));
             this.btnTopMost.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnTopMost.Name = "btnTopMost";
-            this.btnTopMost.Size = new System.Drawing.Size(63, 24);
+            this.btnTopMost.Size = new System.Drawing.Size(56, 24);
             this.btnTopMost.Text = "置顶";
             this.btnTopMost.Visible = false;
             this.btnTopMost.Click += new System.EventHandler(this.btnTopMost_Click);
@@ -411,112 +477,18 @@ namespace Eazy_Project_III.FormSpace
             this.btnExit.Image = ((System.Drawing.Image)(resources.GetObject("btnExit.Image")));
             this.btnExit.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnExit.Name = "btnExit";
-            this.btnExit.Size = new System.Drawing.Size(43, 28);
+            this.btnExit.Size = new System.Drawing.Size(36, 22);
             this.btnExit.Text = "退出";
             this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
-            // button10
-            // 
-            this.button10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button10.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button10.Location = new System.Drawing.Point(11, 400);
-            this.button10.Margin = new System.Windows.Forms.Padding(4);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(140, 62);
-            this.button10.TabIndex = 30;
-            this.button10.Text = "手動 QC Laser量测";
-            this.button10.UseVisualStyleBackColor = false;
-            // 
-            // vsTouchMotorUI1
-            // 
-            this.vsTouchMotorUI1.BackColor = System.Drawing.SystemColors.Control;
-            this.vsTouchMotorUI1.Location = new System.Drawing.Point(1129, 16);
-            this.vsTouchMotorUI1.Margin = new System.Windows.Forms.Padding(5);
-            this.vsTouchMotorUI1.Name = "vsTouchMotorUI1";
-            this.vsTouchMotorUI1.Size = new System.Drawing.Size(553, 716);
-            this.vsTouchMotorUI1.TabIndex = 8;
-            // 
-            // vsTouchMotorUI2
-            // 
-            this.vsTouchMotorUI2.BackColor = System.Drawing.SystemColors.Control;
-            this.vsTouchMotorUI2.Location = new System.Drawing.Point(568, 16);
-            this.vsTouchMotorUI2.Margin = new System.Windows.Forms.Padding(5);
-            this.vsTouchMotorUI2.Name = "vsTouchMotorUI2";
-            this.vsTouchMotorUI2.Size = new System.Drawing.Size(553, 716);
-            this.vsTouchMotorUI2.TabIndex = 7;
-            // 
-            // vsTouchMotorUI3
-            // 
-            this.vsTouchMotorUI3.BackColor = System.Drawing.SystemColors.Control;
-            this.vsTouchMotorUI3.Location = new System.Drawing.Point(7, 16);
-            this.vsTouchMotorUI3.Margin = new System.Windows.Forms.Padding(5);
-            this.vsTouchMotorUI3.Name = "vsTouchMotorUI3";
-            this.vsTouchMotorUI3.Size = new System.Drawing.Size(553, 716);
-            this.vsTouchMotorUI3.TabIndex = 6;
-            // 
-            // vsTouchMotorUI4
-            // 
-            this.vsTouchMotorUI4.BackColor = System.Drawing.SystemColors.Control;
-            this.vsTouchMotorUI4.Location = new System.Drawing.Point(1129, 16);
-            this.vsTouchMotorUI4.Margin = new System.Windows.Forms.Padding(5);
-            this.vsTouchMotorUI4.Name = "vsTouchMotorUI4";
-            this.vsTouchMotorUI4.Size = new System.Drawing.Size(553, 716);
-            this.vsTouchMotorUI4.TabIndex = 5;
-            // 
-            // vsTouchMotorUI5
-            // 
-            this.vsTouchMotorUI5.BackColor = System.Drawing.SystemColors.Control;
-            this.vsTouchMotorUI5.Location = new System.Drawing.Point(568, 16);
-            this.vsTouchMotorUI5.Margin = new System.Windows.Forms.Padding(5);
-            this.vsTouchMotorUI5.Name = "vsTouchMotorUI5";
-            this.vsTouchMotorUI5.Size = new System.Drawing.Size(553, 716);
-            this.vsTouchMotorUI5.TabIndex = 4;
-            // 
-            // vsTouchMotorUI6
-            // 
-            this.vsTouchMotorUI6.BackColor = System.Drawing.SystemColors.Control;
-            this.vsTouchMotorUI6.Location = new System.Drawing.Point(7, 16);
-            this.vsTouchMotorUI6.Margin = new System.Windows.Forms.Padding(5);
-            this.vsTouchMotorUI6.Name = "vsTouchMotorUI6";
-            this.vsTouchMotorUI6.Size = new System.Drawing.Size(553, 716);
-            this.vsTouchMotorUI6.TabIndex = 3;
-            // 
-            // vsTouchMotorUI7
-            // 
-            this.vsTouchMotorUI7.BackColor = System.Drawing.SystemColors.Control;
-            this.vsTouchMotorUI7.Location = new System.Drawing.Point(1129, 16);
-            this.vsTouchMotorUI7.Margin = new System.Windows.Forms.Padding(5);
-            this.vsTouchMotorUI7.Name = "vsTouchMotorUI7";
-            this.vsTouchMotorUI7.Size = new System.Drawing.Size(553, 716);
-            this.vsTouchMotorUI7.TabIndex = 5;
-            // 
-            // vsTouchMotorUI8
-            // 
-            this.vsTouchMotorUI8.BackColor = System.Drawing.SystemColors.Control;
-            this.vsTouchMotorUI8.Location = new System.Drawing.Point(568, 16);
-            this.vsTouchMotorUI8.Margin = new System.Windows.Forms.Padding(5);
-            this.vsTouchMotorUI8.Name = "vsTouchMotorUI8";
-            this.vsTouchMotorUI8.Size = new System.Drawing.Size(553, 716);
-            this.vsTouchMotorUI8.TabIndex = 4;
-            // 
-            // vsTouchMotorUI9
-            // 
-            this.vsTouchMotorUI9.BackColor = System.Drawing.SystemColors.Control;
-            this.vsTouchMotorUI9.Location = new System.Drawing.Point(7, 16);
-            this.vsTouchMotorUI9.Margin = new System.Windows.Forms.Padding(5);
-            this.vsTouchMotorUI9.Name = "vsTouchMotorUI9";
-            this.vsTouchMotorUI9.Size = new System.Drawing.Size(553, 716);
-            this.vsTouchMotorUI9.TabIndex = 3;
-            // 
             // frmAXISSetup
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1699, 815);
+            this.ClientSize = new System.Drawing.Size(1269, 653);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.toolStrip1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.MaximizeBox = false;
             this.Name = "frmAXISSetup";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

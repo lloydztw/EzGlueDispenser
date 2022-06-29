@@ -895,7 +895,18 @@ namespace Eazy_Project_III.FormSpace
                             MACHINE.PLCIO.ModulePositionGO(ModuleName.MODULE_PICK, 1);
 
                             Process.NextDuriation = 500;
-                            Process.ID = 15;
+                            Process.ID = 12;
+                        }
+                        break;
+                    case 12:
+                        if (Process.IsTimeup)
+                        {
+                            if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_PICK, 1) && !Universal.IsNoUseMotor)
+                            {
+                                // 定位後停等 1000 ms
+                                Process.NextDuriation = 1000;
+                                Process.ID = 15;
+                            }
                         }
                         break;
                     case 15:
@@ -908,7 +919,8 @@ namespace Eazy_Project_III.FormSpace
                                 double laserZ = ax_read_laser();
                                 if (Math.Abs(laserZ) < 0.0001)
                                 {
-                                    CommonLogClass.Instance.LogMessage("雷射讀值異常", Color.Red);
+                                    string msg = string.Format("雷射讀值異常 {0:0.000}", laserZ);
+                                    CommonLogClass.Instance.LogMessage(msg, Color.Red);
                                     //_LOG("雷射讀值異常", Color.Red);
                                     Process.NextDuriation = 500;
                                     Process.ID = 3020;
@@ -934,7 +946,11 @@ namespace Eazy_Project_III.FormSpace
                                     Process.ID = 3020;
                                     return;
                                 }
-
+                                else
+                                {
+                                    string msg = string.Format("QC雷射讀值 {0:0.000} 已寫入", laserZ);
+                                    CommonLogClass.Instance.LogMessage(msg, Color.DarkGreen);
+                                }
                                 Process.NextDuriation = 500;
                                 Process.ID = 4010;
 

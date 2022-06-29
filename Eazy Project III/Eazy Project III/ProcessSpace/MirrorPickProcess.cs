@@ -211,7 +211,8 @@ namespace Eazy_Project_III.ProcessSpace
                                 double laserZ = ax_read_laser();
                                 if(Math.Abs(laserZ) < 0.0001)
                                 {
-                                    _LOG("雷射讀值異常", Color.Red);
+                                    var cur = ax_read_current_motor_pos();
+                                    _LOG("雷射讀值異常", laserZ, "@XYZ", cur, Color.Red);
                                     Process.NextDuriation = NextDurtimeTmp;
                                     Process.ID = 3020;
                                     return;
