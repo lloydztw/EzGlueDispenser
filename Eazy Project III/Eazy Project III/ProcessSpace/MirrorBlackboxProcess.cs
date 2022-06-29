@@ -433,8 +433,6 @@ namespace Eazy_Project_III.ProcessSpace
         }
         QVector phase2_calc_target(double sphereCenterOffsetU)
         {
-            double cosFactor = 0.89;
-
             //取出 中光電貢獻的補償量
             m_currMotorPos = ax_read_current_pos();
             var initPos_before_core = this.CompensationInitPos;
@@ -450,7 +448,7 @@ namespace Eazy_Project_III.ProcessSpace
                             finalPos_of_core);
 
             _LOG("球心計算之補償量", "Δ(X,Y,U,Z)", cxDelta.Slice(0, 4));
-            var targetPos = m_currMotorPos + delta * cosFactor;
+            var targetPos = m_currMotorPos + delta;
 
             return targetPos;
         }

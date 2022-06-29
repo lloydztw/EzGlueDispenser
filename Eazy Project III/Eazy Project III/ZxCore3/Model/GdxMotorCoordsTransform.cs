@@ -9,6 +9,7 @@ namespace JetEazy.GdxCore3.Model
         static int MODE = 2;
 
         #region PRIVATE_DATA
+        static double FACTOR = 1.0;
         QVector mv_zero = new QVector(6);
         double alpha = -45;
         Mat ROT_vy = null;
@@ -173,7 +174,7 @@ namespace JetEazy.GdxCore3.Model
                     Y = dGy;
                     X = 0;
                 }
-                return new QVector(X, Y, Z, U);
+                return new QVector(X, Y, Z, U) * FACTOR;
             }
         }
         public QVector SimpleSphereCenterCompensation(double UbcOffset, QVector initPos, QVector finalPos)
@@ -185,7 +186,7 @@ namespace JetEazy.GdxCore3.Model
             double theta_z = dV[5] * Math.PI / 180;
             double dU = UbcOffset * (1 - Math.Cos(theta_z));
             double dZ = UbcOffset * Math.Sin(theta_z);
-            return new QVector(0, 0, dZ, dU, 0, 0);
+            return new QVector(0, 0, dZ, dU, 0, 0) * FACTOR;
         }
         public QVector MotorToWorld(double X, double Y, double Z, double u)
         {
