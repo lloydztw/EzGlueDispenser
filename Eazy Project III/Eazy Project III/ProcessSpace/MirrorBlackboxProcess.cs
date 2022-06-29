@@ -270,7 +270,11 @@ namespace Eazy_Project_III.ProcessSpace
             m_phase1.InitMotorPos = new QVector(m_initMotorPos);
             m_phase1.Reset();
 
-            //(2) LOG
+            //(2) steps and LOG
+            double percA = AxisUnitConvert.PERCISIONS[5];
+            double stepA = Math.Round(RecipeCHClass.Instance.CompStepSizeAngle * percA, 4);
+            double stepU = Math.Round(RecipeCHClass.Instance.CompStepSize * 0.001, 4);
+            COMP_STEP = new QVector(stepU, stepU, stepU, stepU, stepA, stepA);
             _LOG("單步最大補償量", COMP_STEP);
 
             return m_phase1;

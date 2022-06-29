@@ -432,6 +432,16 @@ namespace Eazy_Project_III.OPSpace
 
 
         const string Cat3 = "03.其他参数";
+        [CategoryAttribute(Cat3), DescriptionAttribute("XYZU軸每步最大補償量 um")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 1000)]
+        public int CompStepSize { get; set; } = 25;
+
+        [CategoryAttribute(Cat3), DescriptionAttribute("θ軸每步補償量 N x 0.0167 度")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 1000)]
+        public int CompStepSizeAngle { get; set; } = 5;
+
         [CategoryAttribute(Cat3), DescriptionAttribute("其他有關於調整的參數，可以先以 XXX,YYY,AAA,BBB 先寫在這個字串中，之後再分開。")]
         public string OtherRecipe { get; set; } = string.Empty;
 
