@@ -391,7 +391,7 @@ namespace JetEazy.GdxCore3.Model
             double dL = combinerL - goldenL;
 
             double adj = m_adjs[mirrorIdx];
-            double dU = (dL + adj) * cosFactor;
+            double dU = (dL - adj) * cosFactor;
 
             GdxGlobal.LOG.Trace("mirror, {0}, dL, {1:0.000}, QC adj, {2:0.000}", mirrorIdx, dL, adj);
 

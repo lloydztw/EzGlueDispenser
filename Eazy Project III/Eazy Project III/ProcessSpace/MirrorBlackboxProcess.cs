@@ -421,6 +421,10 @@ namespace Eazy_Project_III.ProcessSpace
             m_targetPos = phase2_calc_target(sphereCenterOffsetU);
             _clip_into_safe_box(m_targetPos);
 
+            // Compensation Steps
+            COMP_STEP[2] = AxisUnitConvert.PERCISIONS[3] * 25;
+            COMP_STEP[3] = AxisUnitConvert.PERCISIONS[3] * 25;
+
             return m_phase2;
         }
         QVector phase2_calc_target(double sphereCenterOffsetU)

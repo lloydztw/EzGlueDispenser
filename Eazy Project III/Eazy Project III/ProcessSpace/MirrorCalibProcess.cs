@@ -453,7 +453,7 @@ namespace Eazy_Project_III.ProcessSpace
             #endregion
 
             // U compensation step 增大
-            COMP_STEP[3] = AxisUnitConvert.PERCISIONS[3] * 10;
+            COMP_STEP[3] = AxisUnitConvert.PERCISIONS[3] * 25;
 
             return m_phase3;
         }

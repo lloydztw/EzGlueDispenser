@@ -513,8 +513,8 @@ namespace Eazy_Project_III.ProcessSpace
         protected void log_motor_command(XRunContext runCtrl, QVector dstMotorPos, QVector incr)
         {
             string tag = string.Format("[{0}]", runCtrl.RunCount);
-            _LOG(runCtrl.Name, tag, "啟自", dstMotorPos - incr);
-            _LOG(runCtrl.Name, tag, "增減", incr);
+            //_LOG(runCtrl.Name, tag, "啟自", dstMotorPos - incr);
+            //_LOG(runCtrl.Name, tag, "增減", incr);
             _LOG(runCtrl.Name, tag, "移到", dstMotorPos);
         }
 
