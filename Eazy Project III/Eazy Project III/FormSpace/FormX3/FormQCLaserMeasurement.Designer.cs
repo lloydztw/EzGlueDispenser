@@ -36,6 +36,7 @@ namespace Eazy_Project_III.FormSpace
             this.rdoMirror0 = new System.Windows.Forms.RadioButton();
             this.rdoMirror1 = new System.Windows.Forms.RadioButton();
             this.btnSnap = new System.Windows.Forms.Button();
+            this.btnClear = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -43,7 +44,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.btnCancel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
             this.btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnCancel.Location = new System.Drawing.Point(237, 204);
+            this.btnCancel.Location = new System.Drawing.Point(301, 213);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(99, 39);
@@ -56,7 +57,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.btnOK.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
             this.btnOK.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnOK.Location = new System.Drawing.Point(130, 204);
+            this.btnOK.Location = new System.Drawing.Point(185, 213);
             this.btnOK.Margin = new System.Windows.Forms.Padding(4);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(99, 39);
@@ -100,26 +101,28 @@ namespace Eazy_Project_III.FormSpace
             // 
             // rdoMirror0
             // 
-            this.rdoMirror0.AutoSize = true;
+            this.rdoMirror0.Appearance = System.Windows.Forms.Appearance.Button;
             this.rdoMirror0.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.rdoMirror0.Location = new System.Drawing.Point(139, 92);
+            this.rdoMirror0.Location = new System.Drawing.Point(135, 116);
             this.rdoMirror0.Name = "rdoMirror0";
-            this.rdoMirror0.Size = new System.Drawing.Size(90, 23);
+            this.rdoMirror0.Size = new System.Drawing.Size(93, 46);
             this.rdoMirror0.TabIndex = 17;
             this.rdoMirror0.TabStop = true;
             this.rdoMirror0.Text = "Mirror 0";
+            this.rdoMirror0.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.rdoMirror0.UseVisualStyleBackColor = true;
             // 
             // rdoMirror1
             // 
-            this.rdoMirror1.AutoSize = true;
+            this.rdoMirror1.Appearance = System.Windows.Forms.Appearance.Button;
             this.rdoMirror1.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.rdoMirror1.Location = new System.Drawing.Point(139, 126);
+            this.rdoMirror1.Location = new System.Drawing.Point(234, 116);
             this.rdoMirror1.Name = "rdoMirror1";
-            this.rdoMirror1.Size = new System.Drawing.Size(90, 23);
+            this.rdoMirror1.Size = new System.Drawing.Size(93, 46);
             this.rdoMirror1.TabIndex = 18;
             this.rdoMirror1.TabStop = true;
             this.rdoMirror1.Text = "Mirror 1";
+            this.rdoMirror1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.rdoMirror1.UseVisualStyleBackColor = true;
             // 
             // btnSnap
@@ -135,12 +138,26 @@ namespace Eazy_Project_III.FormSpace
             this.btnSnap.UseVisualStyleBackColor = false;
             this.btnSnap.Click += new System.EventHandler(this.btnSnap_Click);
             // 
+            // btnClear
+            // 
+            this.btnClear.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(128)))));
+            this.btnClear.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnClear.Location = new System.Drawing.Point(65, 213);
+            this.btnClear.Margin = new System.Windows.Forms.Padding(4);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(99, 39);
+            this.btnClear.TabIndex = 20;
+            this.btnClear.Text = "清除";
+            this.btnClear.UseVisualStyleBackColor = false;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+            // 
             // FormQCLaserMeasurement
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(467, 331);
             this.ControlBox = false;
+            this.Controls.Add(this.btnClear);
             this.Controls.Add(this.btnSnap);
             this.Controls.Add(this.rdoMirror1);
             this.Controls.Add(this.rdoMirror0);
@@ -154,7 +171,6 @@ namespace Eazy_Project_III.FormSpace
             this.Text = "QC Laser 手動設定";
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -166,5 +182,6 @@ namespace Eazy_Project_III.FormSpace
         private System.Windows.Forms.RadioButton rdoMirror0;
         private System.Windows.Forms.RadioButton rdoMirror1;
         private System.Windows.Forms.Button btnSnap;
+        private System.Windows.Forms.Button btnClear;
     }
 }

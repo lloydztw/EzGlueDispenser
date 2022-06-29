@@ -311,8 +311,15 @@ namespace JetEazy.GdxCore3.Model
             {
                 return "Combiner for Mirror " + mirrorIdx + " 尚未掃過三點雷射點位!";
             }
-            var adj = calcGCAdjustment(mirrorIdx, qcLE);
-            m_adjs[mirrorIdx] = adj;
+            if (qcLE <= -9998)
+            {
+                m_adjs[mirrorIdx] = 0;
+            }
+            else
+            {
+                var adj = calcGCAdjustment(mirrorIdx, qcLE);
+                m_adjs[mirrorIdx] = adj;
+            }
             Save();
             return null;
         }
