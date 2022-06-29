@@ -34,7 +34,7 @@ namespace Eazy_Project_III.ProcessSpace
     public abstract class MirrorAbsImageProcess : BaseProcess
     {
         protected const string IMAGE_SAVE_PATH = @"D:\EVENTLOG\Nlogs\images";
-        protected static int MOTOR_TIMEOUT_WAIT_COUNT = 5000;
+        protected static int MOTOR_TIMEOUT_WAIT_COUNT = 50000;
         protected static int MOTOR_CMD_DELAY = 10;
         protected static int MAX_RUN_COUNT = int.MaxValue;
 

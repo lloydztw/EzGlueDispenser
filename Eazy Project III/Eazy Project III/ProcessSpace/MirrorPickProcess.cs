@@ -295,6 +295,9 @@ namespace Eazy_Project_III.ProcessSpace
                                     Process.ID = 50;
 
                                     CommonLogClass.Instance.LogMessage("平面度测试正常", Color.Black);
+
+                                    double L = GdxCore.GetQCMotorPos(this.m_PickMirrorIndex, out double X, out double Y, out double Z);
+                                    _LOG("mirror", m_PickMirrorIndex, "QC 馬達座標", new QVector(X, Y, Z), "Laser 期望值", L.ToString("0.000"), Color.Purple);
                                 }
                                 else
                                 {
@@ -366,8 +369,7 @@ namespace Eazy_Project_III.ProcessSpace
 
                             if (!MACHINE.PLCIO.GetIO(IOConstClass.QB1542))
                             {
-                                CommonLogClass.Instance.LogMessage("拾取及到达测试位置 完成", Color.Black);
-
+                                CommonLogClass.Instance.LogMessage("拾取及到达测试位置 完成", Color.Black);                                
                                 Process.Stop();
                                 FireCompleted();
                             }
