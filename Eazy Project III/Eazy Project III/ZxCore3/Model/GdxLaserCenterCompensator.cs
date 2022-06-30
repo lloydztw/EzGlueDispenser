@@ -23,8 +23,7 @@ namespace JetEazy.GdxCore3.Model
         /// </summary>
         public QVector MotorBasePos
         {
-            get;
-            private set;
+            get { return FacadeCenter.Slice(0, 3); }
         }
 
         /// <summary>
@@ -39,7 +38,7 @@ namespace JetEazy.GdxCore3.Model
         }
 
         /// <summary>
-        /// Y-Z 平面的中心點: (Xc, Yc, Zc, Lmin)
+        /// Y-Z 平面的中心點: (Xc, Yc, Zc, Lmax)
         /// </summary>
         public QVector FacadeCenter
         {
@@ -134,7 +133,7 @@ namespace JetEazy.GdxCore3.Model
             double Yc = (ymin + ymax) / 2;
             double Zc = (zmin + zmax) / 2;
             FacadeCenter = new QVector(Xc, Yc, Zc, lmin);
-            MotorBasePos = new QVector(Xc, Yc, Zc);
+            //MotorBasePos = new QVector(Xc, Yc, Zc);
 
             //(2) Relative Points
             //    (lx, ly, lz) = (Y, Z, L) - (Yc, Zc, Lmin)
@@ -205,6 +204,7 @@ namespace JetEazy.GdxCore3.Model
         const int N_MIRRORS = 2;
 
         #region PRIVATE_DATA
+        static double FACTOR = 1.0;
         /// <summary>
         /// (X,Y,Z,L)
         /// </summary>
@@ -216,7 +216,7 @@ namespace JetEazy.GdxCore3.Model
         #region PRIVATE_PLANE_COORDS
         GdxLocalPlaneCoord m_xplaneGolden = new GdxLocalPlaneCoord();
         GdxLocalPlaneCoord[] m_xplaneMirrors = new GdxLocalPlaneCoord[N_MIRRORS];   // runtime
-        GdxLocalPlaneCoord[] m_xplaneQCs = new GdxLocalPlaneCoord[N_MIRRORS];       // standard
+        GdxLocalPlaneCoord[] m_xplaneQCs = new GdxLocalPlaneCoord[N_MIRRORS];       // ini
         double[] m_adjs = new double[N_MIRRORS];
         #endregion
 
@@ -277,26 +277,44 @@ namespace JetEazy.GdxCore3.Model
         {
             if (mirrorIdx < N_MIRRORS)
             {
-                if (m_xplaneQCs[mirrorIdx] == null)
-                    BuildGoldenPlaneFormula();
-                var motorPos = m_xplaneQCs[mirrorIdx].FacadeCenter;
-                return motorPos.Slice(0, 3);
+                if (_isBuiltOk[mirrorIdx] && m_xplaneMirrors[mirrorIdx] != null)
+                {
+                    var motorPos = m_xplaneMirrors[mirrorIdx].FacadeCenter;
+                    return motorPos.Slice(0, 3);
+                }
+                else
+                {
+                    if (m_xplaneQCs[mirrorIdx] == null)
+                        BuildGoldenPlaneFormula();
+                    var motorPos = m_xplaneQCs[mirrorIdx].FacadeCenter;
+                    return motorPos.Slice(0, 3);
+                }
             }
             return null;
         }
+        /// <summary>
+        /// ( X, Y, Z, Lmin + Ldepth ) <br/>
+        /// where LE = -(Lmin + Ldepth)
+        /// </summary>
         public QVector GetLastRunSurfaceCenter(int mirrorIdx)
         {
             return m_xplaneMirrors[mirrorIdx].RealSurfaceCenter;
         }
-
-        public string SetQCLaserMeasurement(int mirrorIdx, double qcLaserMeasurement)
+        public string SetQCLaserMeasurement(int mirrorIdx, double qcLE)
         {
             if (!_isBuiltOk[mirrorIdx])
             {
                 return "Combiner for Mirror " + mirrorIdx + " 尚未掃過三點雷射點位!";
             }
-            var adj = calcGCAdjustment(mirrorIdx, qcLaserMeasurement);
-            m_adjs[mirrorIdx] = adj;
+            if (qcLE <= -9998)
+            {
+                m_adjs[mirrorIdx] = 0;
+            }
+            else
+            {
+                var adj = calcGCAdjustment(mirrorIdx, qcLE);
+                m_adjs[mirrorIdx] = adj;
+            }
             Save();
             return null;
         }
@@ -308,13 +326,26 @@ namespace JetEazy.GdxCore3.Model
                     BuildGoldenPlaneFormula();
 
                 //double laserQC = mirrorIdx == 0 ?
-                //    GdxGlobal.Facade.INI.Mirror1.GetQcLaserMeasuredDist():
-                //    GdxGlobal.Facade.INI.Mirror2.GetQcLaserMeasuredDist();
+                var xplane = m_xplaneMirrors[mirrorIdx];
 
-                var plane = m_xplaneMirrors[mirrorIdx];
-                double laserCalc = plane.Lmin + plane.LcDepth;
+                double combinerL = xplane.RealSurfaceCenter[3];
+                double adj = qcLaserMeasurement - combinerL;
 
-                double adj = qcLaserMeasurement - laserCalc;
+                adj = adj * FACTOR;
+
+                GdxGlobal.LOG.Trace("設定QC量測, mirror,{0}, laserQC,{1:0.000}, adj,{2:0.000}",
+                                        mirrorIdx, qcLaserMeasurement, adj );
+
+                //// double a = 45 * Math.PI / 180;
+                //// double DX = xplane.MotorBasePos.X - m_xplaneGolden.MotorBasePos.X;
+                //// double dXU = DX * Math.Cos(a);
+                //// double goldenL = m_xplaneGolden.Lmin + m_xplaneGolden.LcDepth;
+                //// double combinerL = xplane.Lmin + xplane.LcDepth;
+                //// double dL = combinerL - goldenL + dXU;
+                //// double adj = m_adjs[mirrorIdx];
+                //// double dLu = dL + adj * FACTOR;
+                //// double dU = dLu;
+
                 return adj;
             }
             return 0;
@@ -330,7 +361,7 @@ namespace JetEazy.GdxCore3.Model
         {
             BuildGoldenPlaneFormula();
 
-            double cosFactor = 0.981;
+            // X,Y,Z,U,thz,thy
             int N6 = currentMotorPosAx6.Dimensions;
             if (!CanCompensate(mirrorIdx) && mirrorIdx < N_MIRRORS)
                 return new QVector(N6); // zero incr
@@ -371,9 +402,9 @@ namespace JetEazy.GdxCore3.Model
             var d_theta_z = m_xplaneGolden.ThetaZ - xplane.ThetaZ;
 
             // Laser and U
-            double laserD = targetAx4[3];
+            double deltaL = targetAx4[3];
             double currU = currentMotorPosAx6[3];
-            double incrU = (laserD - currU) * 0.999;
+            double incrU = (deltaL - currU) * 0.999;
 
             // 四軸 to 六軸坐標系
             var targetAx6 = targetAx4.Expand(N6);
@@ -386,12 +417,15 @@ namespace JetEazy.GdxCore3.Model
             incr[5] = d_theta_z;
 
             // Simple L compensation
-            double goldenL = m_xplaneGolden.Lmin + m_xplaneGolden.LcDepth;
-            double combinerL = xplane.Lmin + xplane.LcDepth;
+            //double a = 45 * Math.PI / 180;
+            //double DX = xplane.MotorBasePos.X - m_xplaneGolden.MotorBasePos.X;
+            //double dXU = DX * Math.Cos(a);
+            double goldenL = m_xplaneGolden.RealSurfaceCenter[3];
+            double combinerL = xplane.RealSurfaceCenter[3];
             double dL = combinerL - goldenL;
-
             double adj = m_adjs[mirrorIdx];
-            double dU = (dL - adj) * cosFactor;
+            double dLu = dL + adj;
+            double dU = dLu;
 
             GdxGlobal.LOG.Trace("mirror, {0}, dL, {1:0.000}, QC adj, {2:0.000}", mirrorIdx, dL, adj);
 
