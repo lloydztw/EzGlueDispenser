@@ -156,13 +156,12 @@ namespace JetEazy.GdxCore3
             Y = motorPos.Y;
             Z = motorPos.Z;
             var runSurfaceCenter = trf.GetLastRunSurfaceCenter(mirrorIndex);
-            double LE = runSurfaceCenter != null ? -runSurfaceCenter[3] : 0;
-            return LE;
+            return runSurfaceCenter != null ? runSurfaceCenter[3] : 0;
         }
-        public static string SetQcLaserMeasurement(int mirrorIdx, double LE)
+        public static string SetQcLaserMeasurement(int mirrorIdx, double value)
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
-            string err = trf.SetQCLaserMeasurement(mirrorIdx, LE);
+            string err = trf.SetQCLaserMeasurement(mirrorIdx, value);
             return err;
         }
 
@@ -177,6 +176,7 @@ namespace JetEazy.GdxCore3
                 trf.ResetLaserPtsOnMirror(mirrorIdx);
 
             trf.AddLaserPtOnMirror(mirrorIdx, motorPosL);
+
 
             GdxGlobal.LOG.Trace("MirrorPicker.CollectLaserPos, mirror={0}, @{1}, laser={2:0.0000}, motorPos={3}",
                                     mirrorIdx, pointIdx, laserDist, motorPosL );

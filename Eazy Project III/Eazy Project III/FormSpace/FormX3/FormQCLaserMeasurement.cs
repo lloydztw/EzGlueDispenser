@@ -50,11 +50,6 @@ namespace Eazy_Project_III.FormSpace
             DialogResult = DialogResult.Cancel;
             Close();
         }
-        private void btnClear_Click(object sender, EventArgs e)
-        {
-            int mirrorIdx = rdoMirror0.Checked ? 0 : 1;
-            GdxCore.SetQcLaserMeasurement(mirrorIdx, -9999);
-        }
 
         private bool update_laser_value()
         {
@@ -63,6 +58,7 @@ namespace Eazy_Project_III.FormSpace
             numericUpDown1.Value = (decimal)Math.Round(laserZ, 4);
             return true;
         }
+
 
     }
 }
