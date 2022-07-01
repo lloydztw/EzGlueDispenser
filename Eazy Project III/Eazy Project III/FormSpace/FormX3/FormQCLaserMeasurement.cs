@@ -41,6 +41,11 @@ namespace Eazy_Project_III.FormSpace
                 MessageBox.Show(err, "QC Laser 無法設定");
                 return;
             }
+            else
+            {
+                string msg = string.Format("Mirror {0} QC Laser 已成功寫入!", mirrorIdx);
+                MessageBox.Show(msg, "QC Laser 設定");
+            }
 
             DialogResult = DialogResult.OK;
             Close();

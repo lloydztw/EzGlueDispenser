@@ -338,7 +338,8 @@ namespace Eazy_Project_III.ProcessSpace
                                 posStr += MACHINECollection.GetSingleAXISPositionNow(8);
                                 MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_ADJUST, 4, posStr);
                                 CommonLogClass.Instance.LogMessage("微調模組後退位置寫入", Color.Black);
-
+                                MACHINECollection.MotorSpeed();
+                                CommonLogClass.Instance.LogMessage("所有軸速度寫入", Color.Black);
                             }
                         }
                         break;

@@ -31,7 +31,7 @@ namespace VsCommon.ControlSpace
 
             MACHINE = machine;
 
-            InitMotorSpeed();
+            MotorSpeed();
 
 
             SetIniPara();
@@ -45,7 +45,7 @@ namespace VsCommon.ControlSpace
         }
 
 
-        private void InitMotorSpeed()
+        public void MotorSpeed()
         {
             foreach (PLCMotionClass MOTION in MACHINE.PLCMOTIONCollection)
             {
@@ -54,6 +54,17 @@ namespace VsCommon.ControlSpace
                 MOTION.SetSpeed(SpeedTypeEnum.MANUAL);
                 MOTION.SetSpeed(SpeedTypeEnum.GO);
             }
+        }
+        /// <summary>
+        /// 設定單軸的速度類型
+        /// </summary>
+        /// <param name="iMotorIndex">軸編號0-8 吸嘴XYZ 微調U thetay thetaz 點膠XYZ</param>
+        /// <param name="eSpeedType">速度類型</param>
+        public void SetSingleMotorSpeed(int iMotorIndex,SpeedTypeEnum eSpeedType)
+        {
+            if (iMotorIndex < 0 || iMotorIndex >= MACHINE.PLCMOTIONCollection.Length)
+                return;
+            MACHINE.PLCMOTIONCollection[iMotorIndex].SetSpeed(eSpeedType);
         }
 
 

@@ -950,6 +950,10 @@ namespace Eazy_Project_III.FormSpace
                                 {
                                     string msg = string.Format("QC雷射讀值 {0:0.000} 已寫入", laserZ);
                                     CommonLogClass.Instance.LogMessage(msg, Color.DarkGreen);
+
+                                    // 於 tick 內, show message box 會卡死.
+                                    //msg = string.Format("Mirror {0} QC Laser 已成功寫入!", MainMirrorIndex);
+                                    //MessageBox.Show(msg, "QC Laser 設定");
                                 }
                                 Process.NextDuriation = 500;
                                 Process.ID = 4010;

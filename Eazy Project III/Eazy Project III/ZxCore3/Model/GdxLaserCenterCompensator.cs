@@ -247,7 +247,7 @@ namespace JetEazy.GdxCore3.Model
             if (mirrorIdx < N_MIRRORS && _laserRunPts[mirrorIdx] != null)
                 _laserRunPts[mirrorIdx].Add(pos);
         }
-        
+
         public void BuildMirrorPlaneTransform(int mirrorIdx)
         {
             if (mirrorIdx < N_MIRRORS)
@@ -334,7 +334,7 @@ namespace JetEazy.GdxCore3.Model
                 adj = adj * FACTOR;
 
                 GdxGlobal.LOG.Trace("設定QC量測, mirror,{0}, laserQC,{1:0.000}, adj,{2:0.000}",
-                                        mirrorIdx, qcLaserMeasurement, adj );
+                                        mirrorIdx, qcLaserMeasurement, adj);
 
                 //// double a = 45 * Math.PI / 180;
                 //// double DX = xplane.MotorBasePos.X - m_xplaneGolden.MotorBasePos.X;
@@ -461,6 +461,12 @@ namespace JetEazy.GdxCore3.Model
             if (fileName == null)
                 fileName = getDefaultFileName();
 
+            var ini = Eazy_Project_III.INI.Instance;
+            ini.Mirror1_Offset_Adj = m_adjs[0];
+            ini.Mirror2_Offset_Adj = m_adjs[1];
+            ini.Save();
+
+#if (OPT_REPLACED_BY_UNIVERSAL_INI)
             //GdxGlobal.INI.Mirror1.QcLaserAdj = m_adjs[0];
             //GdxGlobal.INI.Mirror2.QcLaserAdj = m_adjs[1];
 
@@ -471,15 +477,20 @@ namespace JetEazy.GdxCore3.Model
                 stm.Flush();
                 stm.Close();
             }
+#endif
         }
         void Load(string fileName = null)
         {
             if (fileName == null)
                 fileName = getDefaultFileName();
 
+            var ini = Eazy_Project_III.INI.Instance;
+            m_adjs[0] = ini.Mirror1_Offset_Adj;
+            m_adjs[1] = ini.Mirror2_Offset_Adj;
+
+#if (OPT_REPLACED_BY_UNIVERSAL_INI)
             //m_adjs[0] = GdxGlobal.INI.Mirror1.QcLaserAdj;                           // 1-base-index
             //m_adjs[1] = GdxGlobal.INI.Mirror2.QcLaserAdj;                           // 1-base-index
-
             List<double> adjs = new List<double>();
 
             try
@@ -506,6 +517,7 @@ namespace JetEazy.GdxCore3.Model
             }
 
             m_adjs = adjs.ToArray();
+#endif
         }
         string getDefaultFileName()
         {
