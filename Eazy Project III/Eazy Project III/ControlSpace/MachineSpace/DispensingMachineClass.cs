@@ -77,7 +77,7 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
                 PLCCollection[i].ReadAction += ReadAction;
                 PLCCollection[i].ReadListAction += DispensingMachineClass_ReadListAction;
                 PLCCollection[i].ReadListUintAction += DispensingMachineClass_ReadListUintAction;
-
+                PLCCollection[i].CommErrorStringAction += DispensingPLC_CommErrorStringAction;
                 i++;
             }
 
@@ -105,9 +105,16 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
             PLCIO = new DispensingIOClass();
             PLCIO.Initial(WORKPATH + "\\" + myMachineEA.ToString(), PLCCollection);
 
-            EVENT = new EventClass(WORKPATH + "\\EVENT.jdb");
+            //@LETIAN: 2022/07/05 加入 EVENTClass 成員 logPath 初始化設定
+            //          (目前只用於第三站)
+            EVENT = new EventClass(WORKPATH + "\\EVENT.jdb", Universal.LOG_ALARM_EVENT_PATH);
 
             return ret;
+        }
+
+        private void DispensingPLC_CommErrorStringAction(string str)
+        {
+            MachineCommError(str);
         }
 
         private void DispensingMachineClass_ReadListUintAction(short[] readbuffer, string operationstring, string myname)
@@ -494,6 +501,30 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
             }
         }
 
+        bool SCREENTrigered = false;
+        bool IsSCREENnow = false;
+        public bool IsSCREEN
+        {
+            get
+            {
+                return IsSCREENnow;
+            }
+            set
+            {
+                if (IsSCREENnow != value)
+                {
+                    if (value)
+                        SCREENTrigered = true;
+                    else
+                        SCREENTrigered = false;
+
+                    IsSCREENnow = value;
+                }
+                else
+                    SCREENTrigered = false;
+            }
+        }
+
 
         public bool ClearAlarm
         {
@@ -524,10 +555,15 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
                 OnTrigger(MachineEventEnum.ALARM_COMMON);
             }
 
-            IsEMC = PLCIO.ADR_ISEMC || PLCIO.ADR_ISSCREEN;
+            IsEMC = PLCIO.ADR_ISEMC;
             if (EMCTrigered)
             {
                 OnTrigger(MachineEventEnum.EMC);
+            }
+            IsSCREEN = PLCIO.ADR_ISSCREEN;
+            if (SCREENTrigered)
+            {
+                OnTrigger(MachineEventEnum.CURTAIN);
             }
 
             foreach (VsCommPLC plc in PLCCollection)
@@ -589,6 +625,16 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
             foreach (VsCommPLC plc in PLCCollection)
             {
                 plc.SetNormalTemp(ebTemp);
+            }
+        }
+
+        public delegate void MachineCommErrorStringHandler(string str);
+        public event MachineCommErrorStringHandler MachineCommErrorStringAction;
+        public void MachineCommError(string str)
+        {
+            if (MachineCommErrorStringAction != null)
+            {
+                MachineCommErrorStringAction(str);
             }
         }
 

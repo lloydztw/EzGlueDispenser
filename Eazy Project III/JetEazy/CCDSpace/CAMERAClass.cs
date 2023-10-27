@@ -9,37 +9,6 @@ using System.Text;
 
 namespace JetEazy.CCDSpace
 {
-    public class CameraPara
-    {
-        public int Index { get; set; } = 0;
-        public string SerialNumber { get; set; } = string.Empty;
-
-        public bool IsDebug { get; set; } = false;
-        public int Rotate { get; set; } = 0;
-        public string CfgPath { get; set; } = "WORK";
-        public string ToCameraString()
-        {
-            string str = "";
-
-            str += Index + "@";
-            str += SerialNumber + "@";
-            str += (IsDebug ? "1" : "0") + "@";
-            str += Rotate + "@";
-            str += CfgPath + "@";
-
-            return str;
-        }
-        public void FromCameraString(string eStr)
-        {
-            string[] strs = eStr.Split('@').ToArray();
-            Index = int.Parse(strs[0]);
-            SerialNumber = strs[1];
-            IsDebug = strs[2] == "1";
-            Rotate = int.Parse(strs[3]);
-            CfgPath = strs[4];
-        }
-    }
-
     public class CAMERAClass : ICam
     {
         
@@ -115,8 +84,9 @@ namespace JetEazy.CCDSpace
             }
 
             _cam = new CAM_HIKVISION(new System.Windows.Forms.PictureBox(), _camCfg.Index);
-            _cam.Init(_camCfg.SerialNumber);
-
+            //_cam.Init(_camCfg.SerialNumber);
+            _cam.Init(_camCfg);
+            //_cam.RotateAngle = _camCfg.Rotate = 90;
         }
         public void Close()
         {
@@ -144,7 +114,21 @@ namespace JetEazy.CCDSpace
 
             MvCamCtrl.NET.MyCamera.MVCC_FLOATVALUE stParam = new MvCamCtrl.NET.MyCamera.MVCC_FLOATVALUE();
             _cam.GetFloatValue_NET(ref stParam);
-            _cam.SetExposure((float)val / 1000f * stParam.fMax);
+            //if (val < stParam.fMin && val > stParam.fMax)
+            //    val = 1000;
+            //_cam.SetExposure((float)val / 1000f * stParam.fMax);
+            _cam.SetExposure((float)(val * 1000f));
+            //_cam.SetFramerate(100);
+        }
+        public void SetGain(float val)
+        {
+            if (_camCfg.IsDebug)
+                return;
+
+            if (_cam == null)
+                return;
+
+            _cam.SetGain(val);
         }
         public void StartCapture()
         {
@@ -170,10 +154,15 @@ namespace JetEazy.CCDSpace
                 return;
             if (_cam == null)
                 return;
-
-            _cam.TriggerSoftwareX();
+            
+            //_cam.TriggerSoftwareX();
         }
-        
+        public int RotateAngle
+        {
+            get { return _camCfg.Rotate; }
+            set { _camCfg.Rotate = value; }
+        }
+
         /// <summary>
         /// The caller must maintain the life cycle of the Bitmap returned by this function!!!
         /// </summary>
@@ -181,6 +170,7 @@ namespace JetEazy.CCDSpace
         /// <returns></returns>
         public Bitmap GetSnap(int msec = 1000)
         {
+            #region DEBUG RETURN
             if (_camCfg.IsDebug)
             {
                 Bitmap ret = null;  //  this ret must be new bitmap or clone() !!
@@ -205,27 +195,66 @@ namespace JetEazy.CCDSpace
                 }
                 return ret;
             }
+            #endregion
+
             if (_cam == null)
                 return (Bitmap)m_BmpError.Clone();  // ok
 
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-            while (true)
+            Bitmap newBitmapFrame = _cam.GetImageNow();
+            //不旋轉圖像
+            //if (newBitmapFrame != null)
+            //    return newBitmapFrame;
+            if (newBitmapFrame != null)
             {
-                Bitmap newBitmapFrame = _cam.CaptureBmp(_camCfg.Rotate);
-
-                if (newBitmapFrame != null)
-                {
-                    //var ret= (Bitmap)bmptemp.Clone();
-                    //bmptemp.Dispose();
-                    //return ret;
+                if (_camCfg.Rotate == 0)
                     return newBitmapFrame;
+                Bitmap bitmap = new Bitmap(newBitmapFrame);
+                switch (_camCfg.Rotate)
+                {
+                    case 90:
+                        bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                        break;
+                    case 270:
+                        bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                        break;
+                    case 180:
+                        bitmap.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                        break;
                 }
-
-                if (watch.ElapsedMilliseconds > msec)
-                    break;
+                newBitmapFrame.Dispose();
+                return bitmap;
             }
             return (Bitmap)m_BmpError.Clone();
+
+            #region MASK is old Funtion
+            //Stopwatch watch = new Stopwatch();
+            //watch.Start();
+            //while (true)
+            //{
+            //    Bitmap newBitmapFrame = _cam.CaptureBmp(_camCfg.Rotate);
+
+            //    if (newBitmapFrame != null)
+            //    {
+            //        //var ret= (Bitmap)bmptemp.Clone();
+            //        //bmptemp.Dispose();
+            //        //return ret;
+            //        return newBitmapFrame;
+            //    }
+
+            //    if (watch.ElapsedMilliseconds > msec)
+            //        break;
+            //}
+            //return (Bitmap)m_BmpError.Clone();
+            #endregion
+        }
+        public int GetFps()
+        {
+            if (_camCfg.IsDebug)
+                return 0;
+            if (_cam == null)
+                return 0;
+
+            return _cam.iCount;
         }
     }
 }

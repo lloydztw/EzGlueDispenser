@@ -11,12 +11,12 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
 
     public enum DispensingUI : int
     {
-        UICOUNT = 19,
+        UICOUNT = 20,
     }
 
     public enum DispensingAddressEnum : int
     {
-        COUNT = 22,
+        COUNT = 23,
 
         ADR_UVTOP = 0,
         ADR_UVBOTTOM = 1,
@@ -41,11 +41,14 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
         ADR_SMALL_LIGHT = 16,
         ADR_CONTROLBOX = 17,
         ADR_POGO_PIN = 18,
+        ADR_UV_Level = 19,
 
+        //Notice Add IO follow index=19 start
         //I00=17,
-        ADR_RESET_START = 19,
-        ADR_RESETING = 20,
-        ADR_RESET_COMPLETE = 21,
+        ADR_RESET_START = 20,
+        ADR_RESETING = 21,
+        ADR_RESET_COMPLETE = 22,
+       
     }
 
     public class DispensingIOClass : GeoIOClass
@@ -124,6 +127,8 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
               new AddressClass(ReadINIValue("Operation Address", DispensingAddressEnum.ADR_CONTROLBOX.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)DispensingAddressEnum.ADR_POGO_PIN] =
               new AddressClass(ReadINIValue("Operation Address", DispensingAddressEnum.ADR_POGO_PIN.ToString(), "", INIFILE));
+            ADDRESSARRAY[(int)DispensingAddressEnum.ADR_UV_Level] =
+              new AddressClass(ReadINIValue("Operation Address", DispensingAddressEnum.ADR_UV_Level.ToString(), "", INIFILE));
 
 
             #region ALARMS INI
@@ -280,7 +285,13 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             //get
             //{
             AddressClass address = ADDRESSARRAY[eindex];
+            
+            // 避免離線模擬崩潰
+            if (Universal.IsNoUseIO && address.SiteNo < 0)
+                return false;
+
             return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+
             //}
             //set
             //{
@@ -711,9 +722,74 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
 
         #endregion
 
+        public int ADR_UPDELAYTIME
+        {
+            set
+            {
+                SetMWIndex(1093, value);
+            }
+        }
 
         #region 定义的点位操作 MASK掉 已经通过数值去控制
+        /// <summary>
+        /// 屏蔽門禁
+        /// </summary>
+        public bool ADR_BYPASS_DOOR
+        {
+            get
+            {
+                AddressClass address = new AddressClass("0:QB1556.0");
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+            set
+            {
+                AddressClass address = new AddressClass("0:QB1556.0");
+                PLC[address.SiteNo].SetIO(value, address.Address0);
+            }
+        }
+        /// <summary>
+        /// 屏蔽光幕
+        /// </summary>
+        public bool ADR_BYPASS_SCREEN
+        {
+            get
+            {
+                AddressClass address = new AddressClass("0:QB1557.0");
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+            set
+            {
+                AddressClass address = new AddressClass("0:QB1557.0");
+                PLC[address.SiteNo].SetIO(value, address.Address0);
+            }
+        }
+        /// <summary>
+        /// AUTORUN TO PLC
+        /// </summary>
+        public bool ADR_RUNNING_PLC_ALARM
+        {
+            get
+            {
+                AddressClass address = new AddressClass("0:QB1558.0");
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+            set
+            {
+                AddressClass address = new AddressClass("0:QB1558.0");
+                PLC[address.SiteNo].SetIO(value, address.Address0);
+            }
+        }
 
+        /// <summary>
+        /// 復位完成有產品
+        /// </summary>
+        public bool ADR_ISRESETCOOMPLETE_HAVE_MIRROR
+        {
+            get
+            {
+                return GetIO("0:QB1555.0");
+            }
+        }
         public bool ADR_ISEMC
         {
             get { return !GetInputIndex(0); }
@@ -959,6 +1035,23 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
                 PLC[address.SiteNo].SetIO(value, address.Address0);
                 if (!string.IsNullOrEmpty(address.Address1))
                     PLC[address.SiteNo].SetIO(!value, address.Address1);
+            }
+        }
+
+        /// <summary>
+        /// 停止PLC的流程
+        /// </summary>
+        public bool ADR_STOP_PLC_SIGN
+        {
+            get
+            {
+                AddressClass address = new AddressClass("0:QB1559.0");
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+            set
+            {
+                AddressClass address = new AddressClass("0:QB1559.0");
+                PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
 

@@ -83,7 +83,7 @@ namespace JetEazy.UISpace
         bool IsNeedToChange = true;
 
         JzTimes myTimes = new JzTimes();
-        
+
         AccDBClass ACCDB;
         EsssDBClass ESSDB;
         string UIPath = "";
@@ -97,6 +97,8 @@ namespace JetEazy.UISpace
         public EssUI()
         {
             InitializeComponent();
+            SizeChanged += EssUI_SizeChanged;
+            label3.Text = "";
         }
 
         public void Initial(EsssDBClass essdb,
@@ -157,16 +159,16 @@ namespace JetEazy.UISpace
             btnLogout.Click += new EventHandler(btn_Click);
 
             btnAccountManagement.Click += new EventHandler(btn_Click);
-            
+
             btnClearPass.Click += new EventHandler(btn_Click);
             btnClearFail.Click += new EventHandler(btn_Click);
 
-            btnRun.Click+=new EventHandler(btn_Click);
+            btnRun.Click += new EventHandler(btn_Click);
             btnRecipe.Click += new EventHandler(btn_Click);
             btnSetup.Click += new EventHandler(btn_Click);
 
-            btnReset.Click+=new EventHandler(btn_Click);
-            
+            btnReset.Click += new EventHandler(btn_Click);
+
             btnFastCal = button10;
             btnFastCal.Tag = TagEnum.FASTCAL;
             btnFastCal.Click += new EventHandler(btn_Click);
@@ -174,14 +176,16 @@ namespace JetEazy.UISpace
             cboChangeRecipe.SelectedIndexChanged += new EventHandler(cbo_SelectedIndexChanged);
 
             picExit.DoubleClick += new EventHandler(picExit_DoubleClick);
-           
+                        
             FillDisplay();
 
             SamplingTimems = samplingtimems;
 
             myTimes.Cut();
 
+            _auto_layout();
         }
+
 
         void cbo_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -193,10 +197,10 @@ namespace JetEazy.UISpace
             switch (TAG)
             {
                 case TagEnum.CHANGERECIPE:
-                    
-                    string [] selectedrecipe = cboChangeRecipe.Text.Split(']');
- 
-                    selectedrecipe[0] = selectedrecipe[0].Replace("[","");
+
+                    string[] selectedrecipe = cboChangeRecipe.Text.Split(']');
+
+                    selectedrecipe[0] = selectedrecipe[0].Replace("[", "");
                     ESSDB.LastRecipeIndex = int.Parse(selectedrecipe[0]);
 
                     ESSDB.Save();
@@ -223,9 +227,13 @@ namespace JetEazy.UISpace
         void picExit_DoubleClick(object sender, EventArgs e)
         {
             if (LOGINStatus != ESSStatusEnum.LOGOUT)
+            {
+                JetEazy.BasicSpace.VsMSG.Instance.Warning("請登出!\n回到跑線正常狀態,\n才能退出程式!");
                 return;
+            }
+
             if (JetEazy.BasicSpace.VsMSG.Instance.Question("是否要关闭系统？") == DialogResult.OK)
-                //if (MessageBox.Show(myLanguage.Messages("msg1", LanguageIndex), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            //if (MessageBox.Show(myLanguage.Messages("msg1", LanguageIndex), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 OnTrigger(ESSStatusEnum.EXIT);
             }
@@ -286,7 +294,7 @@ namespace JetEazy.UISpace
 
         public void ShowPLC_RxTime(string str)
         {
-            lblVer.Text = str;
+            lblVer.Text = str.Trim(',');
             lblVer.Refresh();
         }
 
@@ -314,7 +322,7 @@ namespace JetEazy.UISpace
         void Logout()
         {
             if (JetEazy.BasicSpace.VsMSG.Instance.Question("是否要登出账户？") == DialogResult.OK)
-                //if (MessageBox.Show(myLanguage.Messages("msg2",LanguageIndex), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            //if (MessageBox.Show(myLanguage.Messages("msg2",LanguageIndex), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 ACCDB.Indicator = -1;
                 LOGINStatus = ESSStatusEnum.LOGOUT;
@@ -356,7 +364,7 @@ namespace JetEazy.UISpace
         public void Set111(string filestr)
         {
             Bitmap bmp = new Bitmap(filestr);
-            
+
             picExit.Image = new Bitmap(bmp);
 
             bmp.Dispose();
@@ -401,7 +409,7 @@ namespace JetEazy.UISpace
         }
 
         ESSStatusEnum LastMainStatus = ESSStatusEnum.RUN;
-        
+
         public bool Disable
         {
             set
@@ -495,7 +503,7 @@ namespace JetEazy.UISpace
                         btnRun.BackColor = JzToolsClass.NormalColor;
                         btnRecipe.BackColor = JzToolsClass.UsedColor;
                         btnSetup.BackColor = JzToolsClass.NormalColor;
-                        
+
                         btnRun.Enabled = true;
                         btnRecipe.Enabled = true;
                         btnSetup.Enabled = ACCDB.AccNow.IsAllowSetupINI;
@@ -506,7 +514,7 @@ namespace JetEazy.UISpace
                         btnRun.BackColor = JzToolsClass.NormalColor;
                         btnRecipe.BackColor = JzToolsClass.NormalColor;
                         btnSetup.BackColor = JzToolsClass.UsedColor;
-                        
+
                         btnRun.Enabled = true;
                         btnRecipe.Enabled = ACCDB.AccNow.IsAllowSetupRecipe;
                         btnSetup.Enabled = true;
@@ -535,5 +543,76 @@ namespace JetEazy.UISpace
             }
         }
 
+
+        #region AUTO_LAYOUT_FUNCTIONS
+        void EssUI_SizeChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                _auto_layout();
+            }
+            catch
+            {
+
+            }
+        }
+
+        void _auto_layout()
+        {
+#if OPT_LETIAN_AUTO_LAYOUT
+            if (pictureBox1.Tag == null)
+            {
+                pictureBox1.BackgroundImageLayout = ImageLayout.Zoom;
+                pictureBox1.Dock = DockStyle.Top;
+                using (Bitmap bmp = new Bitmap(pictureBox1.BackgroundImage))
+                {
+                    pictureBox1.BackColor = bmp.GetPixel(2, 2);
+                }
+                pictureBox1.Tag = this;
+            }
+            //
+            var rcc = ClientRectangle;
+            int pad = 0;
+            int w = (rcc.Width - pad * 4) / 3;
+            int x = pad;
+
+            //foreach (var c in new Control[] { btnLogin, lblAccountName, btnAccountManagement })
+            foreach (var c in new Control[] { button2, label3, button3 })
+            {
+                c.Left = x;
+                c.Width = w;
+                x += w + pad;
+            }
+            button1.Location = button2.Location;
+            button1.Size = button2.Size;
+
+            //foreach (var c in new Control[] { lblMainStatus, cboChangeRecipe })
+            foreach (var c in new Control[] { label4, comboBox1 })
+            {
+                c.Left = pad;
+                c.Width = rcc.Width - pad * 2;
+            }
+
+            x = pad;
+            //foreach (var c in new Control[] { btnRun, btnRecipe, btnSetup })
+            foreach (var c in new Control[] { button7, button8, button9 })
+            {
+                c.Left = x;
+                c.Width = w;
+                x += w + pad;
+            }
+
+            label1.Left = pad;
+            label1.Width = w;
+
+            //lblDateTime
+            label2.Left = label1.Right + pad;
+            label2.Width = rcc.Width - label2.Left - pad;
+
+            //lblPassCount;
+            //lblFailCount;
+#endif
+        }
+        #endregion
     }
 }

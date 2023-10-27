@@ -60,6 +60,9 @@ namespace Eazy_Project_III.ProcessSpace
 
         public override void Tick()
         {
+            if (!IsValidPlcScanned())
+                return;
+
             var Process = this;
 
             //iNextDurtime[3] = 1000;
@@ -70,7 +73,7 @@ namespace Eazy_Project_III.ProcessSpace
                 {
                     case 5:
 
-                        Process.NextDuriation = 100;
+                        Process.NextDuriation = NextDurtimeTmp;
                         Process.ID = 10;
 
                         switch (Process.RelateString)
@@ -87,18 +90,19 @@ namespace Eazy_Project_III.ProcessSpace
                         {
                             if (m_BuzzerIndex < m_BuzzerCount)
                             {
-                                MACHINE.PLCIO.ADR_BUZZER = true;
-
+                                //if (!Universal.IsSilentMode)
+                                //    MACHINE.PLCIO.ADR_BUZZER = true;
+                                _set_buzzer(true);
                                 Process.NextDuriation = 500;
                                 Process.ID = 15;
-
                                 m_BuzzerIndex++;
                             }
                             else
                             {
-                                MACHINE.PLCIO.ADR_BUZZER = false;
-
+                                //MACHINE.PLCIO.ADR_BUZZER = false;
+                                _set_buzzer(false);
                                 Process.Stop();
+                                FireCompleted();
                             }
                         }
                         break;
@@ -115,6 +119,26 @@ namespace Eazy_Project_III.ProcessSpace
             }
         }
 
+        void _set_buzzer(bool on)
+        {
+#if (OPT_SIM)
+            if (on)
+            {
+                //>> System.Media.SystemSounds.Beep.Play();
+                System.Console.Beep();
+            }
+#else
+            if (on)
+            {
+                if (!Universal.IsSilentMode)
+                    MACHINE.PLCIO.ADR_BUZZER = true;
+            }
+            else
+            {
+                MACHINE.PLCIO.ADR_BUZZER = false;
+            }
+#endif
+        }
 
     }
 }

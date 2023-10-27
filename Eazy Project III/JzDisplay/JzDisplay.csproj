@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>JzDisplay</RootNamespace>
     <AssemblyName>JzDisplay</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -68,9 +68,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="JetEazy">
-      <HintPath>..\JetEazy\bin\Debug\JetEazy.dll</HintPath>
-    </Reference>
     <Reference Include="MoveGraphLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\DLLS\MoveGraphLibrary.dll</HintPath>
@@ -116,6 +113,12 @@
     <EmbeddedResource Include="UISpace\DispUI.resx">
       <DependentUpon>DispUI.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JetEazy\JetEazy.csproj">
+      <Project>{a24458c1-b3ac-462a-8b42-dafd1d420e19}</Project>
+      <Name>JetEazy</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

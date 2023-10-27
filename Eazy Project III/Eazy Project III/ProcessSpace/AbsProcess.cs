@@ -1,5 +1,7 @@
 ﻿using JetEazy.BasicSpace;
+using JetEazy.GdxCore3.Model;
 using System;
+using System.Drawing;
 using System.Threading;
 
 namespace JetEazy.ProcessSpace
@@ -37,7 +39,7 @@ namespace JetEazy.ProcessSpace
         #endregion
 
         //public event EventHandler OnStateChanged;
-        //public event EventHandler<ProcessEventArgs> OnError;
+        public event EventHandler<ProcessEventArgs> OnNG;
         public event EventHandler<ProcessEventArgs> OnMessage;
         public event EventHandler<ProcessEventArgs> OnCompleted;
 
@@ -46,7 +48,8 @@ namespace JetEazy.ProcessSpace
             get { return GetType().Name; }
         }
         public virtual void Start(params object[] args)
-        {
+        {          
+            LastNG = null;
             if (args.Length > 0)
                 base.Start((string)args[0]);
             else
@@ -59,14 +62,58 @@ namespace JetEazy.ProcessSpace
         }
         public abstract void Tick();
 
-        protected void SetNextState(int id, int nextDuration = -1)
+        protected abstract void InvalidatePlcScanned();
+        private void _changeNextState(int id)
         {
-            bool isChanged = (this.ID != id);
-            this.ID = id;
-            if (nextDuration >= 0)
-                this.NextDuriation = nextDuration;
+            bool isChanged = (base.ID != id);
+            base.ID = id;
+
+            if (isChanged || true)
+            {
+                // 2022/10/22
+                // 改變狀態, 代表 需要等待 plc 更新.
+                // 自動清除 plc scanned 標記. 
+                InvalidatePlcScanned();
+            }
+
             //if (isChanged)
             //    OnStateChanged?.Invoke(this, null);
+
+            // TRACE Delay Time
+            if (false && NextDuriation >= 300)
+            {
+                GdxGlobal.LOG.Log(GetType().Name, "Delay", NextDuriation, Color.DarkCyan);
+            }
+        }
+        protected void SetNextState(int id, int nextDuration = -1)
+        {
+            if (nextDuration >= 0)
+                base.NextDuriation = nextDuration;
+            else
+                base.NextDuriation = _defaultDuration;
+            _changeNextState(id); ;
+        }
+        public new int ID
+        {
+            get
+            {
+                return base.ID;
+            }
+            set
+            {
+                _changeNextState(value);
+            }
+        }
+        public string LastNG
+        {
+            get;
+            protected set;
+        }
+
+        protected void FireNG(string message)
+        {
+            var e = new ProcessEventArgs() { Message = message };
+            OnNG?.Invoke(this, e);
         }
         protected void FireMessage(string message)
         {

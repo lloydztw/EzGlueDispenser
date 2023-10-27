@@ -98,7 +98,7 @@ namespace VsCommon.ControlSpace
                             //设定点胶时间&UV时间
                             machineX3.PLCIO.SetMWIndex(Eazy_Project_III.ControlSpace.IOSpace.IOConstClass.MW1091, Eazy_Project_III.OPSpace.RecipeCHClass.Instance.DispensingTime);
                             machineX3.PLCIO.SetMWIndex(Eazy_Project_III.ControlSpace.IOSpace.IOConstClass.MW1092, RecipeCHClass.Instance.UVTime);
-
+                            machineX3.PLCIO.ADR_UPDELAYTIME = INI.Instance.DispensingUpDelayTime;
                             //避光槽位置 9上 7下
                             machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 9, INI.Instance.ShadowPosUp, false);
                             machineX3.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 7, INI.Instance.ShadowPos, false);

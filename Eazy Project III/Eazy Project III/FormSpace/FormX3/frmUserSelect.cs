@@ -1,12 +1,5 @@
-﻿using JetEazy.BasicSpace;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+﻿using System;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Eazy_Project_III.FormSpace
@@ -22,7 +15,11 @@ namespace Eazy_Project_III.FormSpace
         Button btnCancel;
 
         int iGetIndex = 0;
-        int iPutIndex = 0;
+
+        /// <summary>
+        /// 2022-11-15 改為先取 mirror1 (右)
+        /// </summary>
+        int iPutIndex = 1;  
 
         /// <summary>
         /// 拾取第几组
@@ -96,6 +93,7 @@ namespace Eazy_Project_III.FormSpace
             FillDisplay();
 
             //LanguageExClass.Instance.EnumControls(this);
+            _updateGuiStatus();
         }
 
         private void FrmUserPutSelect_Click(object sender, EventArgs e)
@@ -144,6 +142,12 @@ namespace Eazy_Project_III.FormSpace
             FillDisplay();
         }
 
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            _updateGuiStatus();
+        }
+
+
         void FillDisplay()
         {
             int i = 0;
@@ -171,5 +175,24 @@ namespace Eazy_Project_III.FormSpace
         {
             this.DialogResult = DialogResult.OK;
         }
+
+
+        private void _updateGuiStatus()
+        {
+            // 2022-11-15 改為先取 mirror1 (右)
+            if (!this.checkBox1.Checked)
+            {
+                //button8.PerformClick();
+                //button7.Enabled = false;
+                button7.PerformClick();
+                button8.Enabled = false;
+            }
+            else
+            {
+                //button7.Enabled = true;
+                button8.Enabled = true;
+            }
+        }
+
     }
 }

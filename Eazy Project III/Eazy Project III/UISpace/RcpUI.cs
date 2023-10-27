@@ -81,6 +81,7 @@ namespace PhotoMachine.UISpace
         public RcpUI()
         {
             InitializeComponent();
+            SizeChanged += RcpUI_SizeChanged;
         }
 
         public void Initial(string uipath,
@@ -126,6 +127,8 @@ namespace PhotoMachine.UISpace
             btnOK.Click += new EventHandler(btn_Click);
             btnCancel.Click += new EventHandler(btn_Click);
             btnDetial.Click += new EventHandler(btn_Click);
+            
+            //SizeChanged += RcpUI_SizeChanged;
 
             //STPUI = stpUI1;
             //STPUI.Initial(UIPath,LanguageIndex,VER,OPT,VIEW);
@@ -178,20 +181,10 @@ namespace PhotoMachine.UISpace
                     ModifyCancel();
                     break;
                 case TagEnum.DETIAL:
-
-                    m_FrmRecipe = new frmRecipe();
-                    m_FrmRecipe.ShowDialog();
-
-                    m_FrmRecipe.Dispose();
-                    m_FrmRecipe = null;
-
+                    showRecipeDialogWindow();
                     break;
             }
         }
-
-
-        frmRecipe m_FrmRecipe = null;
-
         void AddAndCopy(bool IsCopy)
         {
             OnTrigger(RCPStatusEnum.EDIT);
@@ -349,5 +342,75 @@ namespace PhotoMachine.UISpace
                 TriggerActionForSetupDetail(status, setupindex);
             }
         }
+
+        void showRecipeDialogWindow()
+        {
+            if (OPT == OptionEnum.DISPENSING)
+            {
+                using (var frm = new FormRecipe())
+                {
+                    frm.ShowDialog();
+                }
+            }
+            else
+            {
+                using (var frm = new frmRecipe())
+                {
+                    frm.ShowDialog();
+                }
+            }
+        }
+
+
+        #region AUTO_LAYOUT
+        void RcpUI_SizeChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                _auto_layout();
+            }
+            catch
+            {
+            }
+        }
+        void _auto_layout()
+        {
+#if OPT_LETIAN_AUTO_LAYOUT
+
+            groupBox1.Dock = DockStyle.Top;
+            richTextBox1.Dock = DockStyle.Bottom;
+
+            var rcc = ClientRectangle;
+            int pad = 3;
+            int w = (rcc.Width - pad * 6) / 3;
+            int x = pad * 2;
+
+            //var ctrls = new Control[] { btnAdd, btnModify, btnCancel };
+            var ctrls = new Control[] { button1, button2, button6 };
+            foreach (var c in ctrls)
+            {
+                c.Top = rcc.Bottom - c.Height - pad * 2;
+                c.Left = x;
+                c.Width = w;
+                x += w + pad;
+            }
+            // btnOK
+            button4.Location = button2.Location;
+            button4.Size = button2.Size;
+            // lblModifyDateTime
+            label4.Top = button4.Top - label4.Height - pad;
+            label4.Left = groupBox1.Left;
+            label4.Width = rcc.Width - label4.Left * 2;
+            // groupBox1
+            groupBox1.Height = (label4.Top - pad * 2) - groupBox1.Top;
+            // richbox1
+            richTextBox1.Height = richTextBox1.Bottom - button3.Bottom - pad * 2;
+            // btnDetail
+            rcc = groupBox1.ClientRectangle;
+            button3.Left = rcc.Right - button3.Width - pad * 5;
+            textBox2.Width = button3.Right - textBox2.Left;
+#endif
+        }
+        #endregion
     }
 }

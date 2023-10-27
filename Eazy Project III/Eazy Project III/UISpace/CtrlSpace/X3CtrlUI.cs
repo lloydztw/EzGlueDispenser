@@ -66,6 +66,7 @@ namespace Eazy_Project_III.UISpace.CtrlSpace
             "小灯条",
             "手柄",
             "POGO",
+            "UV亮度等級",
         };
 
 
@@ -82,7 +83,7 @@ namespace Eazy_Project_III.UISpace.CtrlSpace
                 lbl_IOS[i].BackColor = System.Drawing.Color.Green;
                 lbl_IOS[i].BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
                 lbl_IOS[i].ForeColor = System.Drawing.Color.Yellow;
-                lbl_IOS[i].Size = new System.Drawing.Size(45, 20);
+                lbl_IOS[i].Size = new System.Drawing.Size(75, 20);
                 lbl_IOS[i].TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
                 //lblInput[i].Text = myText[i];
 
@@ -216,7 +217,7 @@ namespace Eazy_Project_III.UISpace.CtrlSpace
 
             SetEnable(false);
 
-#if OPT_LETIAN_DEBUG
+#if OPT_LETIAN_AUTO_LAYOUT
             groupBox2.Dock = DockStyle.Fill;
             lblAXIS.Dock = DockStyle.Bottom;
 #endif

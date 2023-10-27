@@ -23,7 +23,8 @@ namespace JetEazy.BasicSpace
             get { return _instance; }
         }
 
-        VsMessageBox _messageBox = null;
+        //VsMessageBox _messageBox = null;
+
         /// <summary>
         /// 询问视窗
         /// </summary>
@@ -31,13 +32,30 @@ namespace JetEazy.BasicSpace
         /// <returns>返回OK  和 Cancel </returns>
         public DialogResult Question(string msg)
         {
-            _messageBox = new VsMessageBox(msg);
-            return _messageBox.ShowDialog();
+            // 2022 revised by LeTian Chang
+            // 防止 memory leak
+            using (var _messageBox = new VsMessageBox(msg))
+            {
+                return _messageBox.ShowDialog();
+            }
         }
         public void Warning(string msg)
         {
-            _messageBox = new VsMessageBox(msg, true);
-            _messageBox.ShowDialog();
+            // 2022 revised by LeTian Chang
+            // 防止 memory leak
+            using (var _messageBox = new VsMessageBox(msg, true))
+            {
+                _messageBox.ShowDialog();
+            }
+        }
+        public void Info(string msg)
+        {
+            // 2022 revised by LeTian Chang
+            // 新增 Info
+            using (var _messageBox = new VsMessageBox(msg, false, true))
+            {
+                _messageBox.ShowDialog();
+            }
         }
     }
 

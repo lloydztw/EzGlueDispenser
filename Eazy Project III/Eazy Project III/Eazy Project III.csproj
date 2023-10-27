@@ -22,7 +22,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;OPT_LETIAN_DEBUG | OPT_LIVE_IMAGE_STRESS_TEST</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;xOPT_SIM | OPT_LETIAN_AUTO_LAYOUT | OPT_LIVE_IMAGE_STRESS_TEST</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -32,7 +32,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;OPT_LETIAN_AUTO_LAYOUT | OPT_LIVE_IMAGE_STRESS_TEST</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -41,6 +41,25 @@
     <ApplicationIcon>coconut3_01_fPz_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="JetEazy.Camera.Interface, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Common Files\JetEazy\JetEazy.Camera.Interface.dll</HintPath>
+    </Reference>
+    <Reference Include="JetEazy.Camera.Viewer, Version=3.0.2.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Common Files\JetEazy\JetEazy.Camera.Viewer.dll</HintPath>
+    </Reference>
+    <Reference Include="JetEazy.ImageViewerEx, Version=2.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Common Files\JetEazy\JetEazy.ImageViewerEx.dll</HintPath>
+    </Reference>
+    <Reference Include="JetEazy.QUtility, Version=2.5.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Common Files\JetEazy\JetEazy.QUtility.dll</HintPath>
+    </Reference>
+    <Reference Include="JetEazyLibEx">
+      <HintPath>C:\Program Files\Common Files\JetEazy\JetEazyLibEx.dll</HintPath>
+    </Reference>
     <Reference Include="MoveGraphLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\JzDisplay\bin\Debug\MoveGraphLibrary.dll</HintPath>
@@ -56,6 +75,14 @@
     </Reference>
     <Reference Include="OpenCvSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6adad1e807fea099, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenCvSharp4.4.6.0.20220608\lib\netstandard2.0\OpenCvSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="opencv_vbase, Version=2.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Common Files\JetEazy\opencv_vbase.dll</HintPath>
+    </Reference>
+    <Reference Include="opencv_vsm, Version=2.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Common Files\JetEazy\opencv_vsm.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -130,6 +157,12 @@
     <Compile Include="FormSpace\FormX3\frmAXISSetup.Designer.cs">
       <DependentUpon>frmAXISSetup.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\FormX3\FormRecipe.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\FormX3\FormRecipe.Designer.cs">
+      <DependentUpon>FormRecipe.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSpace\frmDataGridViewPosition.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -180,15 +213,19 @@
     </Compile>
     <Compile Include="ProcessSpace\AbsProcess.cs" />
     <Compile Include="ProcessSpace\BaseProcess.cs" />
+    <Compile Include="ZxCore3\Drivers\Motor\Victor_Gaara_Bridges\EzAxis.cs" />
     <Compile Include="ProcessSpace\MirrorAbsImageProcess.cs" />
     <Compile Include="ProcessSpace\MirrorBlackboxProcess.cs" />
-    <Compile Include="ProcessSpace\TestLiveImageProcess.cs" />
     <Compile Include="ProcessSpace\MirrorCalibProcess.cs" />
     <Compile Include="ProcessSpace\MirrorDispenseProcess.cs" />
     <Compile Include="ProcessSpace\MirrorPickProcess.cs" />
+    <Compile Include="ProcessSpace\MVC-Control\CvFreeQuadrilateralBox.cs" />
+    <Compile Include="ProcessSpace\MVC-Control\GdxLiveDispControl.cs" />
+    <Compile Include="ProcessSpace\ZxReportGenerator.cs" />
     <Compile Include="ProcessSpace\ResetProcess.cs" />
     <Compile Include="ProcessSpace\BuzzerProcess.cs" />
     <Compile Include="ProcessSpace\MainProcess.cs" />
+    <Compile Include="ProcessSpace\RcpLiveImageProcess.cs" />
     <Compile Include="UISpace\MainSpace\MainGdx3UI.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -202,14 +239,22 @@
     <Compile Include="ZxCore3\Drivers\Laser\Interface\IxLaser.cs" />
     <Compile Include="ZxCore3\Drivers\Laser\Sim\GdxLaserSim.cs" />
     <Compile Include="ZxCore3\Drivers\Laser\Victor_Gaara_Bridges\GdxLaser.cs" />
+    <Compile Include="ZxCore3\CoreCompInfo.cs" />
     <Compile Include="ZxCore3\GdxCore.cs" />
+    <Compile Include="UISpace\MainSpace\GdxDispUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UISpace\MainSpace\GdxDispUI.Designer.cs">
+      <DependentUpon>GdxDispUI.cs</DependentUpon>
+    </Compile>
     <Compile Include="ZxCore3\Model\GdxGlobal.cs" />
+    <Compile Include="ZxCore3\Model\GdxLaserCenterCompensator_inv.cs" />
     <Compile Include="ZxCore3\Model\GdxMotorCoordsTransform.cs" />
     <Compile Include="ZxCore3\Model\GdxLaserCenterCompensator.cs" />
     <Compile Include="ZxCore3\Model\Victor_Gaara_Bridges\GdxFacade.cs" />
+    <Compile Include="ZxCore3\Model\Victor_Gaara_Bridges\GdxLog.cs" />
     <Compile Include="ZxCore3\Model\Victor_Gaara_Bridges\GdxFacadeIO.cs" />
     <Compile Include="ZxCore3\Model\Victor_Gaara_Bridges\GdxFacadeIni.cs" />
-    <Compile Include="ZxCore3\Utils\QVector.cs" />
     <Compile Include="ZxCore3\Utils\QxConvert.cs" />
     <Compile Include="GlobalSpace\Enums.cs" />
     <Compile Include="GlobalSpace\INI.cs" />
@@ -313,6 +358,9 @@
     <EmbeddedResource Include="FormSpace\FormX3\frmAXISSetup.resx">
       <DependentUpon>frmAXISSetup.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\FormX3\FormRecipe.resx">
+      <DependentUpon>FormRecipe.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\frmDataGridViewPosition.resx">
       <DependentUpon>frmDataGridViewPosition.cs</DependentUpon>
     </EmbeddedResource>
@@ -386,6 +434,9 @@
     <EmbeddedResource Include="UISpace\RunUI.resx">
       <DependentUpon>RunUI.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UISpace\MainSpace\GdxDispUI.resx">
+      <DependentUpon>GdxDispUI.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="app.config" />
     <None Include="NLog.config" />
     <None Include="packages.config" />
@@ -400,6 +451,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="coconut3_01_fPz_icon.ico" />
+    <Content Include="ZxCore3\Drivers\IO\Vender_Fatek\To_be_continued.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Eazy Project Interface\Eazy Project Interface.csproj">
       <Project>{5b8a94dc-98da-4330-a5a8-89d9ce06410f}</Project>
       <Name>Eazy Project Interface</Name>
@@ -407,10 +462,6 @@
     <ProjectReference Include="..\Eazy Project Measure\Eazy Project Measure.csproj">
       <Project>{3c6431a8-ae4d-4cfc-becc-ff1dc973adbc}</Project>
       <Name>Eazy Project Measure</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Eazy Project Module\Eazy Project Module.csproj">
-      <Project>{cef15868-98a6-400a-9af9-a9849c0ee3e8}</Project>
-      <Name>Eazy Project Module</Name>
     </ProjectReference>
     <ProjectReference Include="..\JetEazy\JetEazy.csproj">
       <Project>{a24458c1-b3ac-462a-8b42-dafd1d420e19}</Project>
@@ -421,11 +472,6 @@
       <Name>JzDisplay</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="coconut3_01_fPz_icon.ico" />
-    <Content Include="ZxCore3\Drivers\IO\Vender_Fatek\To_be_continued.txt" />
-  </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(ProjectDir)NLog.config" "$(TargetDir)"</PostBuildEvent>

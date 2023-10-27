@@ -38,6 +38,13 @@ namespace Eazy_Project_III.ProcessSpace
         int Mirror_DispensingProcessIndex = 0;
         int m_DispensingIndex = 0;
         List<string> m_DispensingRunList = new List<string>();
+
+        /// <summary>
+        /// UV 照射計時, 每秒產生LOG訊息 (threading) <br/>
+        /// @LETIAN:2022/07/05
+        /// </summary>
+        System.Threading.Timer m_uvTimer;
+        int m_uvTimerCount = 0;
         #endregion
 
         #region SINGLETON
@@ -71,9 +78,18 @@ namespace Eazy_Project_III.ProcessSpace
             //      (a little awkwardly)
             base.Start(args[0]);
         }
+        
+        public override void Stop()
+        {
+            stop_uv_timer();
+            base.Stop();
+        }
 
         public override void Tick()
         {
+            if (!IsValidPlcScanned())
+                return;
+
             var Process = this;
 
             if (Process.IsOn)
@@ -85,7 +101,7 @@ namespace Eazy_Project_III.ProcessSpace
                         m_DispensingRunList.Clear();
 
                         Process.NextDuriation = NextDurtimeTmp;
-
+                        //NextDurtimeTmp = 50;
                         bool bOK = true;
 
                         switch (Process.RelateString)
@@ -156,7 +172,7 @@ namespace Eazy_Project_III.ProcessSpace
                             CommonLogClass.Instance.LogMessage("点胶启动 Index" + m_DispensingIndex.ToString(), Color.Black);
                             m_DispensingIndex++;
 
-                            Process.NextDuriation = 1500;
+                            Process.NextDuriation = NextDurtimeTmp;
                             Process.ID = 30;
                         }
                         break;
@@ -168,7 +184,28 @@ namespace Eazy_Project_III.ProcessSpace
                             if (!MACHINE.PLCIO.GetIO(IOConstClass.QB1541))
                             {
                                 //单个点胶完成
-                                if (m_DispensingIndex < m_DispensingRunList.Count)
+                                if (m_DispensingIndex == 2)
+                                {
+                                    Process.NextDuriation = NextDurtimeTmp;
+                                    Process.ID = 3010;
+
+                                    string _posStr = INI.Instance.ShadowPosUp;
+
+                                    switch (Mirror_DispensingProcessIndex)
+                                    {
+                                        case 0:
+                                            _posStr = INI.Instance.sMirror1ReadyPos;
+                                            break;
+                                        case 1:
+                                            _posStr = INI.Instance.sMirror2ReadyPos;
+                                            break;
+                                    }
+
+                                    MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 7, _posStr);
+                                    CommonLogClass.Instance.LogMessage((Mirror_DispensingProcessIndex == 0 ? "Mirror A" : "Mirror B") + " 待機位置=" + _posStr, Color.Black);
+
+                                }
+                                else if (m_DispensingIndex < m_DispensingRunList.Count)
                                 {
                                     //m_DispensingIndex++;
 
@@ -180,14 +217,56 @@ namespace Eazy_Project_III.ProcessSpace
                                     Process.NextDuriation = NextDurtimeTmp;
                                     Process.ID = 40;
 
+                                    
                                     //Process.Stop();
                                     CommonLogClass.Instance.LogMessage("点胶完成", Color.Black);
-
+                                    MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 7, INI.Instance.ShadowPos);
+                                    CommonLogClass.Instance.LogMessage("寫入點膠待機位置="+ INI.Instance.ShadowPosUp, Color.Black);
                                     //UVCylinder.Instance.SetFront();
                                 }
                             }
                         }
                         break;
+
+
+                    #region 插入流程 點完第二個點后 回避光槽位置 以便進行下面的點膠
+
+                    case 3010:
+                        if (Process.IsTimeup)
+                        {
+                            //if (MACHINE.PLCIO.GetOutputIndex((int)DispensingAddressEnum.ADR_RESET_COMPLETE) || Universal.IsNoUseIO)
+                            {
+
+                                Process.NextDuriation = NextDurtimeTmp;
+                                Process.ID = 3020;
+
+                                //避光槽启动
+                                MACHINE.PLCIO.SetIO(IOConstClass.QB1550, true);
+                                CommonLogClass.Instance.LogMessage("運動至待機位置启动", Color.Black);
+                            }
+                        }
+                        break;
+                    case 3020:
+                        if (Process.IsTimeup)
+                        {
+                            GdxCore.Trace("MirrorDispenser.IO.Wait", Process, IOConstClass.QB1550, false);
+
+                            if (!MACHINE.PLCIO.GetIO(IOConstClass.QB1550) || Universal.IsNoUseIO)
+                            {
+                                CommonLogClass.Instance.LogMessage("運動至待機位置完成", Color.Black);
+
+                                CommonLogClass.Instance.LogMessage("下一個點膠編號=" + (m_DispensingIndex + 1).ToString(), Color.Black);
+
+                                Process.NextDuriation = NextDurtimeTmp;
+                                Process.ID = 10;
+                            }
+                        }
+                        break;
+
+
+
+                    #endregion
+
 
                     #region INITIAL POS
 
@@ -280,6 +359,7 @@ namespace Eazy_Project_III.ProcessSpace
                             {
                                 UV.Instance.Seton();
                                 CommonLogClass.Instance.LogMessage("UV打开", Color.Black);
+                                start_uv_timer();
 
                                 Process.NextDuriation = RecipeCHClass.Instance.UVTime * 1000;
                                 Process.ID = 4020;
@@ -297,6 +377,7 @@ namespace Eazy_Project_III.ProcessSpace
                                 CommonLogClass.Instance.LogMessage("UV关闭", Color.Black);
                                 UVCylinder.Instance.SetBack();
 
+                                stop_uv_timer();
                                 Process.NextDuriation = NextDurtimeTmp;
                                 Process.ID = 4030;
                             }
@@ -323,7 +404,7 @@ namespace Eazy_Project_III.ProcessSpace
                     case 403000:
                         if (Process.IsTimeup)
                         {
-                            GdxCore.Trace("MirrorDispenser.IO.Wait", Process, MACHINE.PLCIO.GetGaAddress("INPUT",6), false);
+                            GdxCore.Trace("MirrorDispenser.IO.Wait", Process, MACHINE.PLCIO.GetGaAddress("INPUT",6).Address0, false);
 
                             if (!MACHINE.PLCIO.GetInputIndex(6))
                             {
@@ -357,6 +438,31 @@ namespace Eazy_Project_III.ProcessSpace
 
                                 CommonLogClass.Instance.LogMessage("微調模組後退位置定位", Color.Black);
 
+
+                                string _posStrReady = MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_PICK);
+
+                                //插入判斷mirror 作業待命位置 節省時間
+                                if (MainProcess.Instance.MainAloneToMirror)
+                                {
+                                    MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 6, _posStrReady);
+                                    CommonLogClass.Instance.LogMessage("吸嘴待命位置寫入(單獨製作) " + _posStrReady, Color.Black);
+                                }
+                                else
+                                {
+                                    //switch (Mirror_DispensingProcessIndex)
+                                    switch (MainProcess.Instance.CurRunCont)
+                                    {
+                                        case 0:
+                                            _posStrReady = INI.Instance.sMirror1ToMirror2ReadyPos;
+                                            CommonLogClass.Instance.LogMessage("吸嘴作業待命位置寫入 " + _posStrReady, Color.Black);
+                                            break;
+                                        case 1:
+                                            _posStrReady = MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_PICK);
+                                            CommonLogClass.Instance.LogMessage("吸嘴待命位置寫入 " + _posStrReady, Color.Black);
+                                            break;
+                                    }
+                                    MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 6, _posStrReady);
+                                }
                             }
                         }
                         break;
@@ -366,13 +472,18 @@ namespace Eazy_Project_III.ProcessSpace
                             if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_ADJUST, 4))
                             {
                                 Process.NextDuriation = NextDurtimeTmp;
-                                Process.ID = 4040;
+                                Process.ID = 4060;
                                 CommonLogClass.Instance.LogMessage("微調模組後退完成", Color.Black);
                                 
                                 MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_PICK, 6);
-
+                                Set_Cooling_Module(false);
                                 //CommonLogClass.Instance.LogMessage("微调模组待命完成", Color.Black);
                                 CommonLogClass.Instance.LogMessage("吸嘴模组回待命启动", Color.Black);
+
+                                //微調 和 吸嘴 同步回待命
+
+                                MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_ADJUST, 6);
+                                CommonLogClass.Instance.LogMessage("微调模组待命啓動", Color.Black);
 
                             }
                         }
@@ -405,8 +516,77 @@ namespace Eazy_Project_III.ProcessSpace
                             }
                         }
                         break;
+
+                    case 4060:
+                        if (Process.IsTimeup)
+                        {
+                            if ((MACHINE.PLCIO.ModulePositionIsReadyComplete(ModuleName.MODULE_PICK, 6) &&
+                                MACHINE.PLCIO.ModulePositionIsReadyComplete(ModuleName.MODULE_ADJUST, 6) &&
+                                MACHINECollection.AdjustReadyPositionOK()) ||
+                                Universal.IsNoUseIO)
+                            {
+                                Process.Stop();
+
+                                CommonLogClass.Instance.LogMessage("吸嘴模组待命完成", Color.Black);
+                                CommonLogClass.Instance.LogMessage("微调模组待命完成", Color.Black);
+                            }
+                        }
+                        break;
                 }
             }
         }
+
+
+        #region PRIVATE_FUNCTIONS
+
+        /// <summary>
+        /// 利用 Threading.Timer, 在 UV照射期間, 
+        /// 每秒 發出 一筆 event, 
+        /// 以防止被誤認為程式當掉
+        /// </summary>
+        private void start_uv_timer()
+        {
+            if (m_uvTimer == null)
+            {
+                m_uvTimerCount = 0;
+                m_uvTimer = new System.Threading.Timer(
+                    new System.Threading.TimerCallback((arg) =>
+                    {
+                        try
+                        {
+                            // 使用 LOG 會產生很多筆 重複的紀錄
+                            // CommonLogClass.Instance.LogMessage("UV照射中", Color.Purple);
+                            // string msg = string.Format("UV 照射中 (第{0}秒)", ++m_uvTimerCount);
+                            int totalSecs = RecipeCHClass.Instance.UVTime;
+                            FireMessage($"UV.照射中 ({++m_uvTimerCount}秒 / {totalSecs}秒)");
+                            // Force To Close the residual display label.
+                            System.Threading.Thread.Sleep(500);
+                            if (!IsOn)
+                                FireMessage("UV.Off");
+                        }
+                        catch
+                        {
+                        }
+                    }));
+                m_uvTimer.Change(0, 1000);
+            }
+        }
+        private void stop_uv_timer()
+        {
+            try
+            {
+                if (m_uvTimer != null)
+                {
+                    m_uvTimer.Dispose();
+                    m_uvTimer = null;
+                    FireMessage("UV.Off");
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        #endregion
     }
 }

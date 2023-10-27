@@ -372,14 +372,18 @@ namespace JetEazy.ControlSpace.MotionSpace
         public override void Go(float position)
         {
             //@LETIAN: 原先的寫法會有數值誤差!!!
-            //   案例 position = 36.35 會被處理成 3634 (36.34) 
+            //   案例 position = 36.35 會被處理成 3634 (36.34)
             //old code >>> int setposition = (int)(position * (float)ONEMMSTEP);
             int setposition = (int)Math.Round((double)position * ONEMMSTEP);
 
             StepPositionSet = setposition;
 
             AddressClass address = ADDRESSARRAY[(int)MotionAddressEnum.ADR_GO];
+
             PLC[address.SiteNo].SetIO(true, address.Address0);
+
+            //@LETIAN 2022/10/27: 清除 OnSiteCacheData
+            _clearOnSiteCacheData();
         }
         public override void Home()
         {
@@ -616,8 +620,16 @@ namespace JetEazy.ControlSpace.MotionSpace
             }
         }
 
-
-
+        #region PRIVATE_FUNCTIONS
+        void _clearOnSiteCacheData()
+        {
+            //@LETIAN 2022/10/27: 清除 IsOnSite
+            AddressClass address = ADDRESSARRAY[(int)MotionAddressEnum.ADR_ISONSITE];
+            if (string.IsNullOrEmpty(address.Address0))
+                return;
+            PLC[address.SiteNo].IOData.SetBit(address.Address0, false);
+        }
+        #endregion
     }
 }
 

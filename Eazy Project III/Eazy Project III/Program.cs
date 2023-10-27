@@ -15,14 +15,29 @@ namespace Eazy_Project_III
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new FormSpace.frmUserSelect());
-            //_test();
-            Application.Run(new MainForm());
+            var frmMain = new MainForm();
+            _test(frmMain);
+            Application.Run(frmMain);
 
         }
-        static void _test()
+        static void _test(Form frm)
         {
-            JetEazy.GdxCore3.Model.CoretronicsAPI.updateParams();
+#if(OPT_DIRECT_TEST_GUI_FORM)
+            //> JetEazy.GdxCore3.Model.CoretronicsAPI.updateParams();
+            frm.Load += new EventHandler((sender, e) =>
+            {
+                frm.BeginInvoke(new Action(() =>
+                {
+                    var dlg = new FormSpace.FormRecipe();
+                    {
+                        dlg.FormBorderStyle = FormBorderStyle.Sizable;
+                        dlg.ControlBox = true;
+                        //dlg.ShowDialog(frm);
+                        dlg.Show(frm);
+                    }
+                }));
+            });
+#endif
         }
     }
 }

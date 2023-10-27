@@ -3,6 +3,8 @@ using JetEazy.QMath;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using JetEazy.GdxCore3.Model;
+
 
 namespace JetEazy.GdxCore3.Model
 {
@@ -233,6 +235,11 @@ namespace JetEazy.GdxCore3.Model
             // RESERVED.
         }
 
+        public void Init()
+        {
+            GdxGlobal.INI.Sync();
+            BuildGoldenPlaneFormula();
+        }
         public void ResetLaserPtsOnMirror(int mirrorIdx)
         {
             if (mirrorIdx < N_MIRRORS)
@@ -252,7 +259,7 @@ namespace JetEazy.GdxCore3.Model
         {
             if (mirrorIdx < N_MIRRORS)
             {
-                BuildGoldenPlaneFormula();
+                //BuildGoldenPlaneFormula();
                 var xplane = m_xplaneMirrors[mirrorIdx];
                 var pts = _laserRunPts[mirrorIdx];
                 xplane.BuildTransform(pts);
@@ -284,8 +291,8 @@ namespace JetEazy.GdxCore3.Model
                 }
                 else
                 {
-                    if (m_xplaneQCs[mirrorIdx] == null)
-                        BuildGoldenPlaneFormula();
+                    //if (m_xplaneQCs[mirrorIdx] == null)
+                    //    BuildGoldenPlaneFormula();
                     var motorPos = m_xplaneQCs[mirrorIdx].FacadeCenter;
                     return motorPos.Slice(0, 3);
                 }
@@ -322,8 +329,8 @@ namespace JetEazy.GdxCore3.Model
         {
             if (mirrorIdx < N_MIRRORS)
             {
-                if (m_xplaneQCs[mirrorIdx] == null)
-                    BuildGoldenPlaneFormula();
+                //if (m_xplaneQCs[mirrorIdx] == null)
+                //    BuildGoldenPlaneFormula();
 
                 //double laserQC = mirrorIdx == 0 ?
                 var xplane = m_xplaneMirrors[mirrorIdx];
@@ -332,8 +339,9 @@ namespace JetEazy.GdxCore3.Model
                 double adj = qcLaserMeasurement - combinerL;
 
                 adj = adj * FACTOR;
+                adj = Math.Round(adj, 4);
 
-                GdxGlobal.LOG.Trace("設定QC量測, mirror,{0}, laserQC,{1:0.000}, adj,{2:0.000}",
+                GdxGlobal.LOG.Log("設定QC量測, mirror,{0}, laserQC,{1:0.000}, adj,{2:0.000}",
                                         mirrorIdx, qcLaserMeasurement, adj);
 
                 //// double a = 45 * Math.PI / 180;
@@ -359,7 +367,7 @@ namespace JetEazy.GdxCore3.Model
         }
         public QVector CalcCompensation(int mirrorIdx, QVector currentMotorPosAx6)
         {
-            BuildGoldenPlaneFormula();
+            //BuildGoldenPlaneFormula();
 
             // X,Y,Z,U,thz,thy
             int N6 = currentMotorPosAx6.Dimensions;
@@ -422,7 +430,7 @@ namespace JetEazy.GdxCore3.Model
             //double dXU = DX * Math.Cos(a);
             double goldenL = m_xplaneGolden.RealSurfaceCenter[3];
             double combinerL = xplane.RealSurfaceCenter[3];
-            double dL = combinerL - goldenL;
+            double dL = -(combinerL - goldenL);
             double adj = m_adjs[mirrorIdx];
             double dLu = dL + adj;
             double dU = dLu;
@@ -464,7 +472,8 @@ namespace JetEazy.GdxCore3.Model
             var ini = Eazy_Project_III.INI.Instance;
             ini.Mirror1_Offset_Adj = m_adjs[0];
             ini.Mirror2_Offset_Adj = m_adjs[1];
-            ini.Save();
+            ini.SaveQCLaser(true);
+            //ini.Filll
 
 #if (OPT_REPLACED_BY_UNIVERSAL_INI)
             //GdxGlobal.INI.Mirror1.QcLaserAdj = m_adjs[0];
@@ -485,8 +494,8 @@ namespace JetEazy.GdxCore3.Model
                 fileName = getDefaultFileName();
 
             var ini = Eazy_Project_III.INI.Instance;
-            m_adjs[0] = ini.Mirror1_Offset_Adj;
-            m_adjs[1] = ini.Mirror2_Offset_Adj;
+            m_adjs[0] = Math.Round(ini.Mirror1_Offset_Adj, 4);
+            m_adjs[1] = Math.Round(ini.Mirror2_Offset_Adj, 4);
 
 #if (OPT_REPLACED_BY_UNIVERSAL_INI)
             //m_adjs[0] = GdxGlobal.INI.Mirror1.QcLaserAdj;                           // 1-base-index

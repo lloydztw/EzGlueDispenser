@@ -684,7 +684,7 @@ namespace JetEazy.ControlSpace
                             if (!IsFirstOver)
                             {
                                 CAM_HIK[i] = new CAM_HIKVISION(new PictureBox(), OFFSETIndex + i);
-                                CAM_HIK[i].Init(WorkPath);
+                                //CAM_HIK[i].Init(WorkPath);
 
                                 //CAM_HIK[i].SetGain(INI.CCD_GAIN);
                                 //CCDBMP[i] = new Bitmap(CCDWidth, CCDHeight);

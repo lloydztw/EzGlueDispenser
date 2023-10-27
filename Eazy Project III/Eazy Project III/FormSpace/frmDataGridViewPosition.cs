@@ -143,6 +143,7 @@ namespace Eazy_Project_III.FormSpace
                 case "Mirror0CaliPos":
                 case "Mirror1PutPos":
                 case "Mirror2PutPos":
+                case "sMirror1ToMirror2ReadyPos":
                     m_pos_count = 1;
                     //m_motorGroupIndex = 1;
                     m_ModuleName = ModuleName.MODULE_PICK;
@@ -151,6 +152,8 @@ namespace Eazy_Project_III.FormSpace
                 case "ShadowPos":
                 case "ShadowPosUp":
                 case "InitialDispensingPos":
+                case "sMirror1ReadyPos":
+                case "sMirror2ReadyPos":
                     m_pos_count = 1;
                     //m_motorGroupIndex = 1;
                     m_ModuleName = ModuleName.MODULE_DISPENSING;

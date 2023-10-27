@@ -2,14 +2,10 @@
 using Eazy_Project_III.ControlSpace.MachineSpace;
 using Eazy_Project_III.OPSpace;
 using Eazy_Project_Interface;
-using JetEazy.BasicSpace;
-using JetEazy.Drivers.Laser;
-using JetEazy.GdxCore3;
 using JetEazy.GdxCore3.Model;
 using JetEazy.ProcessSpace;
 using System;
-using System.Drawing;
-using System.Text;
+using System.Threading;
 using VsCommon.ControlSpace;
 
 
@@ -27,18 +23,24 @@ namespace Eazy_Project_III.ProcessSpace
         public BaseProcess()
         {
             // 300 ms
-            NextDurtimeTmp = 300;
+            // NextDurtimeTmp = 300;
+            _initPlcEventHandlers();
         }
 
         #region COMMON_ACCESS_TO_THE_GLOBAL_COMPONENTS
 
-        protected ICam ICamForCali
+        ICam ICamForCali
         {
             get { return Universal.CAMERAS[0]; }
         }
-        protected ICam ICamForBlackBox
+        ICam ICamForBlackBox
         {
             get { return Universal.CAMERAS[1]; }
+        }
+
+        protected ICam GetCamera(int camID)
+        {
+            return Universal.CAMERAS[camID];
         }
         protected IUV UvActuactor
         {
@@ -53,6 +55,10 @@ namespace Eazy_Project_III.ProcessSpace
             get { return Projector.Instance; }
         }
 
+        protected RecipeCHClass Recipe
+        {
+            get { return RecipeCHClass.Instance; }
+        }
         protected MachineCollectionClass MACHINECollection
         {
             get
@@ -60,7 +66,6 @@ namespace Eazy_Project_III.ProcessSpace
                 return Universal.MACHINECollection;
             }
         }
-
         protected DispensingMachineClass MACHINE
         {
             get { return (DispensingMachineClass)Universal.MACHINECollection.MACHINE; }
@@ -75,9 +80,20 @@ namespace Eazy_Project_III.ProcessSpace
             get { return _defaultDuration; }
             set { _defaultDuration = value; }
         }
+        protected void InitDefaultDelay()
+        {
+            _defaultDuration = RecipeCHClass.Instance.ProcessDelay;
+            _LOG("程序預設 Delay(ms)", _defaultDuration);
+        }
+        public override void Start(params object[] args)
+        {
+            //@LETIAN 20221026 啟用
+            InitDefaultDelay();
+            base.Start(args);
+        }
         #endregion
 
-        #region COMMON_OPERATION_FUCTIONS_FOR_STATION_3
+        #region COMMON_MACHINE_FUCTIONS_FOR_STATION_3
         protected void SetNormalLight()
         {
             MACHINE.PLCIO.ADR_RED = false;
@@ -96,7 +112,81 @@ namespace Eazy_Project_III.ProcessSpace
             MACHINE.PLCIO.ADR_YELLOW = false;
             MACHINE.PLCIO.ADR_GREEN = true;
         }
+        protected void Set_Cooling_Module(bool on)
+        {
+            MACHINE.PLCIO.SetOutputIndex((int)ControlSpace.IOSpace.DispensingAddressEnum.ADR_FINTOP, on);
+            MACHINE.PLCIO.SetOutputIndex((int)ControlSpace.IOSpace.DispensingAddressEnum.ADR_FINBOTTOM, !on);
+            MACHINE.PLCIO.SetOutputIndex((int)ControlSpace.IOSpace.DispensingAddressEnum.ADR_FAN, on);
+            _LOG(on ? "散熱模組打開" : "散熱模組關閉");
+        }
         #endregion
+
+        #region PLC_ON_SCANNED_EVENT_HANDLER
+        
+        #region PRIVATE_MEMBERS
+        private ManualResetEvent m_plcScanEv = new ManualResetEvent(false);
+        private int m_plcScanCount = 0;
+        private void _initPlcEventHandlers()
+        {
+            var plc = MACHINECollection.MACHINE.PLCCollection[0];
+            plc.OnScanned += new EventHandler((sender, e) =>
+            {
+                OnPlcScanned(sender, e);
+            });
+        }
+        #endregion
+
+        protected virtual void OnPlcScanned(object sender, EventArgs e)
+        {
+            m_plcScanEv.Set();
+            m_plcScanCount++;
+        }
+
+        /// <summary>
+        /// 清除 Scanned 標記 
+        /// </summary>
+        protected override void InvalidatePlcScanned()
+        {
+            m_plcScanEv.Reset();
+            m_plcScanCount = 0;
+        }
+
+        // <summary>
+        // PLC 是否已經 有效 scanned 更新
+        // </summary>
+        protected bool IsValidPlcScanned(int validScannedCount = 0)
+        {
+            bool ok = WaitForPlcScanned(0);
+            if (ok)
+            {
+                if (validScannedCount > 1)
+                    ok = (m_plcScanCount > validScannedCount);
+            }
+            return ok;
+        }
+
+        /// <summary>
+        /// 等待 PLC 有效 scanned 更新
+        /// </summary>
+        /// <param name="waitTime">ms</param>
+        protected bool WaitForPlcScanned(int waitTime)
+        {
+            bool ok = m_plcScanEv.WaitOne(waitTime);
+            return ok;
+        }
+
+        /// <summary>
+        /// 放棄等待 PLC 更新 <br/>
+        /// @LETIAN: 20221022 搭配 WaitForPlcScanned 使用
+        /// </summary>
+        protected void AbortWaitPlcScanned()
+        {
+            m_plcScanCount = 1000;
+            m_plcScanEv.Set();
+        }
+        #endregion
+
+        #region COMMON_LOG_FUNCTIONS
 
         /// <summary>
         /// Generic LOG (dual) <br/>
@@ -106,6 +196,7 @@ namespace Eazy_Project_III.ProcessSpace
         /// </summary>
         protected void _LOG(string msg, params object[] args)
         {
+#if (false)
             Color color = Color.Black;
 
             int N = args.Length;
@@ -132,6 +223,9 @@ namespace Eazy_Project_III.ProcessSpace
                 GdxGlobal.LOG.Warn(msg);
             else
                 GdxGlobal.LOG.Debug(msg);
+#endif
+            msg = Name + ", " + msg;
+            GdxGlobal.LOG.Log(msg, args);
         }
 
         /// <summary>
@@ -141,9 +235,15 @@ namespace Eazy_Project_III.ProcessSpace
         /// </summary>
         protected void _LOG(Exception ex, string msg)
         {
+#if (false)
             msg = Name + ", " + msg;
             CommonLogClass.Instance.LogMessage(msg, Color.Red);
             GdxGlobal.LOG.Warn(ex, msg);
+#endif
+            msg = Name + ", " + msg;
+            GdxGlobal.LOG.Log(ex, msg);
         }
+
+        #endregion
     }
 }

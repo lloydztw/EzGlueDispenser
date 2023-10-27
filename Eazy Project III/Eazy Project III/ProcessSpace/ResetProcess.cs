@@ -17,6 +17,7 @@ namespace Eazy_Project_III.ProcessSpace
         {
             get { return BuzzerProcess.Instance; }
         }
+        System.Diagnostics.Stopwatch m_Stopwatch = new System.Diagnostics.Stopwatch();
         #endregion
 
         #region SINGLETON
@@ -38,6 +39,9 @@ namespace Eazy_Project_III.ProcessSpace
 
         public override void Tick()
         {
+            if (!IsValidPlcScanned())
+                return;
+
             var Process = this;
 
             if (Process.IsOn)
@@ -63,6 +67,8 @@ namespace Eazy_Project_III.ProcessSpace
                         MACHINE.PLCIO.SetOutputIndex((int)DispensingAddressEnum.ADR_RESET_START, true);
                         CommonLogClass.Instance.LogMessage("所有轴复位中", Color.Black);
 
+                        m_Stopwatch.Restart();
+
                         break;
 
                     case 10:
@@ -70,6 +76,7 @@ namespace Eazy_Project_III.ProcessSpace
                         {
                             if (MACHINE.PLCIO.GetOutputIndex((int)DispensingAddressEnum.ADR_RESET_COMPLETE) || Universal.IsNoUseIO)
                             {
+                                m_Stopwatch.Stop();
                                 //CommonLogClass.Instance.LogMessage("所有轴复位完成", Color.Lime);
                                 //Process.Stop();
 
@@ -77,9 +84,18 @@ namespace Eazy_Project_III.ProcessSpace
 
                                 //m_BuzzerIndex = 0;
                                 //m_BuzzerCount = 1;//复位完成叫一声
-                                m_BuzzerProcess.Start(1); 
 
-                                Process.NextDuriation = 500;
+                                switch (Process.RelateString)
+                                {
+                                    case "CloseWindows":
+                                        break;
+                                    default:
+                                        m_BuzzerProcess.Start(1);
+                                        break;
+                                }
+
+                                Set_Cooling_Module(false);
+                                Process.NextDuriation = 100;
                                 Process.ID = 20;
 
                                 //MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_PICK, 1, MACHINECollection.GetModulePositionForReady(ModuleName.MODULE_PICK));
@@ -88,12 +104,30 @@ namespace Eazy_Project_III.ProcessSpace
 
                                 //CommonLogClass.Instance.LogMessage("模组初始化位置设定", Color.Black);
                             }
+                            else if (m_Stopwatch.ElapsedMilliseconds >= 60 * 1000)
+                            {
+                                m_Stopwatch.Stop();
+                                //Time out
+                                Process.Stop();
+                                switch (Process.RelateString)
+                                {
+                                    case "CloseWindows":
+                                        break;
+                                    default:
+                                        CommonLogClass.Instance.LogMessage("所有轴复位超時", Color.Red);
+                                        m_BuzzerProcess.Start(3);
+                                        Set_Cooling_Module(false);
+                                        SetAbnormalLight();
+                                        MACHINE.PLCIO.ADR_STOP_PLC_SIGN = true;
+                                        break;
+                                }
+                            }
                         }
                         break;
                     case 20:
                         if (Process.IsTimeup)
                         {
-                            if (!m_BuzzerProcess.IsOn)
+                            //if (!m_BuzzerProcess.IsOn)
                             {
                                 Process.Stop();
                                 CommonLogClass.Instance.LogMessage("所有轴复位完成", Color.Black);

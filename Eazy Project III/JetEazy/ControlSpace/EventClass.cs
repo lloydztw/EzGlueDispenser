@@ -48,6 +48,8 @@ namespace JetEazy.ControlSpace
         }
     }
 
+
+
     class EventItemClass
     {
         string Date = "";
@@ -123,10 +125,16 @@ namespace JetEazy.ControlSpace
         }
     }
 
+
+
     public class EventClass
     {
+        #region CONFIGURATION_組態常數
         const int REALALARMCOUNT = 8;
         const int EVENTCOUNT = 8;
+        #endregion
+
+        #region PRIVATE_DATA
 
         Label lblRealtimeAlarm;
         //ListBox lsbAlarm;
@@ -156,8 +164,16 @@ namespace JetEazy.ControlSpace
         JzToolsClass JzTools = new JzToolsClass();
         string logPath = "D:\\EVENTLOG";
 
-        public EventClass(string eventfile)
+        #endregion
+
+
+        public EventClass(string eventfile, string logPath = null)
         {
+            //@LETIAN: 2022/07/05 加入 logPath 初始化設定.
+            // 讓上層可以 統合管理所有 LOG 資料夾
+            if (!string.IsNullOrEmpty(logPath))
+                this.logPath = logPath;
+
             Initial(eventfile);
         }
 
@@ -197,12 +213,13 @@ namespace JetEazy.ControlSpace
             //lsbAlarm = lsbalarm;
             //lsbEvent = lsbevent;
         }
+
         public void Initial(ListBox lsbevent)
         {
             //lsbEvent = lsbevent;
         }
 
-        public void GenEvent(string ID, EventActionTypeEnum action,string replaceVal,AccClass acc)
+        public void GenEvent(string ID, EventActionTypeEnum action, string replaceVal, AccClass acc)
         {
             foreach (EventIDClass eventid in EventIDList)
             {
@@ -214,6 +231,9 @@ namespace JetEazy.ControlSpace
             }
         }
 
+
+        #region PRIVATE_DATA_NOT_USED
+
         string SaveLogName = "";
 
         //StreamWriter ProcessEventSw;
@@ -221,6 +241,11 @@ namespace JetEazy.ControlSpace
         //StreamWriter ProcessReportSw;
 
         string ReportPath = "";
+
+        #endregion
+
+
+        #region NOT_USED_CODE
 
         //public void StartProcessLog(string logname,string tabledata)
         //{
@@ -232,9 +257,9 @@ namespace JetEazy.ControlSpace
         //    ReportPath = SavePath;
 
         //    SaveLogName = JzTimes.TimeSerialString + "-" + logname;
-            
+
         //    ProcessEventSw = File.AppendText(SavePath + "\\" + SaveLogName + ".txt");
-            
+
         //    ProcessDataSw = File.AppendText(SavePath + "\\" + SaveLogName + ".log");
 
         //    ProcessEventSw.AutoFlush = true;
@@ -242,7 +267,7 @@ namespace JetEazy.ControlSpace
         //    //ProcessReportSw.AutoFlush = true;
 
         //    TableSw.WriteLine(tabledata + "," + SaveLogName + ".csv");
-            
+
         //    //ProcessReportSw.WriteLine(processdata);
 
         //}
@@ -255,11 +280,14 @@ namespace JetEazy.ControlSpace
         //    //ProcessReportSw.WriteLine(processstopdata);
         //    //ProcessReportSw.Close();
         //    JzTools.SaveData(processstopdata, ReportPath + "\\" + SaveLogName + ".csv");
-            
+
         //    SaveLogName = "";
         //}
 
-        void AddEvent(EventIDClass eventid, EventActionTypeEnum action,string replaceVal,AccClass acc)
+        #endregion
+
+
+        void AddEvent(EventIDClass eventid, EventActionTypeEnum action, string replaceVal, AccClass acc)
         {
             bool IsAlarmAlive = false;
 
@@ -337,7 +365,7 @@ namespace JetEazy.ControlSpace
 
                             WarningSw = File.AppendText(SaveAWPath + "\\" + DateTime.Now.ToString("yyyyMMdd_HH") + ".log.csv");
                             WarningSw.AutoFlush = true;
-                            
+
                             LastAlarmSavePath = SaveAWPath;
                         }
 
@@ -349,6 +377,7 @@ namespace JetEazy.ControlSpace
                 }
             }
         }
+
         public void RemoveAlarm()
         {
             int i = AlarmList.Count - 1;
@@ -413,9 +442,13 @@ namespace JetEazy.ControlSpace
                 OnAlarm(false);
         }
 
+
+        #region PRIVATE_DATA_II
         string LastLogTime = "";
         string LastDataLogTime = "";
         string LastAlarmLogTime = "";
+        #endregion
+
 
         public void Tick(bool IsDirect)
         {
@@ -438,7 +471,7 @@ namespace JetEazy.ControlSpace
 
                     //FileStream EventFS = new FileStream(SavePath + "\\DAILY.txt", FileMode.Append, FileAccess.Write, FileShare.Read);
                     //EventSw = new StreamWriter(EventFS);
-                    
+
                     EventSw = File.AppendText(SavePath + "\\" + DateTime.Now.ToString("yyyyMMdd_HH") + ".log.csv");
                     //EventSw = File.AppendText(SavePath + "\\DAILY.txt");
                     EventSw.AutoFlush = true;
@@ -453,6 +486,7 @@ namespace JetEazy.ControlSpace
                 }
             }
         }
+
 
         //當有Input Trigger時，產生OnTrigger
         public delegate void AlarmHandler(bool IsBuzzer);

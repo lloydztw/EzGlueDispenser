@@ -394,17 +394,17 @@ namespace Common
             MOTION.SetSpeed(SpeedTypeEnum.GO);
             MOTION.SaveData(MotionAddressEnum.GOSPEED, MOTION.GOSPEED.ToString());
 
-            //MOTION.GOSLOWSPEED = m_MotorParas.GOSLOWSPEED;
+            MOTION.GOSLOWSPEED = m_MotorParas.GOSLOWSPEED;
             //MOTION.SetSpeed(SpeedTypeEnum.GOSLOW);
-            //MOTION.SaveData(MotionAddressEnum.GOSLOWSPEED, MOTION.GOSLOWSPEED.ToString());
+            MOTION.SaveData(MotionAddressEnum.GOSLOWSPEED, MOTION.GOSLOWSPEED.ToString());
 
             MOTION.MANUALSPEED = m_MotorParas.MANUALSPEED;
             MOTION.SetSpeed(SpeedTypeEnum.MANUAL);
             MOTION.SaveData(MotionAddressEnum.MANUALSPEED, MOTION.MANUALSPEED.ToString());
 
-            //MOTION.MANUALSLOWSPEED = m_MotorParas.MANUALSLOWSPEED;
+            MOTION.MANUALSLOWSPEED = m_MotorParas.MANUALSLOWSPEED;
             //MOTION.SetSpeed(SpeedTypeEnum.MANUALSLOW);
-            //MOTION.SaveData(MotionAddressEnum.MANUALSLOWSPEED, MOTION.MANUALSLOWSPEED.ToString());
+            MOTION.SaveData(MotionAddressEnum.MANUALSLOWSPEED, MOTION.MANUALSLOWSPEED.ToString());
 
             MOTION.HOMEHIGHSPEED = m_MotorParas.HOMEHIGHSPEED;
             MOTION.SetSpeed(SpeedTypeEnum.HOMEHIGH);

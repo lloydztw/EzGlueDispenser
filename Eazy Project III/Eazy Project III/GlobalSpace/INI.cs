@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Runtime.InteropServices;
-using System.Drawing;
-using System.IO;
-
+﻿using Eazy_Project_III.FormSpace;
 //using JetEazy;
 using JetEazy.BasicSpace;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
-using Eazy_Project_III.FormSpace;
 //using Eazy_Project_III;
 
 namespace Eazy_Project_III
@@ -108,6 +105,11 @@ namespace Eazy_Project_III
 
     public class INI
     {
+        /// <summary>
+        /// @LETIAN: 20220714
+        /// </summary>
+        public event EventHandler<string> OnPropertyChanged;
+
         private static readonly INI _instance = new INI();
         public static INI Instance
         {
@@ -288,12 +290,12 @@ namespace Eazy_Project_III
 
         [CategoryAttribute(Cat00), DescriptionAttribute("")]
         //[Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
-        [DisplayName("05Mirror1 QC laser 量測值")]
+        [DisplayName("05Mirror1 QC Laser Adj 調整值")]
         [Browsable(X3Visable)]
         public double Mirror1_Offset_Adj { get; set; } = 0;
         [CategoryAttribute(Cat00), DescriptionAttribute("")]
         //[Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
-        [DisplayName("06Mirror2 QC laser 量測值")]
+        [DisplayName("06Mirror2 QC Laser Adj 調整值")]
         [Browsable(X3Visable)]
         public double Mirror2_Offset_Adj { get; set; } = 0;
         #endregion
@@ -440,12 +442,38 @@ namespace Eazy_Project_III
         [Browsable(X3Visable)]
         public string sMirror1JamedPosList { get; set; } = string.Empty;
         public List<string> Mirror1JamedPosList = new List<string>();
+
+
+        [CategoryAttribute(Cat1), DescriptionAttribute("")]
+        [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
+        [DisplayName("01.A Mirror 點膠待機位置")]
+        [Browsable(X3Visable)]
+        public string sMirror1ReadyPos { get; set; } = string.Empty;
+
+
         [CategoryAttribute(Cat1), DescriptionAttribute("第二個 Mirror 的點膠位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
         [DisplayName("02.B Mirror 點膠位置")]
         [Browsable(X3Visable)]
         public string sMirror2JamedPosList { get; set; } = string.Empty;
         public List<string> Mirror2JamedPosList = new List<string>();
+
+
+        [CategoryAttribute(Cat1), DescriptionAttribute("")]
+        [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
+        [DisplayName("02.B Mirror 點膠待機位置")]
+        [Browsable(X3Visable)]
+        public string sMirror2ReadyPos { get; set; } = string.Empty;
+
+
+
+        [CategoryAttribute(Cat1), DescriptionAttribute("")]
+        [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
+        [DisplayName("03.Mirror作業待命位置")]
+        [Browsable(X3Visable)]
+        public string sMirror1ToMirror2ReadyPos { get; set; } = string.Empty;
+
+
 
         [CategoryAttribute(Cat1), DescriptionAttribute("避光槽位置")]
         [Editor(typeof(GetPositionPropertyEditor), typeof(UITypeEditor))]
@@ -536,6 +564,12 @@ namespace Eazy_Project_III
         [Browsable(X3Visable)]
         public int DispensingMsTime { get; set; } = 50;
 
+        [CategoryAttribute(Cat6), DescriptionAttribute("Z軸上升延時 单位(ms)")]
+        //[Editor(typeof(GetFilePathPropertyEditor), typeof(UITypeEditor))]
+        [DisplayName("03.Z軸上升延時")]
+        [Browsable(X3Visable)]
+        public int DispensingUpDelayTime { get; set; } = 50;
+
         #endregion
 
         #endregion
@@ -593,6 +627,10 @@ namespace Eazy_Project_III
             ShadowPos = ReadINIValue("Basic", "ShadowPos", ShadowPos.ToString(), INIFILE);
             ShadowPosUp = ReadINIValue("Basic", "ShadowPosUp", ShadowPosUp.ToString(), INIFILE);
 
+            sMirror1ReadyPos = ReadINIValue("Basic", "sMirror1ReadyPos", sMirror1ReadyPos.ToString(), INIFILE);
+            sMirror2ReadyPos = ReadINIValue("Basic", "sMirror2ReadyPos", sMirror2ReadyPos.ToString(), INIFILE);
+            sMirror1ToMirror2ReadyPos = ReadINIValue("Basic", "sMirror1ToMirror2ReadyPos", sMirror1ToMirror2ReadyPos.ToString(), INIFILE);
+
             sMirror1UVPosList = ReadINIValue("Basic", "sMirror1UVPosList", sMirror1UVPosList.ToString(), INIFILE);
             Mirror1UVPosList = sMirror1UVPosList.Split(';').ToList();
             sMirror2UVPosList = ReadINIValue("Basic", "sMirror2UVPosList", sMirror2UVPosList.ToString(), INIFILE);
@@ -606,6 +644,7 @@ namespace Eazy_Project_III
 
             IsUseMeasureHeight = ReadINIValue("Other", "IsUseMeasureHeight", (IsUseMeasureHeight ? "1" : "0"), INIFILE) == "1";
             DispensingMsTime = int.Parse(ReadINIValue("Other", "DispensingMsTime", DispensingMsTime.ToString(), INIFILE));
+            DispensingUpDelayTime = int.Parse(ReadINIValue("Other", "DispensingUpDelayTime", DispensingUpDelayTime.ToString(), INIFILE));
 
             sMirrorAdjDeep1Length = int.Parse(ReadINIValue("Basic", "sMirrorAdjDeepLength", sMirrorAdjDeep1Length.ToString(), INIFILE));
             sMirrorAdjDeep2Length = int.Parse(ReadINIValue("Basic", "sMirrorAdjDeep2Length", sMirrorAdjDeep2Length.ToString(), INIFILE));
@@ -673,6 +712,9 @@ namespace Eazy_Project_III
 
             WriteINIValue("Basic", "ShadowPos", ShadowPos.ToString(), INIFILE);
             WriteINIValue("Basic", "ShadowPosUp", ShadowPosUp.ToString(), INIFILE);
+            WriteINIValue("Basic", "sMirror1ReadyPos", sMirror1ReadyPos.ToString(), INIFILE);
+            WriteINIValue("Basic", "sMirror2ReadyPos", sMirror2ReadyPos.ToString(), INIFILE);
+            WriteINIValue("Basic", "sMirror1ToMirror2ReadyPos", sMirror1ToMirror2ReadyPos.ToString(), INIFILE);
 
             WriteINIValue("Basic", "sMirror1UVPosList", sMirror1UVPosList.ToString(), INIFILE);
             Mirror1UVPosList = sMirror1UVPosList.Split(';').ToList();
@@ -687,6 +729,7 @@ namespace Eazy_Project_III
 
             WriteINIValue("Other", "IsUseMeasureHeight", (IsUseMeasureHeight ? "1" : "0"), INIFILE);
             WriteINIValue("Other", "DispensingMsTime", DispensingMsTime.ToString(), INIFILE);
+            WriteINIValue("Other", "DispensingUpDelayTime", DispensingUpDelayTime.ToString(), INIFILE);
 
             WriteINIValue("Basic", "sMirrorAdjDeepLength", sMirrorAdjDeep1Length.ToString(), INIFILE);
             WriteINIValue("Basic", "sMirrorAdjDeep2Length", sMirrorAdjDeep2Length.ToString(), INIFILE);
@@ -716,10 +759,12 @@ namespace Eazy_Project_III
             WriteINIValue("Basic", "sMirror0PlaneHeightPosList", sMirror0PlaneHeightPosList.ToString(), INIFILE);
             Mirror0PlaneHeightPosList = sMirror0PlaneHeightPosList.Split(';').ToList();
         }
-        public void SaveQCLaser()
+        public void SaveQCLaser(bool toSendEvent = false)
         {
             WriteINIValue("Basic", "Mirror1_Offset_Adj", Mirror1_Offset_Adj.ToString(), INIFILE);
             WriteINIValue("Basic", "Mirror2_Offset_Adj", Mirror2_Offset_Adj.ToString(), INIFILE);
+            if (toSendEvent)
+                OnPropertyChanged?.Invoke(this, "LaserQC");
         }
     }
 }

@@ -1,22 +1,19 @@
 ﻿using Eazy_Project_III.ControlSpace.IOSpace;
 using Eazy_Project_III.ControlSpace.MachineSpace;
 using Eazy_Project_III.FormSpace;
-using Eazy_Project_III.OPSpace;
 using Eazy_Project_III.ProcessSpace;
 using Eazy_Project_III.UISpace.IOSpace;
-using Eazy_Project_Interface;
 using JetEazy;
 using JetEazy.BasicSpace;
 using JetEazy.ControlSpace;
 using JetEazy.DBSpace;
+using JetEazy.FormSpace;
 using JetEazy.GdxCore3;
 using JetEazy.GdxCore3.Model;
 using JetEazy.ProcessSpace;
-using JzDisplay;
-using JzDisplay.UISpace;
 using System;
 using System.Drawing;
-using System.Threading;
+using System.IO;
 using System.Windows.Forms;
 using VsCommon.ControlSpace;
 using VsCommon.ControlSpace.IOSpace;
@@ -44,6 +41,10 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
 
         #region WINDOW_GUI_CONTROLS
+        Control runUI = null;
+        Control txtBarcode = null;
+        Control lblPassSign = null;
+        Control lblProductionRunTime = null;
 
         Button btnStart;
         Button btnStop;
@@ -60,6 +61,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
         Label lblState;
         Label lblAlarm;
+        Button btnDispeningManual;
         #endregion
 
 
@@ -71,7 +73,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 return Universal.ACCDB;
             }
         }
-        DispUI m_DispUI;
+        //DispUI m_DispUI;
         //IO_INPUTUI _INPUTUI;
         X3INPUTUI _X3INPUTUI;
         MachineCollectionClass MACHINECollection
@@ -85,6 +87,8 @@ namespace Eazy_Project_III.UISpace.MainSpace
         {
             get { return (DispensingMachineClass)Universal.MACHINECollection.MACHINE; }
         }
+
+        bool[] m_plcCommError;
         #endregion
 
 
@@ -117,6 +121,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             btnCalibrateProcess = button5;
             btnPutProcess = button10;
             btnDispensingProcess = button2;
+            btnDispeningManual = button11;
 
             btnManual_Auto = button1;
             btnManual_Auto.Click += BtnManual_Auto_Click;
@@ -131,8 +136,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
             btnCalibrateProcess.Click += BtnCalibrateProcess_Click;
             btnPutProcess.Click += BtnPutProcess_Click;
             btnDispensingProcess.Click += BtnDispensingProcess_Click;
+            btnDispeningManual.Click += BtnDispeningManual_Click;
 
-#if OPT_LIVE_IMAGE_STRESS_TEST
+#if (OPT_LIVE_IMAGE_STRESS_TEST)
             btnTestLiveImaging.Click += btnTestLiveImaging_Click;
             btnTestLiveImaging.Visible = true;
 #else
@@ -144,9 +150,17 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
             MACHINE.TriggerAction += MACHINE_TriggerAction;
             MACHINE.EVENT.TriggerAlarm += EVENT_TriggerAlarm;
-
+            MACHINE.MachineCommErrorStringAction += MACHINE_MachineCommErrorStringAction;
             //_INPUTUI.Initial(VERSION, OPTION, MACHINECollection.MACHINE);
             _X3INPUTUI.Initial(VERSION, OPTION, MACHINE);
+
+            m_plcCommError = new bool[MACHINE.PLCCollection.Length];
+            int i = 0;
+            while (i < MACHINE.PLCCollection.Length)
+            {
+                m_plcCommError[i] = false;
+                i++;
+            }
 
             switch (VERSION)
             {
@@ -173,6 +187,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
             InitAllProcesses();
             StopAllProcesses("INIT");
         }
+
+        
+
         public void Close()
         {
             switch (VERSION)
@@ -216,7 +233,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             ////m_dispensingprocess.Tick();
             ////m_mainprocess.Tick();
             //////> m_BuzzerProcess.Tick();
-            
+
             TickAllProcesses();
 
 
@@ -230,8 +247,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
             btnCalibrateProcess.BackColor = (m_calibrateprocess.IsOn ? Color.Red : Color.FromArgb(192, 255, 192));
             btnPutProcess.BackColor = (m_blackboxprocess.IsOn ? Color.Red : Color.FromArgb(192, 255, 192));
             btnDispensingProcess.BackColor = (m_dispensingprocess.IsOn ? Color.Red : Color.FromArgb(192, 255, 192));
-
-            btnTestLiveImaging.BackColor = (m_testLiveImageProcess.IsOn ? Color.Red : Color.FromArgb(255, 224, 192));
+            btnTestLiveImaging.BackColor = (m_liveImageProcess.IsOn ? Color.Red : Color.FromArgb(255, 224, 192));
+            if (runUI != null)
+                runUI.Enabled = !m_mainprocess.IsOn;
 
             AlarmUITick();
         }
@@ -283,26 +301,46 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 return;
             }
 
+            //判斷是否復位完成
+            if (!MACHINE.PLCIO.GetOutputIndex((int)DispensingAddressEnum.ADR_RESET_COMPLETE))
+            {
+                VsMSG.Instance.Warning("設備未復位，無法啓動，請復位。");
+                return;
+            }
+
             string onStrMsg = "是否要启动？";
             string offStrMsg = "是否要停止？";
             string msg = (m_mainprocess.IsOn ? offStrMsg : onStrMsg);
+            if (m_mainprocess.IsOn)
+                if (VsMSG.Instance.Question(msg) != DialogResult.OK)
+                    return;
 
-            if (VsMSG.Instance.Question(msg) == DialogResult.OK)
+            if (true)
             {
                 if (!m_mainprocess.IsOn)
                 {
+                    var barcode = txtBarcode.Text.Trim();
+                    if (string.IsNullOrEmpty(barcode))
+                    {
+                        VsMSG.Instance.Warning("請輸入條碼!");
+                        _sim_auto_barcode();
+                        return;
+                    }
+
                     myUserSelectForm = new frmUserSelect();
                     if (myUserSelectForm.ShowDialog() == DialogResult.OK)
                     {
                         MainGroupIndex = myUserSelectForm.GetIndex;
                         MainMirrorIndex = myUserSelectForm.PutIndex;
                         MainAloneToMirror = myUserSelectForm.IsAloneToMirror;
-
+                        m_mainprocess.Barcode = txtBarcode.Text.Trim();
                         m_mainprocess.Start();
                     }
                 }
                 else
+                {
                     StopAllProcesses("USERSTOP");
+                }
             }
         }
         private void BtnPickProcess_Click(object sender, EventArgs e)
@@ -315,6 +353,13 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 0)
             {
                 VsMSG.Instance.Warning("手动模式下，无法吸料，请检查。");
+                return;
+            }
+
+            //判斷是否復位完成
+            if (!MACHINE.PLCIO.GetOutputIndex((int)DispensingAddressEnum.ADR_RESET_COMPLETE))
+            {
+                VsMSG.Instance.Warning("設備未復位，無法啓動，請復位。");
                 return;
             }
 
@@ -353,6 +398,13 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 return;
             }
 
+            //判斷是否復位完成
+            if (!MACHINE.PLCIO.GetOutputIndex((int)DispensingAddressEnum.ADR_RESET_COMPLETE))
+            {
+                VsMSG.Instance.Warning("設備未復位，無法啓動，請復位。");
+                return;
+            }
+
             string onStrMsg = "是否要进行校正测试？";
             string offStrMsg = "是否要停止校正测试流程？";
             string msg = (m_calibrateprocess.IsOn ? offStrMsg : onStrMsg);
@@ -360,9 +412,14 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (VsMSG.Instance.Question(msg) == DialogResult.OK)
             {
                 if (!m_calibrateprocess.IsOn)
+                {
+                    m_mainprocess.Barcode = "DEBUG";
                     m_calibrateprocess.Start(MainMirrorIndex, true);
+                }
                 else
+                {
                     m_calibrateprocess.Stop();
+                }
             }
         }
         private void BtnPutProcess_Click(object sender, EventArgs e)
@@ -373,6 +430,12 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 VsMSG.Instance.Warning("手动模式下，无法放料，请检查。");
                 return;
             }
+            //判斷是否復位完成
+            if (!MACHINE.PLCIO.GetOutputIndex((int)DispensingAddressEnum.ADR_RESET_COMPLETE))
+            {
+                VsMSG.Instance.Warning("設備未復位，無法啓動，請復位。");
+                return;
+            }
 
             string onStrMsg = "是否要进行放料测试？";
             string offStrMsg = "是否要停止放料测试流程？";
@@ -381,9 +444,14 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (VsMSG.Instance.Question(msg) == DialogResult.OK)
             {
                 if (!m_blackboxprocess.IsOn)
+                {
+                    m_mainprocess.Barcode = "DEBUG";
                     m_blackboxprocess.Start(MainMirrorIndex, true);
+                }
                 else
+                {
                     m_blackboxprocess.Stop();
+                }
             }
         }
         private void BtnDispensingProcess_Click(object sender, EventArgs e)
@@ -393,6 +461,12 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 0)
             {
                 VsMSG.Instance.Warning("手动模式下，无法点胶，请检查。");
+                return;
+            }
+            //判斷是否復位完成
+            if (!MACHINE.PLCIO.GetOutputIndex((int)DispensingAddressEnum.ADR_RESET_COMPLETE))
+            {
+                VsMSG.Instance.Warning("設備未復位，無法啓動，請復位。");
                 return;
             }
 
@@ -410,11 +484,11 @@ namespace Eazy_Project_III.UISpace.MainSpace
         }
         private void BtnManual_Auto_Click(object sender, EventArgs e)
         {
-            MACHINE.PLCIO.SetMWIndex(IOConstClass.MW1090, MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 1 ? 0 : 1);
+            int action = MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 1 ? 0 : 1;
+            MACHINE.PLCIO.SetMWIndex(IOConstClass.MW1090, action);
         }
         private void BtnReset_Click(object sender, EventArgs e)
         {
-
             //判断是否在手动状态
             if (MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 1)
             {
@@ -422,14 +496,20 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 return;
             }
 
-            //判断吸嘴是否有料
-            string IX0_6 = "0:IX0.6";//輸入點位6
-            //if (MACHINE.PLCIO.GetIO(IX0_6))
-            if (MACHINE.PLCIO.GetInputIndex(6))
-            {
-                VsMSG.Instance.Warning("請先取走鏡片，再復位。");
-                return;
-            }
+            //>>>no check 20220719
+            ////判断吸嘴是否有料
+            //string IX0_6 = "0:IX0.6";//輸入點位6
+            ////if (MACHINE.PLCIO.GetIO(IX0_6))
+            //if (MACHINE.PLCIO.GetInputIndex(6))
+            //{
+            //    VsMSG.Instance.Warning("請先取走鏡片，再復位。");
+            //    return;
+            //}
+
+            //if(check_have_mirror())
+            //{
+            //    return;
+            //}
 
             string onStrMsg = "是否要进行复位？";
             string offStrMsg = "是否要停止复位流程？";
@@ -438,29 +518,62 @@ namespace Eazy_Project_III.UISpace.MainSpace
             if (VsMSG.Instance.Question(msg) == DialogResult.OK)
             {
                 if (!m_resetprocess.IsOn)
+                {
+                    if (m_mainprocess.LastNG != null)
+                        StopAllProcesses("RESET");
                     m_resetprocess.Start();
+                }
                 else
+                {
                     m_resetprocess.Stop();
+                }
             }
         }
         private void btnTestLiveImaging_Click(object sender, EventArgs e)
         {
-            var ts = m_testLiveImageProcess;
-            if (ts.IsOn)
+            var ps = m_liveImageProcess;
+            if (ps.IsOn)
             {
-                ts.Stop();
+                ps.Stop();
                 System.Threading.Thread.Sleep(100);
             }
             else
             {
-                int camID = 0;
-                var tag = btnTestLiveImaging.Tag;
-                if (tag != null)
-                    int.TryParse(tag.ToString(), out camID);
-                camID = (camID + 1) % 2;
-                btnTestLiveImaging.Tag = camID;
-                ts.Start(camID);
-                System.Threading.Thread.Sleep(100);
+                //int camID = 0;
+                //var tag = btnTestLiveImaging.Tag;
+                //if (tag != null)
+                //    int.TryParse(tag.ToString(), out camID);
+                //camID = (camID + 1) % 2;
+                //btnTestLiveImaging.Tag = camID;
+                //ts.Start(camID);
+                //System.Threading.Thread.Sleep(100);
+                ps.Start("StressTest");
+            }
+        }
+        private void BtnDispeningManual_Click(object sender, EventArgs e)
+        {
+            int delaytime = 1;
+            bool bOK = int.TryParse(comboBox1.Text, out delaytime);
+            if (bOK)
+            {
+                string msg = "手動出膠 時間 " + delaytime.ToString() + " 毫秒";
+                if (VsMSG.Instance.Question(msg) == DialogResult.OK)
+                {
+                    DispensingMs(delaytime);
+                }
+            }
+        }
+        private void DispensingMs(int itime)
+        {
+            if (!MACHINE.PLCIO.GetOutputIndex((int)DispensingAddressEnum.ADR_SWITCH_DISPENSING))
+            {
+                System.Threading.Tasks.Task task = new System.Threading.Tasks.Task(() =>
+                {
+                    MACHINE.PLCIO.SetOutputIndex((int)DispensingAddressEnum.ADR_SWITCH_DISPENSING, true);
+                    System.Threading.Thread.Sleep(itime);
+                    MACHINE.PLCIO.SetOutputIndex((int)DispensingAddressEnum.ADR_SWITCH_DISPENSING, false);
+                });
+                task.Start();
             }
         }
 
@@ -468,6 +581,30 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
 
         #region HARDWARE_EVENT_HANDLERS
+        private void MACHINE_MachineCommErrorStringAction(string str)
+        {
+            //輸出那個plc掉綫
+            int index = 0;
+            string _plcIndex = str.Replace("PLC", "");
+            bool bOK = int.TryParse(_plcIndex, out index);
+            string _errorStr = "plc通訊中斷!!!\r\n(編號Index=" + index.ToString() + ")\r\n是否重連?";
+            //先停掉流程
+            StopAllProcesses();
+            if (!m_plcCommError[index])
+            {
+                m_plcCommError[index] = true;
+                if (VsMSG.Instance.Question(_errorStr) == DialogResult.OK)
+                {
+                    //重連
+                    MACHINE.PLCCollection[index].RetryConn();
+                    m_plcCommError[index] = false;
+                }
+                else
+                {
+                    Environment.Exit(0);
+                }
+            }
+        }
         private void Laser_OnScanned(object sender, double e)
         {
             if (InvokeRequired)
@@ -489,7 +626,11 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
         private void EVENT_TriggerAlarm(bool IsBuzzer)
         {
-            MACHINE.PLCIO.ADR_BUZZER = IsBuzzer;
+            if (Universal.IsSilentMode)
+                MACHINE.PLCIO.ADR_BUZZER = false;
+            else
+                MACHINE.PLCIO.ADR_BUZZER = IsBuzzer;
+
             if (!IsBuzzer)
             {
                 SetNormalLight();
@@ -497,6 +638,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
         }
 
         bool IsEMCTriggered = false;
+        bool IsSCREENTriggered = false;
 
         private void MACHINE_TriggerAction(MachineEventEnum machineevent)
         {
@@ -512,6 +654,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     break;
                 case MachineEventEnum.EMC:
                     IsEMCTriggered = true;
+                    break;
+                case MachineEventEnum.CURTAIN:
+                    IsSCREENTriggered = true;
                     break;
             }
         }
@@ -551,6 +696,15 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
                     IsEMCTriggered = false;
                     StopAllProcesses();
+                    //OnTrigger(ActionEnum.ACT_ISEMC, "");
+                }
+                if (IsSCREENTriggered)
+                {
+                    //SetAbnormalLight();
+
+                    IsSCREENTriggered = false;
+                    if (!MACHINE.PLCIO.ADR_BYPASS_SCREEN)
+                        StopAllProcesses();
                     //OnTrigger(ActionEnum.ACT_ISEMC, "");
                 }
             }
@@ -595,10 +749,26 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 //    Console.WriteLine("DEBUG");
                 //}
 
-                if (MACHINE.PLCIO.GetAlarmsAddress(item.BitNo, item.ADR_Address))
+                switch (item.ADR_Address)
                 {
-                    MACHINE.EVENT.GenEvent("A0002", EventActionTypeEnum.AUTOMATIC, item.ADR_Chinese, ACCDB.AccNow);
+                    case "IX0.0"://急停被按下
+                    case "IX1.1"://光幕被遮擋
+
+                        if (!MACHINE.PLCIO.GetAlarmsAddress(item.BitNo, item.ADR_Address))
+                        {
+                            MACHINE.EVENT.GenEvent("A0002", EventActionTypeEnum.AUTOMATIC, item.ADR_Chinese, ACCDB.AccNow);
+                        }
+
+                        break;
+                    default:
+                        if (MACHINE.PLCIO.GetAlarmsAddress(item.BitNo, item.ADR_Address))
+                        {
+                            MACHINE.EVENT.GenEvent("A0002", EventActionTypeEnum.AUTOMATIC, item.ADR_Chinese, ACCDB.AccNow);
+                        }
+                        break;
                 }
+
+
             }
         }
 
@@ -630,14 +800,23 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
         private void UpdateStateUI()
         {
+            string ngMsg = null;
+
             //if (m_TestProcess.IsOn)
             //    lblState.Text = "执行-测试区取像中 " + m_TestProcess.ID.ToString();
+
             if (m_dispensingprocess.IsOn)
                 lblState.Text = "执行-点胶中 " + m_dispensingprocess.ID.ToString();
             else if (m_blackboxprocess.IsOn)
+            {
+                ngMsg = m_mainprocess.LastNG;
                 lblState.Text = "执行-放取校正中  " + m_blackboxprocess.ID.ToString();
+            }
             else if (m_calibrateprocess.IsOn)
+            {
+                ngMsg = m_mainprocess.LastNG;
                 lblState.Text = "执行-校正中 " + m_calibrateprocess.ID.ToString();
+            }
             else if (m_pickprocess.IsOn)
                 lblState.Text = "执行-拾取中 " + m_pickprocess.ID.ToString();
             else if (m_mainprocess.IsOn)
@@ -656,15 +835,29 @@ namespace Eazy_Project_III.UISpace.MainSpace
             }
             else if (MACHINE.PLCIO.ADR_ISSCREEN)
             {
-                lblState.Text = "光幕遮挡";
-                lblState.BackColor = Color.Red;
+                if (!MACHINE.PLCIO.ADR_BYPASS_SCREEN)
+                {
+                    lblState.Text = "光幕遮挡";
+                    lblState.BackColor = Color.Red;
+                }
             }
             else
             {
-                lblState.BackColor = Color.Black;
+                if (ngMsg != null)
+                {
+                    lblState.Text = ngMsg; // "NG: " + lblState.Text;
+                    lblState.BackColor = Color.Red;
+                }
+                else
+                {
+                    lblState.BackColor = Color.Black;
+                }
             }
 
             lblState.Text = LanguageExClass.Instance.ToTraditionalChinese(lblState.Text);
+
+            _updateProductionRunTime();
+            _updateButtonsStatus();
         }
 
         #endregion
@@ -698,20 +891,22 @@ namespace Eazy_Project_III.UISpace.MainSpace
         //}
         #endregion
 
+
+        #region RESERVED_CODE
         void init_Display()
         {
-            m_DispUI = dispUI1;
-            m_DispUI.Initial(100, 0.01f);
-            m_DispUI.SetDisplayType(DisplayTypeEnum.SHOW);
-
+            //m_DispUI = dispUI1;
+            //m_DispUI.Initial(100, 0.01f);
+            //m_DispUI.SetDisplayType(DisplayTypeEnum.SHOW);
             //m_DispUI.MoverAction += M_DispUI_MoverAction;
             //m_DispUI.AdjustAction += M_DispUI_AdjustAction;
         }
         void update_Display()
         {
-            m_DispUI.Refresh();
-            m_DispUI.DefaultView();
+            //m_DispUI.Refresh();
+            //m_DispUI.DefaultView();
         }
+        #endregion
 
 
         #region PROCESSES_For_STATION_3
@@ -779,9 +974,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 return MirrorDispenseProcess.Instance;
             }
         }
-        BaseProcess m_testLiveImageProcess
+        BaseProcess m_liveImageProcess
         {
-            get { return TestLiveImageProcess.Instance; }
+            get { return RcpLiveImageProcess.Instance; }
         }
         #endregion
 
@@ -794,8 +989,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             m_blackboxprocess.Stop();
             m_dispensingprocess.Stop();
             m_resetprocess.Stop();
-            m_BuzzerProcess.Stop();
-            m_testLiveImageProcess.Stop();
+            //m_BuzzerProcess.Stop();
 
             switch (reason)
             {
@@ -803,33 +997,67 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     MACHINE.PLCIO.CLEARALARMS = true;
                     break;
                 case "USERSTOP":
+                    m_liveImageProcess.Stop();
                     SetNormalLight();
+
+                    m_BuzzerProcess.Stop();
+
+                    MACHINE.PLCIO.ADR_STOP_PLC_SIGN = true;
+                    break;
+                default:
                     break;
             }
 
+            set_cooling_module(false);
+            close_projector_light();
         }
         void InitAllProcesses()
         {
+            //----------------------------------------------------------------
+            // (1) 大部的 Processes 應該可以當成 MainProcess 的 Child Process,
+            //      可以集中由 MainProcess 管理, 形成一體 Model.
+            // (2) 以下對 Process Event Handler 的掛載.
+            //      在 Model-View-Control 的架構規範下, 屬於 Control.
+            //      ~ 以後再從 GUI(MainGdx3UI) 抽離出來.
+            //----------------------------------------------------------------
             m_mainprocess.OnCompleted += process_OnCompleted;
-            // Buzzer 的 結束 似乎不需要特別關注.
-            // m_BuzzerProcess.OnCompleted += process_OnCompleted;
+            // Buzzer 的結束 用來檢視是否有 NG 發生.
+            m_BuzzerProcess.OnCompleted += buzzer_OnCompleted;
             m_resetprocess.OnCompleted += process_OnCompleted;
             m_pickprocess.OnCompleted += process_OnCompleted;
             m_calibrateprocess.OnCompleted += process_OnCompleted;
             m_blackboxprocess.OnCompleted += process_OnCompleted;
             m_dispensingprocess.OnCompleted += process_OnCompleted;
-            // Calib and BlackBox
-            m_calibrateprocess.OnMessage += calibrateProcess_OnMessage;
-            m_blackboxprocess.OnMessage += blackboxProcess_OnMessage;
-            ((MirrorCalibProcess)m_calibrateprocess).OnLiveImage += process_OnLiveImage;
-            ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveImage += process_OnLiveImage;
-            ((MirrorCalibProcess)m_calibrateprocess).OnLiveCompensating += process_OnLiveCompensating;
-            ((MirrorBlackboxProcess)m_blackboxprocess).OnLiveCompensating += process_OnLiveCompensating;
 
-            //TEST
-#if OPT_LIVE_IMAGE_STRESS_TEST
-            ((TestLiveImageProcess)m_testLiveImageProcess).OnLiveImage += process_OnLiveImage;
-#endif
+            //----------------------------------------------------------------
+            m_pickprocess.OnMessage += pickprocess_OnMessage;
+            m_dispensingprocess.OnMessage += dispensingprocess_OnMessage;
+
+            //----------------------------------------------------------------
+            // Calib, BlackBox, LiveImage Process 都是與影像有關的,
+            // 行為相似, 共同繼承自 MirrorAbsImageProcess,
+            // 可以一起處理 !
+            //----------------------------------------------------------------
+            var imgProcesses = new MirrorAbsImageProcess[]
+            {
+                (MirrorAbsImageProcess)m_calibrateprocess,
+                (MirrorAbsImageProcess)m_blackboxprocess,
+                (MirrorAbsImageProcess)m_liveImageProcess,  // liveImageProcess 納入正式成員
+            };
+            foreach (var ps in imgProcesses)
+            {
+                // 通用型事件
+                ps.OnNG += process_OnNG;
+                ps.OnMessage += process_OnMessage;
+                // 即時影像 Event
+                ps.OnLiveImage += process_OnLiveImage;
+                // 中光電補償運算中, 單步調試的互動式 Event
+                ps.OnLiveCompensating += process_OnLiveCompensating;
+                // 中光電補償運算後, 圖點結果 Event.
+                // 掛上此 Handler 後, OnLiveImage 的功能會被替代.
+                // 直接在此 Handler 同時處理 LiveImaging
+                ps.OnCompensatedInfo += process_OnCompensatedInfo;
+            }
         }
         void TickAllProcesses()
         {
@@ -840,7 +1068,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             m_dispensingprocess.Tick();
             m_mainprocess.Tick();
             //> m_BuzzerProcess.Tick();
-            m_testLiveImageProcess.Tick();
+            m_liveImageProcess.Tick();
         }
 
 
@@ -849,11 +1077,23 @@ namespace Eazy_Project_III.UISpace.MainSpace
         {
             base.OnHandleCreated(e);
             check_coretronic_version();
+            _intercept_UI();
         }
         private void process_OnCompleted(object sender, ProcessEventArgs e)
         {
             if (sender == m_resetprocess)
             {
+                if(m_resetprocess.RelateString == "CloseWindows")
+                {
+                    //執行的關閉流程 這裏則跳出
+                    return;
+                }
+
+                if (m_mainprocess.LastNG != null)
+                {
+                    clear_NG();
+                }
+
                 if (!check_coretronic_version())
                 {
                     // 此處異常檢查
@@ -865,16 +1105,70 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     m_mainprocess.Stop();       // 中斷主流程
                     return;
                 }
+                if (check_have_mirror())
+                {
+                    return;
+                }
             }
 
             try
             {
+                if (sender == m_mainprocess)
+                {
+                    handle_main_process_completed(sender, e);
+                    if (e.Message == "PartialCompleted")
+                        return;
+                }
+
                 // Do whatever message you want to show to the operators.
-                string msg = "程序 " + ((BaseProcess)sender).Name + "\n已完成!\n";
+                string msg = $"程序 {((BaseProcess)sender).Name}, 已完成!\n";
                 CommonLogClass.Instance.LogMessage(msg, Color.Black);
             }
             catch
             {
+            }
+        }
+        private void process_OnMessage(object sender, ProcessEventArgs e)
+        {
+            if (string.IsNullOrEmpty(e.Message))
+                return;
+
+            if (e.Message.StartsWith("NG"))
+            {
+                // For backward compatibility
+                process_OnNG(sender, e);
+            }
+            else
+            {
+                // RESERVED
+            }
+        }
+        private void process_OnNG(object sender, ProcessEventArgs e)
+        {
+            // 異常
+            //>>> string ngMsg = "異常: " + e.Message;
+            //>>> CommonLogClass.Instance.LogMessage(ngMsg, Color.Red);
+
+            // 標記 NG 到 main process
+            m_mainprocess.SetNG(e.Message);
+            m_BuzzerProcess.Start(1);           // Buzzer 叫一聲
+            _updateButtonsStatus();
+        }
+        private void buzzer_OnCompleted(object sender, ProcessEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                EventHandler<ProcessEventArgs> h = buzzer_OnCompleted;
+                BeginInvoke(h, sender, e);
+            }
+            else
+            {
+                if (m_mainprocess.LastNG != null)
+                {
+                    //>>> MessageBox.Show(m_mainprocess.LastNG);
+                    var errMsg = m_mainprocess.LastNG + "\n\r\n\r(後續可按 復位 排除NG態)";
+                    VsMSG.Instance.Warning(errMsg);
+                }
             }
         }
         private void process_OnLiveImage(object sender, ProcessEventArgs e)
@@ -883,10 +1177,6 @@ namespace Eazy_Project_III.UISpace.MainSpace
             {
                 try
                 {
-                    //@LETIAN: 2022/06/20 (for backgroud thread)
-                    // bmp 由 sender maintains life cycle.
-                    // 由於 DispUI 內部會另行複製 bmp
-                    // 所以 在此 Handler Function 內不用 Dispose()
                     if (InvokeRequired)
                     {
                         EventHandler<ProcessEventArgs> h = process_OnLiveImage;
@@ -894,51 +1184,19 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     }
                     else
                     {
-                        var bmp = (Bitmap)e.Tag;
-                        var bmpShow = new Bitmap(bmp);
-                        m_DispUI.SetDisplayImage(bmpShow);
-                        bmp.Dispose();
+                        //@LETIAN: 2022/07/01 改用 GdxDispUI 增加一些 fps
+                        // bmp 由 Sender maintains life cycle.
+                        // 在此不用 Dispose
+                        Bitmap bmp = (Bitmap)e.Tag;
+                        dispUI1.UpdateLiveImage(bmp);
                     }
                 }
                 catch (Exception ex)
                 {
-                    GdxGlobal.LOG.Error(ex, "OnLiveImage");
-                    CommonLogClass.Instance.LogMessage("OnLiveImage 異常", Color.DarkRed);
+                    //>>> 此一層的 try - catch 以後可以省略.
+                    //>>> 會由 Event Sender 處理 exception
+                    throw ex;
                 }
-            }
-        }
-        private void calibrateProcess_OnMessage(object sender, ProcessEventArgs e)
-        {
-            if (string.IsNullOrEmpty(e.Message))
-                return;
-
-            if(e.Message.StartsWith("NG"))
-            {
-                // 中心點偏移量過大
-                string err = e.Message;
-                CommonLogClass.Instance.LogMessage(err, Color.Red);
-                m_BuzzerProcess.Start(1);   // 叫一聲
-            }
-            else
-            {
-
-            }
-        }
-        private void blackboxProcess_OnMessage(object sender, ProcessEventArgs e)
-        {
-            if (string.IsNullOrEmpty(e.Message))
-                return;
-
-            if (e.Message.StartsWith("NG"))
-            {
-                // 投影補償失敗
-                string err = e.Message;
-                CommonLogClass.Instance.LogMessage(err, Color.Red);
-                m_BuzzerProcess.Start(1);   // 叫一聲
-            }
-            else
-            {
-
             }
         }
         private void process_OnLiveCompensating(object sender, CompensatingEventArgs e)
@@ -953,29 +1211,118 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 else
                 {
                     // @LETIAN: 20220623 Async GUI interaction (new)
-                    // e.GoControlByClient = new ManualResetEvent(false);
-                    var frm = new FormCompensationStepTracer(e)
-                    {
-                        //Tag = e,
-                        TopMost = true
-                    };
+                    var frm = new FormCompensationStepTracer(e);
                     frm.FormClosed += new FormClosedEventHandler((s2, e2) =>
                     {
-                        //>>> DialogResult ret = ((Form)s2).DialogResult;
-                        //>>> var blackBoxEventArgs = (ProcessEventArgs)((Form)s2).Tag;
-                        //>>> blackBoxEventArgs.Cancel = (ret != DialogResult.OK);
-                        //>>> blackBoxEventArgs.GoControlByClient.Set();
-                        frm.Dispose();
+                        frm.Dispose();  // self-destroy ...
                     });
+                    frm.TopMost = true;
                     frm.Show(this);
                     frm.Location = new Point(100, 100);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 e.Cancel = true;
             }
         }
+        private void process_OnCompensatedInfo(object sender, CompensatedInfoEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                EventHandler<CompensatedInfoEventArgs> h = process_OnCompensatedInfo;
+                this.Invoke(h, sender, e);
+            }
+            else
+            {
+                dispUI1.UpdateCompensatedInfo(e);
+            }
+        }
+        private void pickprocess_OnMessage(object sender, ProcessEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                EventHandler<ProcessEventArgs> h = pickprocess_OnMessage;
+                this.Invoke(h, sender, e);
+            }
+            else
+            {
+                if (e.Message == "Picker.Start")
+                {
+                    // 關掉上一回合的 中光電補償圖示
+                    dispUI1.UpdateCompensatedInfo(null);
+                    dispUI1.Refresh();
+                }
+            }
+        }
+        private void dispensingprocess_OnMessage(object sender, ProcessEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                EventHandler<ProcessEventArgs> h = dispensingprocess_OnMessage;
+                this.Invoke(h, sender, e);
+            }
+            else
+            {
+                // UV 照射 計時顯示 on/off
+                if (e.Message.StartsWith("UV"))
+                {
+                    bool isOn = !e.Message.Contains("Off");
+                    lblUvTiming.Visible = isOn;
+                    if (isOn)
+                    {
+                        lblUvTiming.Text = e.Message;
+                        lblUvTiming.Refresh();
+                    }
+                }
+            }
+        }
+        private void handle_main_process_completed(object sender, ProcessEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                EventHandler<ProcessEventArgs> h = handle_main_process_completed;
+                BeginInvoke(h, sender, e);
+            }
+            else
+            {
+                if (e.Message == "PartialCompleted")
+                {
+                    var barcode = m_mainprocess.Barcode;
+                    var ngMsg = m_mainprocess.LastNG;
+                    int mirrorIdx = m_mainprocess.MainMirrorIndex;
+
+                    try
+                    {
+                        var args = (object[])e.Tag;
+                        mirrorIdx = (int)args[0];
+                        ngMsg = (string)args[1];
+                    }
+                    catch (Exception ex)
+                    {
+                        GdxGlobal.LOG.Warn(ex, "PartialCompleted Event 格式有誤!");
+                        return;
+                    }
+
+                    var gen = new ZxReportGenerator();
+                    gen.GenerateReports(barcode, ngMsg, mirrorIdx);
+
+                    if (lblPassSign != null)
+                    {
+                        lblPassSign.Text = (ngMsg == null) ? "PASS" : "NG";
+                        lblPassSign.ForeColor = (ngMsg == null) ? Color.Green : Color.Red;
+                    }
+                }
+                else
+                {
+                    // Final Completed 
+                    if (txtBarcode != null)
+                        txtBarcode.Text = "";
+                    _sim_auto_barcode();
+                }
+            }
+        }
+
         private bool check_coretronic_version()
         {
             // 檢查中光電 Version and UpdateParams
@@ -995,42 +1342,240 @@ namespace Eazy_Project_III.UISpace.MainSpace
             }
             return ok;
         }
+        private bool check_have_mirror()
+        {
+            // 檢查復位完成是否有鏡片 點擊確定按鈕 清除警報
+            // 將來看, 此檢查 是否歸屬於 ResetProcess
+            // 再將此段程序 移入.
+            // 用 event 通知 GUI 顯示異常.
+            bool ok = MACHINE.PLCIO.ADR_ISRESETCOOMPLETE_HAVE_MIRROR;
+            if (ok)
+            {
+                string msg = "吸嘴有鏡片，請取出后，點擊確定";
+                //CommonLogClass.Instance.LogMessage(msg, Color.Red);
+                VsMSG.Instance.Warning(msg);
+                MACHINE.PLCIO.CLEARALARMS = true;
+                //DialogResult dialogResult = VsMSG.Instance.Question(msg);
+                //if(dialogResult == DialogResult.OK)
+                //{
+                //    MACHINE.PLCIO.CLEARALARMS = true;
+                //}
+            }
+            return ok;
+        }
+        private void set_cooling_module(bool on)
+        {
+            MACHINE.PLCIO.SetOutputIndex((int)ControlSpace.IOSpace.DispensingAddressEnum.ADR_FINTOP, on);
+            MACHINE.PLCIO.SetOutputIndex((int)ControlSpace.IOSpace.DispensingAddressEnum.ADR_FINBOTTOM, !on);
+            MACHINE.PLCIO.SetOutputIndex((int)ControlSpace.IOSpace.DispensingAddressEnum.ADR_FAN, on);
+
+            //_LOG(on ? "散熱模組打開" : "散熱模組關閉");
+
+        }
+        private void close_projector_light()
+        {
+            var projector = OPSpace.Projector.Instance;
+            projector.SetColor(Eazy_Project_Interface.ProjectColor.LightRed, false);
+            projector.SetColor(Eazy_Project_Interface.ProjectColor.LightGreen, false);
+        }
+        private void clear_NG()
+        {
+            if (m_mainprocess.LastNG != null)
+            {
+                m_mainprocess.SetNG(null);
+                StopAllProcesses("USERSTOP");
+
+                if (lblPassSign != null)
+                    lblPassSign.Text = "";
+
+                VsMSG.Instance.Info("請取下鏡片!");
+            }
+            _updateButtonsStatus();
+        }
+
+        private void _updateButtonsStatus()
+        {
+            bool isNG = (m_mainprocess.LastNG != null);
+            btnStart.Enabled = !isNG;
+            btnStop.Enabled = !isNG;
+            //>>> btnManual_Auto.Enabled = !isNG;
+        }
+        private void _updateProductionRunTime()
+        {
+            if (lblProductionRunTime != null)
+            {
+                if (m_mainprocess.IsOn)
+                {
+                    var ts = DateTime.Now - m_mainprocess.StartTime;
+                    if (lblProductionRunTime.Tag != null)
+                    {
+                        if (int.TryParse(lblProductionRunTime.Tag.ToString(), out int secs))
+                        {
+                            if (secs == (int)ts.TotalSeconds)
+                                return;
+                        }
+                    }
+                    lblProductionRunTime.Text = ts.ToString().Split('.')[0];
+                    lblProductionRunTime.Tag = ((int)ts.TotalSeconds).ToString();
+                }
+            }
+        }
+        private void _sim_auto_barcode()
+        {
+#if (OPT_SIM)
+            if (txtBarcode == null)
+                return;
+
+            char sep = '#';
+            int count = 1;
+            if (txtBarcode.Tag != null)
+            {
+                var tag = txtBarcode.Tag.ToString();
+                var strs = tag.Split(sep);
+                if (strs.Length > 1 && int.TryParse(strs[1], out count))
+                    count++;
+            }
+            var barcode = string.Format("SIM{0}{1:000}", sep, count);
+            txtBarcode.Text = barcode;
+            txtBarcode.Tag = barcode;
+#endif
+        }
         #endregion
 
 
         #region AUTO_LAYOUT_FUNCTIONS
+        void _intercept_UI(Control panel = null)
+        {
+            // 在不影響其他站的情況下
+            // 把 EssUI 的顯示 PlcRx label
+            // 移轉過來 layout
+
+            if (panel == null)
+                panel = FindForm();
+
+            bool isDoneWithEssUI = false;
+            bool isDoneWithRunUI = false;
+
+            foreach (Control ctrl in panel.Controls)
+            {
+                if (ctrl is UserControl)
+                {
+                    if (isDoneWithEssUI && isDoneWithRunUI)
+                    {
+                        return;
+                    }
+                    else if (!isDoneWithEssUI && ctrl.Name == "essUI1")
+                    {
+                        isDoneWithEssUI = true;
+                        _intercept_EssUI_PlcTimeLabel(ctrl);
+                    }
+                    else if (!isDoneWithRunUI && ctrl.Name == "runUI1")
+                    {
+                        isDoneWithRunUI = true;
+                        _intercept_RunUI_BarcodeTextBox(ctrl);
+                        runUI = ctrl;
+                    }
+                    else
+                    {
+                        _intercept_UI(ctrl);
+                        continue;
+                    }
+                }
+            }
+        }
+        void _intercept_EssUI_PlcTimeLabel(Control panel)
+        {
+            foreach (Control c in panel.Controls)
+            {
+                if (c.Name == "label10" && c is Label)
+                {
+                    // 在不影響其他站的情況下
+                    // 把 EssUI 的顯示 PlcRx label
+                    // 移轉過來 layout
+                    var oldParent = c.Parent;
+                    var newParent = lblScanningTime.Parent;
+                    oldParent.Controls.Remove(c);
+                    newParent.Controls.Add(c);
+                    c.Parent = newParent;
+                    ((Label)c).BorderStyle = lblScanningTime.BorderStyle;
+                    ((Label)c).TextAlign = lblScanningTime.TextAlign;
+                    ((Label)c).AutoSize = false;
+                    c.Font = lblScanningTime.Font;
+                    c.BackColor = lblScanningTime.BackColor;
+                    c.ForeColor = lblScanningTime.ForeColor;
+                    c.Size = lblScanningTime.Size;
+                    c.Location = lblScanningTime.Location;
+                    var swap = lblScanningTime;
+                    c.Tag = swap;
+                    lblScanningTime = (Label)c;
+                    lblScanningTime.Visible = true;
+                    swap.Visible = false;
+                    dispUI1.AlignToTitleBarDockArea(lblScanningTime, lblLEText);
+                    return;
+                }
+                else
+                {
+                    _intercept_EssUI_PlcTimeLabel(c);
+                }
+            }
+        }
+        void _intercept_RunUI_BarcodeTextBox(Control panel)
+        {
+            foreach (Control c in panel.Controls)
+            {
+                if (c.Name == "label2" && lblProductionRunTime == null)
+                {
+                    lblProductionRunTime = c;
+                }
+                if (c.Name == "label4" && lblPassSign == null)
+                {
+                    lblPassSign = c;
+                }
+                if (c.Name == "textBox3" && c is TextBox && txtBarcode == null)
+                {
+                    txtBarcode = c;
+                }
+
+                if (txtBarcode != null && lblPassSign != null && lblProductionRunTime != null)
+                {
+                    return;
+                }
+                else
+                {
+                    _intercept_RunUI_BarcodeTextBox(c);
+                }
+            }
+        }
         void _auto_layout()
         {
-#if !OPT_LETIAN_DEBUG
-            return;
-#endif
-            //@LETIAN: auto layout gui component's location and size
-            //  暫時可以塞到我的小螢幕.
-            //  以後再細改.
             if (FindForm().WindowState == FormWindowState.Minimized)
                 return;
 
             _auto_adjust_bottom_panels();
             _auto_adjust_disp_ui();
 
-            lblLEText.Top = dispUI1.Top;
-            lblLEText.Left = dispUI1.Right - lblLEText.Width;
+            //@LETIAN:20220701:
+            //  lblLEText 已經交給 GdxDispUI 託管, 會自動 layout
         }
         void _auto_adjust_bottom_panels()
         {
             var rcc = ClientRectangle;
             int h = tabControl1.Height;
             tabControl1.Left = rcc.Width - tabControl1.Width - 5;
-            tabControl1.Top = rcc.Height - h;
+            tabControl1.Top = rcc.Height - h - 5;
             groupBox1.Top = rcc.Height - h;
             groupBox1.Height = h;
             groupBox1.Width = rcc.Width - tabControl1.Width - 5;
+            //tabControl1.Height = rcc.Bottom - 5 - tabControl1.Top;
         }
         void _auto_adjust_disp_ui()
         {
             var rcc = ClientRectangle;
             var bottomPanel = tabControl1;
-            dispUI1.Height = rcc.Height - bottomPanel.Height - 5;
+            //dispUI1.Height = rcc.Height - bottomPanel.Height - 5;
+            dispUI1.Height = bottomPanel.Top - 3 - rcc.Top;
+            // GdxDispUI 子項, 會自動 layout
+#if (false)
             dispUI1.Width = rcc.Width;
             foreach (Control c in dispUI1.Controls)
             {
@@ -1040,8 +1585,19 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     c.Height = dispUI1.Bottom - c.Top;
                 }
             }
+#endif
+            //@LETIAN:20220701:
+            //  lblLEText 交給 GdxDispUI 託管, 會自動 layout
+            //lblLEText.Left = dispUI1.Right - lblLEText.Width;
+            //lblLEText.Top = dispUI1.Top;
+            dispUI1.AlignToTitleBarDockArea(lblScanningTime, lblLEText);
+            //UV Timing
+            lblUvTiming.Top = (dispUI1.Bottom - lblUvTiming.Height);
+            lblUvTiming.Top = lblLEText.Bottom + 5;
+            lblUvTiming.Left = dispUI1.Left;
+            lblUvTiming.Width = dispUI1.Width;
+            lblUvTiming.BringToFront();
         }
         #endregion
-
     }
 }

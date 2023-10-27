@@ -7,7 +7,6 @@ using System;
 using System.Drawing;
 
 
-
 namespace Eazy_Project_III.ProcessSpace
 {
     /// <summary>
@@ -70,13 +69,27 @@ namespace Eazy_Project_III.ProcessSpace
             }
             base.Start();
         }
+        public override void Stop()
+        {
+            if (m_phase1 != null)
+                m_phase1.IsUserStop = true;
+            if (m_phase2 != null)
+                m_phase2.IsUserStop = true;
+            base.Stop();
+        }
 
         public override void Tick()
         {
+            if (!IsValidPlcScanned())
+                return;
+
             var Process = this;
 
             if (Process.IsOn)
             {
+                if (!IsValidPlcScanned())
+                    return;
+
                 switch (Process.ID)
                 {
                     #region INIT
@@ -108,13 +121,17 @@ namespace Eazy_Project_III.ProcessSpace
                         if (Process.IsTimeup)
                         {
                             _LOG("設定相機非連續模式");
-                            ICamForCali.StopCapture();
-                            ICamForBlackBox.StopCapture();
+                            GetCamera(0).StopCapture();
+                            GetCamera(1).StopCapture();
 
-                            int expo = RecipeCHClass.Instance.JudgeCamExpo;
-                            _LOG("提前設定曝光時間", expo);
-                            ICamForBlackBox.SetExposure(expo);
-                            SetNextState(100, 1000);
+                            var cam = GetCamera(1);
+                            Recipe.GetCameraExpoAndGain(1, m_mirrorIndex, out int expo, out float gain);
+                            _LOG("提前設定曝光時間與增益", expo, gain.ToString("0.0"));
+                            cam.SetExposure(expo);
+                            cam.SetGain(gain);
+
+                            // Light On Delay
+                            SetNextState(100, RecipeCHClass.Instance.LightOnDelay2);
                         }
                         break;
 
@@ -140,9 +157,9 @@ namespace Eazy_Project_III.ProcessSpace
                             }
                             else if (isReady)
                             {
-                                _LOG(phase.Name, "開始");
+                                _LOG(phase.Name, "開始線程");
+                                SetNextState(199, 500);//放置线程前面，防止卡在线程中无法终止
                                 start_scan_thread(phase);
-                                SetNextState(199, 500);
                             }
                         }
                         break;
@@ -188,9 +205,9 @@ namespace Eazy_Project_III.ProcessSpace
                             }
                             else if (isReady)
                             {
-                                _LOG(phase.Name, "開始");
+                                _LOG(phase.Name, "開始線程");
+                                SetNextState(299, 500);//放置线程前面，防止卡在线程中无法终止
                                 start_scan_thread(phase);
-                                SetNextState(299, 500);
                             }
                         }
                         break;
@@ -239,8 +256,12 @@ namespace Eazy_Project_III.ProcessSpace
         /// θy, θz 補償方向
         /// </summary>
         static double[] THETA_DIR = new double[] { -1, 1 };         // θy, θz
+        QVector m_thetaCompGain;
+        QVector m_thetaCompGain2;
         int[] m_motorParams = new int[2];                           // from coretronics dll
-        //double _decay_rate = 0.9;                                 // reserved for smart compensation
+        bool[] m_coreCompDone = new bool[2];
+        int m_compMaxRunCount = int.MaxValue;
+        int m_compSepPixels = 15;
         GdxMotorCoordsTransform m_trf;
 
         protected override QVector CompensationInitPos
@@ -263,7 +284,8 @@ namespace Eazy_Project_III.ProcessSpace
             //(0) Read Motors Current Position as InitPos
             m_initMotorPos = ax_read_current_pos();
             m_showIDs = new int[] { 3, 4, 5 };
-            ax_set_motor_speed(SpeedTypeEnum.GOSLOW);
+            ax_set_motor_speed(SpeedTypeEnum.GO);
+            InitCompensationSteps();
 
             //(1) Phase Run Context
             m_phase1.StepFunc = phase1_run_one_step;
@@ -271,11 +293,28 @@ namespace Eazy_Project_III.ProcessSpace
             m_phase1.Reset();
 
             //(2) steps and LOG
+            //////double percA = AxisUnitConvert.PERCISIONS[5];
+            //////double stepMaxA = Math.Round(RecipeCHClass.Instance.CompStepAngleMax * percA, 4);
+            //////double stepMaxU = Math.Round(RecipeCHClass.Instance.CompStepSize * 0.001, 4);
+            //////COMP_STEP = new QVector(stepMaxU, stepMaxU, stepMaxU, stepMaxU, stepMaxA, stepMaxA);
+            //////_LOG("單步最大補償量", COMP_STEP);
+            //////InitCompensationSteps();
+
+            //(3) step gains
             double percA = AxisUnitConvert.PERCISIONS[5];
-            double stepA = Math.Round(RecipeCHClass.Instance.CompStepSizeAngle * percA, 4);
-            double stepU = Math.Round(RecipeCHClass.Instance.CompStepSize * 0.001, 4);
-            COMP_STEP = new QVector(stepU, stepU, stepU, stepU, stepA, stepA);
-            _LOG("單步最大補償量", COMP_STEP);
+            double gain = percA * (double)RecipeCHClass.Instance.CompStepAngleGain;
+            double gain2 = percA * (double)RecipeCHClass.Instance.CompStepAngleGain2;
+            m_thetaCompGain = new QVector(THETA_DIR) * gain;
+            m_thetaCompGain2 = new QVector(THETA_DIR) * gain2;
+
+            //(4) max compensation times (phase 1 光斑)
+            m_compMaxRunCount = (int)RecipeCHClass.Instance.CompMaxTimes;
+            m_compSepPixels = (int)RecipeCHClass.Instance.CompSepPixels;
+            _LOG(PHASE_1, "增益分水嶺", m_compSepPixels);
+
+            //(5) individual completion flags
+            for (int i = 0; i < m_coreCompDone.Length; i++)
+                m_coreCompDone[i] = false;
 
             return m_phase1;
         }
@@ -291,30 +330,55 @@ namespace Eazy_Project_III.ProcessSpace
                 return;
 
             //(2) 拍照
-            var cam = ICamForBlackBox;
-            using (Bitmap bmp = snapshot_image(cam, runCtrl.RunCount))
+            _LOG(runCtrl.Name, "擷取影像");
+            var cam = GetCamera(1);
+            
+            //(2.0) 紅斑(mirror==0) or 綠斑(mirror==1)
+            int compType = GdxCore.getProjCompType(m_mirrorIndex, out Color color);
+            string mirrorTag = color == Color.DarkGreen ? "G" : "R";
+
+            using (Bitmap bmp = snapshot_image(cam, $"{mirrorTag}_projection", true))
             {
-                //(2.1) 通知 GUI 更新 Image
-                // FireLiveImaging(bmp);
+                //(2.1) Calls to DLL
+                var tm0 = DateTime.Now;
+                bool isCompOK = GdxCore.CalcProjCompensation(bmp, m_motorParams, compType);
+                var ts = DateTime.Now - tm0;
+                _LOG(runCtrl.Name, "Coretronics", "ProjComp", isCompOK ? "OK" : "NG", m_motorParams[0], m_motorParams[1],
+                    "ms=" + (int)ts.TotalMilliseconds, color);
 
-                //(2.2) 紅or綠光斑
-                Color color = m_mirrorIndex == 0 ? Color.DarkOrange : Color.Blue;
-                int compType = m_mirrorIndex == 0 ? 1 : 0;
-                GdxCore.CalcProjCompensation(bmp, m_motorParams, compType);
-                _LOG(runCtrl.Name, "Coretronics", "ProjComp", m_motorParams[0], m_motorParams[1], color);
+                //(2.2) 補償後圖示結果 (Compensation Info)
+                var info = GdxCore.GetProjCompensationInfo(compType);
 
-                //(2.2) 通知 GUI 更新 Image
-                FireLiveImaging(bmp);
+                //(2.3) 通知 GUI 更新 Image
+                //> FireLiveImaging(bmp);
+                FireCompensatedInfo(runCtrl.Name, m_mirrorIndex, bmp, info);
 
-                //(2.3) m_motorParams == (0,0) => 完成
-                runCtrl.IsCompleted = _is_zero(m_motorParams);
+                //(2.4) NG
+                if (!isCompOK)
+                {
+                    string errCompMsg = PHASE_1 + ", 判定 NG!";
+                    // Log
+                    _LOG(errCompMsg, Color.Red);
+                    // Events
+                    FireNG(errCompMsg);     //<<< 光斑補償 NG
+                    // soft-terminate
+                    SetNextState(9999);
+                    // run flag
+                    runCtrl.Go = false;
+                    return;
+                }
+
+                //(2.5) m_motorParams == (0,0) => 完成
+                runCtrl.IsCompleted = _is_completed(m_coreCompDone, m_motorParams);
+
                 if (runCtrl.IsCompleted)
                 {
-                    //(2.4) 調試模式
+                    //(2.5.1) 調試模式
                     m_currMotorPos = ax_read_current_pos();
                     if (!check_debug_mode(runCtrl, null, m_currMotorPos, m_incr))
                         return;
-                    //(2.5) Completed
+
+                    //(2.5.2) Completed
                     if (runCtrl.IsCompleted)
                         return;
                 }
@@ -332,10 +396,10 @@ namespace Eazy_Project_III.ProcessSpace
                     m_incr = m_nextMotorPos - m_currMotorPos;
 
                 //(6) delta 小於馬達解析度, 當作完成.
-                if (false)
-                {
-                    runCtrl.IsCompleted = _is_almost_zero(m_incr);
-                }
+                //if (false)
+                //{
+                //    runCtrl.IsCompleted = _is_almost_zero(m_incr);
+                //}
 
                 //(6.1) 調試模式
                 if (!check_debug_mode(runCtrl, null, m_currMotorPos, m_incr))
@@ -346,9 +410,9 @@ namespace Eazy_Project_III.ProcessSpace
                     return;
 
                 //(8) Max Run Count
-                if (!check_max_run_count(runCtrl))
+                if (!check_max_run_count(runCtrl, m_compMaxRunCount))
                     return;
-
+                
                 //(9) 下馬達指令
                 log_motor_command(runCtrl, m_nextMotorPos, m_incr);
                 ax_start_move(m_nextMotorPos);
@@ -373,6 +437,7 @@ namespace Eazy_Project_III.ProcessSpace
             for (int i = 0; i < 4; i++)
                 incr[i] = 0;
 
+#if (false)
             // 2022/06/21 only compensate theta_y, theta_z
             for (int i = 4, k = 0; i < N_MOTORS; i++, k++)
             {
@@ -383,6 +448,64 @@ namespace Eazy_Project_III.ProcessSpace
                 else
                     incr[i] = 0;
             }
+#else
+
+            // k= 0,1
+            int lenK = motorParams.Length;
+            for (int i = 4, k = 0; k < lenK; i++, k++)
+            {
+                // LOG AGAIN
+                int pixelsDiff = motorParams[k];
+
+                var gains = Math.Abs(pixelsDiff) <= m_compSepPixels ? 
+                    m_thetaCompGain : 
+                    m_thetaCompGain2;
+
+                // Log10 gain
+                //  int sign = pixelsDiff >= 0 ? 1 : -1;
+                //  double delta = (pixelsDiff) == 0 ? 0 :
+                //    sign * gains[k] * Math.Log10(Math.Abs(pixelsDiff));
+
+                // Linear Gain
+                double delta = (pixelsDiff) == 0 ? 0 : gains[k] * pixelsDiff;
+                double deltaA = Math.Abs(delta);
+
+                // Force to zero if the local completion flag is ON.
+                if (m_coreCompDone[k])
+                {
+                    // 2022-10-20 YoMin 要求:
+                    // 如果補償 < 0.0167, 就用 0.0167 走完, 走完直接結束.
+                    delta = 0.0;
+                }
+                else if (deltaA == 0)
+                {
+                    // 2022-10-20 YoMin 要求:
+                    // 如果補償 < 0.0167, 就用 0.0167 走完, 走完直接結束.
+                    m_coreCompDone[k] = true;
+                }
+                // Min
+                else if (deltaA < MIN_DELTA[i])
+                {
+                    // 2022-10-20 YoMin 要求:
+                    // 如果補償 < 0.0167, 就用 0.0167 走完, 走完直接結束.
+                    delta = delta > 0 ? MIN_DELTA[i] : -MIN_DELTA[i];
+                    m_coreCompDone[k] = true;
+                    _LOG(PHASE_1, $"θ[{k}]達成強制停止條件", Color.DarkMagenta);
+                }
+                // Max
+                else
+                {
+                    double deltaMax = COMP_STEP[i];
+                    if (Math.Abs(delta) > deltaMax)
+                        delta = delta > 0 ? deltaMax : -deltaMax;
+                }
+
+                incr[i] = delta;
+            }
+#endif
+
+            //AxisUnitConvert.ToAxis(incr, true);
+            //AxisUnitConvert.ToWorld(incr, true);
 
             return incr;
         }
@@ -498,7 +621,7 @@ namespace Eazy_Project_III.ProcessSpace
             //(8) 下指令
             log_motor_command(runCtrl, m_nextMotorPos, m_incr);
             ax_start_move(m_nextMotorPos);
-            System.Threading.Thread.Sleep(MOTOR_CMD_DELAY);
+            //System.Threading.Thread.Sleep(MOTOR_CMD_DELAY);
         }
         QVector phase2_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {
@@ -513,12 +636,16 @@ namespace Eazy_Project_III.ProcessSpace
             return AxisUnitConvert.Round(incr, true);
         }
 
-        #endregion
+#endregion
 
 
         void set_projector_light(bool on)
         {
             var projector = base.ProjectorActuactor;
+            if (on)
+            {
+                projector.SetGain(Recipe.OutputGain);//打開光時 設定Gain值
+            }
             if (m_mirrorIndex == 0)
             {
                 projector.SetColor(Eazy_Project_Interface.ProjectColor.LightRed, on);

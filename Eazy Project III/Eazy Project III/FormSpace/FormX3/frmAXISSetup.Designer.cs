@@ -62,6 +62,8 @@ namespace Eazy_Project_III.FormSpace
             this.button2 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.button12 = new System.Windows.Forms.Button();
+            this.button11 = new System.Windows.Forms.Button();
             this.btnWriteToPlc = new System.Windows.Forms.Button();
             this.PG_PosSafe = new System.Windows.Forms.PropertyGrid();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -101,7 +103,7 @@ namespace Eazy_Project_III.FormSpace
             this.tabPage1.Controls.Add(this.vsTouchMotorUI3);
             this.tabPage1.Location = new System.Drawing.Point(4, 34);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage1.Size = new System.Drawing.Size(1261, 590);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "AXIS123";
@@ -111,7 +113,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.vsTouchMotorUI1.BackColor = System.Drawing.SystemColors.Control;
             this.vsTouchMotorUI1.Location = new System.Drawing.Point(847, 13);
-            this.vsTouchMotorUI1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI1.Margin = new System.Windows.Forms.Padding(4);
             this.vsTouchMotorUI1.Name = "vsTouchMotorUI1";
             this.vsTouchMotorUI1.Size = new System.Drawing.Size(415, 573);
             this.vsTouchMotorUI1.TabIndex = 8;
@@ -120,7 +122,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.vsTouchMotorUI2.BackColor = System.Drawing.SystemColors.Control;
             this.vsTouchMotorUI2.Location = new System.Drawing.Point(426, 13);
-            this.vsTouchMotorUI2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI2.Margin = new System.Windows.Forms.Padding(4);
             this.vsTouchMotorUI2.Name = "vsTouchMotorUI2";
             this.vsTouchMotorUI2.Size = new System.Drawing.Size(415, 573);
             this.vsTouchMotorUI2.TabIndex = 7;
@@ -129,7 +131,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.vsTouchMotorUI3.BackColor = System.Drawing.SystemColors.Control;
             this.vsTouchMotorUI3.Location = new System.Drawing.Point(5, 13);
-            this.vsTouchMotorUI3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI3.Margin = new System.Windows.Forms.Padding(4);
             this.vsTouchMotorUI3.Name = "vsTouchMotorUI3";
             this.vsTouchMotorUI3.Size = new System.Drawing.Size(415, 573);
             this.vsTouchMotorUI3.TabIndex = 6;
@@ -141,8 +143,8 @@ namespace Eazy_Project_III.FormSpace
             this.tabPage2.Controls.Add(this.vsTouchMotorUI6);
             this.tabPage2.Location = new System.Drawing.Point(4, 34);
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
-            this.tabPage2.Size = new System.Drawing.Size(1266, 589);
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(1261, 590);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "AXIS456";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -151,7 +153,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.vsTouchMotorUI4.BackColor = System.Drawing.SystemColors.Control;
             this.vsTouchMotorUI4.Location = new System.Drawing.Point(847, 13);
-            this.vsTouchMotorUI4.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI4.Margin = new System.Windows.Forms.Padding(4);
             this.vsTouchMotorUI4.Name = "vsTouchMotorUI4";
             this.vsTouchMotorUI4.Size = new System.Drawing.Size(415, 573);
             this.vsTouchMotorUI4.TabIndex = 5;
@@ -160,7 +162,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.vsTouchMotorUI5.BackColor = System.Drawing.SystemColors.Control;
             this.vsTouchMotorUI5.Location = new System.Drawing.Point(426, 13);
-            this.vsTouchMotorUI5.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI5.Margin = new System.Windows.Forms.Padding(4);
             this.vsTouchMotorUI5.Name = "vsTouchMotorUI5";
             this.vsTouchMotorUI5.Size = new System.Drawing.Size(415, 573);
             this.vsTouchMotorUI5.TabIndex = 4;
@@ -169,7 +171,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.vsTouchMotorUI6.BackColor = System.Drawing.SystemColors.Control;
             this.vsTouchMotorUI6.Location = new System.Drawing.Point(5, 13);
-            this.vsTouchMotorUI6.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI6.Margin = new System.Windows.Forms.Padding(4);
             this.vsTouchMotorUI6.Name = "vsTouchMotorUI6";
             this.vsTouchMotorUI6.Size = new System.Drawing.Size(415, 573);
             this.vsTouchMotorUI6.TabIndex = 3;
@@ -181,7 +183,7 @@ namespace Eazy_Project_III.FormSpace
             this.tabPage3.Controls.Add(this.vsTouchMotorUI9);
             this.tabPage3.Location = new System.Drawing.Point(4, 34);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(1266, 589);
+            this.tabPage3.Size = new System.Drawing.Size(1261, 590);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "AXIS789";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -190,7 +192,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.vsTouchMotorUI7.BackColor = System.Drawing.SystemColors.Control;
             this.vsTouchMotorUI7.Location = new System.Drawing.Point(847, 13);
-            this.vsTouchMotorUI7.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI7.Margin = new System.Windows.Forms.Padding(4);
             this.vsTouchMotorUI7.Name = "vsTouchMotorUI7";
             this.vsTouchMotorUI7.Size = new System.Drawing.Size(415, 573);
             this.vsTouchMotorUI7.TabIndex = 5;
@@ -199,7 +201,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.vsTouchMotorUI8.BackColor = System.Drawing.SystemColors.Control;
             this.vsTouchMotorUI8.Location = new System.Drawing.Point(426, 13);
-            this.vsTouchMotorUI8.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI8.Margin = new System.Windows.Forms.Padding(4);
             this.vsTouchMotorUI8.Name = "vsTouchMotorUI8";
             this.vsTouchMotorUI8.Size = new System.Drawing.Size(415, 573);
             this.vsTouchMotorUI8.TabIndex = 4;
@@ -208,7 +210,7 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.vsTouchMotorUI9.BackColor = System.Drawing.SystemColors.Control;
             this.vsTouchMotorUI9.Location = new System.Drawing.Point(5, 13);
-            this.vsTouchMotorUI9.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.vsTouchMotorUI9.Margin = new System.Windows.Forms.Padding(4);
             this.vsTouchMotorUI9.Name = "vsTouchMotorUI9";
             this.vsTouchMotorUI9.Size = new System.Drawing.Size(415, 573);
             this.vsTouchMotorUI9.TabIndex = 3;
@@ -218,7 +220,7 @@ namespace Eazy_Project_III.FormSpace
             this.tabPage4.Controls.Add(this.groupBox1);
             this.tabPage4.Location = new System.Drawing.Point(4, 34);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(1266, 589);
+            this.tabPage4.Size = new System.Drawing.Size(1261, 590);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "調試操作界面";
             this.tabPage4.UseVisualStyleBackColor = true;
@@ -237,7 +239,7 @@ namespace Eazy_Project_III.FormSpace
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(0, 0);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1266, 589);
+            this.groupBox1.Size = new System.Drawing.Size(1261, 590);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "調試操作";
@@ -419,14 +421,38 @@ namespace Eazy_Project_III.FormSpace
             // 
             // tabPage5
             // 
+            this.tabPage5.Controls.Add(this.button12);
+            this.tabPage5.Controls.Add(this.button11);
             this.tabPage5.Controls.Add(this.btnWriteToPlc);
             this.tabPage5.Controls.Add(this.PG_PosSafe);
             this.tabPage5.Location = new System.Drawing.Point(4, 34);
             this.tabPage5.Name = "tabPage5";
-            this.tabPage5.Size = new System.Drawing.Size(1266, 589);
+            this.tabPage5.Size = new System.Drawing.Size(1261, 590);
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "PLC參數設定";
             this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // button12
+            // 
+            this.button12.BackColor = System.Drawing.Color.Red;
+            this.button12.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button12.Location = new System.Drawing.Point(550, 181);
+            this.button12.Name = "button12";
+            this.button12.Size = new System.Drawing.Size(105, 50);
+            this.button12.TabIndex = 25;
+            this.button12.Text = "ByPass光幕";
+            this.button12.UseVisualStyleBackColor = false;
+            // 
+            // button11
+            // 
+            this.button11.BackColor = System.Drawing.Color.Red;
+            this.button11.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button11.Location = new System.Drawing.Point(550, 125);
+            this.button11.Name = "button11";
+            this.button11.Size = new System.Drawing.Size(105, 50);
+            this.button11.TabIndex = 24;
+            this.button11.Text = "ByPass門禁";
+            this.button11.UseVisualStyleBackColor = false;
             // 
             // btnWriteToPlc
             // 
@@ -445,7 +471,7 @@ namespace Eazy_Project_III.FormSpace
             this.PG_PosSafe.Dock = System.Windows.Forms.DockStyle.Left;
             this.PG_PosSafe.Location = new System.Drawing.Point(0, 0);
             this.PG_PosSafe.Name = "PG_PosSafe";
-            this.PG_PosSafe.Size = new System.Drawing.Size(544, 589);
+            this.PG_PosSafe.Size = new System.Drawing.Size(544, 590);
             this.PG_PosSafe.TabIndex = 0;
             // 
             // toolStrip1
@@ -549,5 +575,7 @@ namespace Eazy_Project_III.FormSpace
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Button button9;
         private System.Windows.Forms.Button button10;
+        private System.Windows.Forms.Button button11;
+        private System.Windows.Forms.Button button12;
     }
 }

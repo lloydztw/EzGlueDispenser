@@ -18,8 +18,11 @@ namespace JetEazy.GdxCore3
 {
     public class GdxCore
     {
+        #region CONFIGURATION_組態設定
         static bool OPT_BYPASS_CORETRON_1 = false;
         static bool OPT_BYPASS_CORETRON_2 = false;
+        #endregion
+
 
         public static void Init()
         {
@@ -30,12 +33,16 @@ namespace JetEazy.GdxCore3
         }
         public static void Dispose()
         {
+            GdxGlobal.LOG.Trace("GdxCore.Dispose");
             GdxGlobal.Dispose();
         }
         public static IxLaser GetLaser(int id = 0)
         {
             return GdxGlobal.GetLaser(id);
         }
+
+
+        #region PUBLIC_中光電DLL之相關接口
 
         public static string GetDllVersion()
         {
@@ -51,6 +58,7 @@ namespace JetEazy.GdxCore3
                 return "unknown";
             }
         }
+
         public static bool UpdateParams()
         {
             try
@@ -70,11 +78,37 @@ namespace JetEazy.GdxCore3
                 return false;
             }
         }
-        public static bool CheckCompensate(Bitmap bmpSrc)
+
+        /// <summary>
+        /// Mirror 與 CompType + Color 轉換
+        /// </summary>
+        public static int getProjCompType(int mirrorIdx, out Color color)
+        {
+            int projCompType;
+            if (mirrorIdx == 0)     
+            {
+                // 紅鏡片 or 紅斑
+                projCompType = 1;       
+                color = Color.DarkOrange;
+            }
+            else
+            {
+                // 綠鏡片 or 綠斑
+                projCompType = 0;     
+                color = Color.DarkGreen;
+            }
+            return projCompType;
+        }
+
+        /// <summary>
+        /// 中光電 Center Compensation <br/>
+        /// projCompType : 0==綠, 1==紅
+        /// </summary>
+        public static bool CheckCenterCompensation(int projCompType, Bitmap bmpSrc)
         {
             if (OPT_BYPASS_CORETRON_1)
             {
-                CommonLogClass.Instance.LogMessage("GdxCore.CheckCompensate BYPASS", Color.Orange);
+                CommonLogClass.Instance.LogMessage("GdxCore.CheckCompensate BYPASS", Color.DarkRed);
                 return true;
             }
 
@@ -85,20 +119,19 @@ namespace JetEazy.GdxCore3
                 CoretronicsAPI.setCenterCompInitial();
 
                 // JUST for safety-verification
-                using (Bitmap bmp = new Bitmap(bmpSrc))
+                // using (Bitmap bmp = new Bitmap(bmpSrc))
+                var bmp = bmpSrc;
                 {
                     var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                     var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-                    CoretronicsAPI.setCenterCompImg(rect.Width, rect.Height, 3, bmpd.Scan0);
+                    CoretronicsAPI.setCenterCompImg(rect.Width, rect.Height, 3, bmpd.Scan0, projCompType);
                     bmp.UnlockBits(bmpd);
                 }
 
-                CoretronicsAPI.CenterCompProcess();
-                go = CoretronicsAPI.getCenterCompInfo();
+                // 改為直接由 CenterCompProcess 取得 go/go-no
+                go = CoretronicsAPI.CenterCompProcess();
 
-                ////暫時跳過 no-go
-                //CommonLogClass.Instance.LogMessage("Coretronics, CenterComp, 暫時跳過 go/no-go !");
-                //go = true;
+                //> go = CoretronicsAPI.getCenterCompInfo();
 
                 return go;
             }
@@ -109,12 +142,29 @@ namespace JetEazy.GdxCore3
                 return false;
             }
         }
-        public static void CalcProjCompensation(Bitmap bmpSrc, int[] motorParams, int projCompType)
+
+        /// <summary>
+        /// 中光電 Center Compensation 之 圖示結果 <br/>
+        /// projCompType : 0==綠, 1==紅
+        /// </summary>
+        public static CoreCompInfo GetCenterCompensationInfo(int projCompType)
+        {
+            var rect = getCenterInfo(projCompType);
+            var info = new CoreCompInfo(projCompType, rect);
+            return info;
+        }
+
+        /// <summary>
+        /// 中光電 Projection Compensation (光斑投影) <br/>
+        /// projCompType : 0==綠, 1==紅 <br/>
+        /// motorParams : 返回 pixel differences. (2022/07/04 修改)
+        /// </summary>
+        public static bool CalcProjCompensation(Bitmap bmpSrc, int[] motorParams, int projCompType)
         {
             if (OPT_BYPASS_CORETRON_2)
             {
                 CommonLogClass.Instance.LogMessage("GdxCore.CalcProjCompensation BYPASS", Color.Orange);
-                return;
+                return true;
             }
 
             try
@@ -122,7 +172,8 @@ namespace JetEazy.GdxCore3
                 CoretronicsAPI.setProjCompInitial();
 
                 // JUST for safety-verification
-                using (Bitmap bmp = new Bitmap(bmpSrc))
+                // using (Bitmap bmp = new Bitmap(bmpSrc))
+                var bmp = bmpSrc;
                 {
                     var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                     var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
@@ -130,41 +181,218 @@ namespace JetEazy.GdxCore3
                     bmp.UnlockBits(bmpd);
                 }
 
-                CoretronicsAPI.ProjCompProcess();
+                bool ok = CoretronicsAPI.ProjCompProcess();
                 CoretronicsAPI.getProjCompInfo(projCompType, motorParams);
+
+#if(OPT_SIM)
+                sim_projection(ref ok, motorParams);
+#endif
+
+                return ok;
+            }
+            catch (Exception ex)
+            {
+                GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
+                CommonLogClass.Instance.LogMessage("中光電 DLL 調用異常", Color.DarkRed);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 中光電 Projection Compensation (光斑投影) 之 圖示結果 <br/>
+        /// projCompType : 0==綠, 1==紅
+        /// </summary>
+        public static CoreCompInfo GetProjCompensationInfo(int projCompType)
+        {
+            var goldenPts = getGoldenMarkPoints();
+            var rects = projCompType == 0 ?
+                        getGBProjInfo() :       // 綠
+                        getMProjInfo() ;        // 紅
+            var info = new CoreCompInfo(projCompType, goldenPts, rects);
+            return info;
+        }
+
+
+        public static bool CheckMarkPoints(Bitmap bmpSrc)
+        {
+            bool ok = true;
+            try
+            {
+                CoretronicsAPI.setMarkInitial();
+
+                // JUST for safety-verification
+                // using (Bitmap bmp = new Bitmap(bmpSrc))
+                var bmp = bmpSrc;
+                {
+                    var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+                    var bmpd = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+                    CoretronicsAPI.setMarkImg(rect.Width, rect.Height, 3, bmpd.Scan0);
+                    bmp.UnlockBits(bmpd);
+                }
+
+                ok = CoretronicsAPI.MarkPtProcess();
+                
             }
             catch (Exception ex)
             {
                 GdxGlobal.LOG.Error(ex, "中光電 DLL 異常!");
                 CommonLogClass.Instance.LogMessage("中光電 DLL 調用異常", Color.DarkRed);
             }
+            return ok;
+        }
+
+
+        /// <summary>
+        /// 中心座標、矩形角度(先假設為方正矩形暫為預留先不使用)、與寬高，
+        /// 後續於UI上顯示中心位置、矩形的四個位置(中心座標加減長寬各半距離)
+        /// </summary>
+        static CoreCompRect getCenterInfo(int projCompType)
+        {
+            float[] centerInfo = new float[5];
+            //中心座標、矩形角度(先假設為方正矩形暫為預留先不使用)、與寬高，
+            //後續於UI上顯示中心位置、矩形的四個位置(中心座標加減長寬各半距離)
+            //回傳內容為 Center.x, Center.y, Angle, Width, Height
+            CoretronicsAPI.getCenterInfo(projCompType, centerInfo);
+            var rect = new CoreCompRect(centerInfo);
+            return rect;
         }
 
         /// <summary>
-        /// 取的 QC 雷射複檢的 馬達位置 X Y Z 座標
-        /// 單位 mm
+        /// 綠斑 GBProjInfo 座標、矩形角度(先假設為方正矩形暫為預留先不使用)、與寬高，
+        /// 後續於UI上顯示中心位置、矩形的四個位置(中心座標加減長寬各半距離)
         /// </summary>
-        /// <param name="mirrorIndex">Mirror Index</param>
-        /// <param name="X">馬達 X 座標</param>
-        /// <param name="Y">馬達 Y 座標</param>
-        /// <param name="Z">馬達 Z 座標</param>
-        public static double GetQCMotorPos(int mirrorIndex, out double X, out double Y, out double Z)
+        static CoreCompRect[] getGBProjInfo()
         {
-            var trf = GdxGlobal.Facade.LaserCoordsTransform;
-            var motorPos = trf.GetQCMotorPos(mirrorIndex);
-            X = motorPos.X;
-            Y = motorPos.Y;
-            Z = motorPos.Z;
-            var runSurfaceCenter = trf.GetLastRunSurfaceCenter(mirrorIndex);
-            return runSurfaceCenter != null ? runSurfaceCenter[3] : 0;
-        }
-        public static string SetQcLaserMeasurement(int mirrorIdx, double value)
-        {
-            var trf = GdxGlobal.Facade.LaserCoordsTransform;
-            string err = trf.SetQCLaserMeasurement(mirrorIdx, value);
-            return err;
+            float[] defectInfo = new float[5];
+            //中心座標、矩形角度(先假設為方正矩形暫為預留先不使用)、與寬高，
+            //後續於UI上顯示中心位置、矩形的四個位置(中心座標加減長寬各半距離)
+            //回傳內容為 Center.x, Center.y, Angle, Width, Height
+            CoretronicsAPI.getGBProjInfo(defectInfo);
+            var rect = new CoreCompRect(defectInfo);
+            return new CoreCompRect[] { rect };
         }
 
+        /// <summary>
+        /// 紅斑 MProjInfo 座標、矩形角度(先假設為方正矩形暫為預留先不使用)、與寬高，
+        /// 後續於UI上顯示中心位置、矩形的四個位置(中心座標加減長寬各半距離)
+        /// </summary>
+        static CoreCompRect[] getMProjInfo()
+        {
+            float[] defectInfo = new float[5 + 5 + 2];
+            // Center1.x, Center1.y, Angle1, Width1, Height1,
+            // Center2.x, Center2.y, Angle2, Width2, Height2,
+            // Center3.x, Center3.y (Midle Center)
+            CoretronicsAPI.getMProjInfo(defectInfo);
+            var rect1 = new CoreCompRect(defectInfo);
+            var rect2 = new CoreCompRect(defectInfo, 5);
+            var rect3 = new CoreCompRect(defectInfo[10], defectInfo[11], 0, 0, 0);
+            return new CoreCompRect[] { rect1, rect2, rect3 };
+        }
+
+        /// <summary>
+        /// Golden Points
+        /// </summary>
+        public static Point[] getGoldenMarkPoints()
+        {
+            // 新版 dll 改為5點, 包含中心點
+            int[] data = new int[10];
+            CoretronicsAPI.getGoldMarkPt(data);
+            int N = data.Length / 2;
+            var pts = new Point[N];
+            for (int i = 0, j = 0; i < N; i++, j += 2)
+            {
+                int x = data[j];
+                int y = data[j + 1];
+                pts[i] = new Point(x, y);
+            }
+            return pts;
+        }
+
+        /// <summary>
+        /// Algo Points
+        /// </summary>
+        public static Point[] getAlgoMarkPoints()
+        {
+            // 新版 dll 改為5點, 包含中心點
+            int[] data = new int[10];
+            CoretronicsAPI.getAlgoMarkPt(data);
+            int N = data.Length / 2;
+            var pts = new Point[N];
+            for (int i = 0, j = 0; i < N; i++, j += 2)
+            {
+                int x = data[j];
+                int y = data[j + 1];
+                pts[i] = new Point(x, y);
+            }
+            return pts;
+        }
+
+        /// <summary>
+        /// set Mark Points
+        /// </summary>
+        public static void setMarkPoints(Point[] pts)
+        {
+            GdxGlobal.LOG.Log("定位點檢, 手動設定", toString(pts));
+            int N = pts.Length;
+            int[] data = new int[N * 2];
+            for (int i = 0, j = 0; i < N; i++, j += 2)
+            {
+                data[j] = pts[i].X;
+                data[j + 1] = pts[i].Y;
+            }
+            CoretronicsAPI.setMarkPt(data);
+        }
+
+        /// <summary>
+        /// set Center Points
+        /// </summary>
+        public static void setGoldenCenterPt(string gb_r, Point[] pts)
+        {
+            GdxGlobal.LOG.Log($"{gb_r}鏡片, 定位點檢, 手動設定", toString(pts));
+            int N = pts.Length;
+            int x = 0;
+            int y = 0;
+            for (int i = 0; i < N; i++)
+            {
+                x += pts[i].X;
+                y += pts[i].Y;
+            }
+            x /= N;
+            y /= N;
+            int[] data = new int[] { x, y };
+            int ptype = gb_r == "GB" ? 0 : 1;
+            CoretronicsAPI.setGoldCenterPt(ptype, data);
+        }
+
+        public static Point getGoldenCenterPt(int ptype)
+        {
+            int[] data = new int[2];
+            CoretronicsAPI.getGoldCenterPt(ptype, data);
+            return new Point(data[0], data[1]);
+        }
+
+        public static string toString(Point[] pts)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0, N = pts.Length; i < N; i++)
+            {
+                sb.Append(i == 0 ? " (" : ", (");
+                sb.Append(pts[i].X);
+                sb.Append(",");
+                sb.Append(pts[i].Y);
+                sb.Append(")");
+            }
+            return sb.ToString();
+        }
+        #endregion
+
+
+        #region PUBLIC_雷射點位標誌相關接口
+
+        public static void InitLaserCoordsTransform()
+        {
+            var trf = GdxGlobal.Facade.LaserCoordsTransform;
+        }
         public static void CollectLaserPt(int mirrorIdx, int pointIdx, double laserDist, string ga_motorPt)
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
@@ -187,10 +415,37 @@ namespace JetEazy.GdxCore3
             trf.BuildMirrorPlaneTransform(mirrorIdx);
             System.Diagnostics.Debug.WriteLine(GdxGlobal.INI.GaugeBlockPlanePoints);
         }
+        /// <summary>
+        /// 取的 QC 雷射複檢的 馬達位置 X Y Z 座標
+        /// 單位 mm
+        /// </summary>
+        public static double GetQCMotorPos(int mirrorIndex, out double X, out double Y, out double Z)
+        {
+            var trf = GdxGlobal.Facade.LaserCoordsTransform;
+            var motorPos = trf.GetQCMotorPos(mirrorIndex);
+            X = motorPos.X;
+            Y = motorPos.Y;
+            Z = motorPos.Z;
+            var runSurfaceCenter = trf.GetLastRunSurfaceCenter(mirrorIndex);
+            return runSurfaceCenter != null ? runSurfaceCenter[3] : 0;
+        }
+        public static string SetQcLaserMeasurement(int mirrorIdx, double value)
+        {
+            var trf = GdxGlobal.Facade.LaserCoordsTransform;
+            string err = trf.SetQCLaserMeasurement(mirrorIdx, value);
+            return err;
+        }
 
+        #endregion
+
+
+        /// <summary>
+        /// 離線模擬用
+        /// </summary>
         public static void Trace(string tag, object process, params object[] args)
         {
             bool isSim = (GdxGlobal.Facade != null && GdxGlobal.Facade.IsSimPLC());
+
             if (!isSim)
                 return;     //> 略過 Trace and Simulation
 
@@ -218,7 +473,8 @@ namespace JetEazy.GdxCore3
             }
         }
 
-        #region PRIVATE_TRACE_FUNCTIONS
+
+        #region PRIVATE_離線模擬與測試
         class XWait
         {
             public string Name;
@@ -227,9 +483,10 @@ namespace JetEazy.GdxCore3
         static XWait _last_process_wait = new XWait();
         static XWait _last_module_wait = new XWait();
         static XWait _last_motors_wait = new XWait();
+        static int m_simCount = 0;
         static void trace_MirrorOperations(string tag, string[] strs, object ps, params object[] args)
         {
-            if (check_wait_count(_last_process_wait, tag, strs) > 2)
+            if (check_wait_count(_last_process_wait, tag, strs) > 5)
                 return;
 
             var LOG = GdxGlobal.LOG;
@@ -311,7 +568,7 @@ namespace JetEazy.GdxCore3
         }
         static void trace_Module_Motion(string tag, string[] strs, params object[] args)
         {
-            if (check_wait_count(_last_module_wait, tag, strs) > 1)
+            if (check_wait_count(_last_module_wait, tag, strs) > 5)
                 return;
 
             var LOG = GdxGlobal.LOG;
@@ -411,10 +668,27 @@ namespace JetEazy.GdxCore3
                 GdxGlobal.IO.sim_axis_to_pos(axisID, pos[i]);
             }
         }
+        static void sim_projection(ref bool ok, int[] motorParams)
+        {
+#if(OPT_SIM)
+            ++m_simCount;
+
+            if (m_simCount % 5 == 0)
+            {
+                motorParams[0] = 0;
+                motorParams[1] = -6;
+            }
+
+            if (m_simCount % 13 == 0)
+                ok = false;
+            else
+                ok = true;
+#endif
+        }
         static int check_wait_count(XWait last_wait, string tag, string[] strs)
         {
             if (last_wait.Name == tag)
-                return ++last_wait.Count;
+                return ++last_wait.Count % 100;
             if (is_wait(strs))
                 last_wait.Name = tag;
             else

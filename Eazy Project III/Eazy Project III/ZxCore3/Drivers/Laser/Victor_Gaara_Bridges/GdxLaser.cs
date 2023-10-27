@@ -80,6 +80,7 @@ namespace JetEazy.GdxCore3
             {
                 _runFlag = true;
                 _thread = new Thread(polling_func);
+                _thread.Name = this.GetType().Name;
                 _thread.Start();
             }
             else

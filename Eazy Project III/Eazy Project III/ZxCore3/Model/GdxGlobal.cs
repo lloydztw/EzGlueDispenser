@@ -4,8 +4,8 @@ namespace JetEazy.GdxCore3.Model
 {
     internal class GdxGlobal
     {
-        public readonly static NLog.Logger LOG = NLog.LogManager.GetCurrentClassLogger();
-        
+        public readonly static GdxLog LOG = GdxLog.Singleton();
+
         public static void Init()
         {
             Facade = GdxFacade.Singleton;

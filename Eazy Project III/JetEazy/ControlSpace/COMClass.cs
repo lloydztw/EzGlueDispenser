@@ -89,6 +89,39 @@ namespace JetEazy.ControlSpace
             return ret;
         }
 
+        public void SetBit(string bitstr, bool on)
+        {
+            //@LETIAN 2022/10/27: for 清除 IsOnSite 
+            try
+            {
+                if (string.IsNullOrEmpty(bitstr))
+                    return;
+
+                string[] strs = bitstr.Substring(2).Split('.');
+                if (strs.Length != 2)
+                    return;
+
+                int address = int.Parse(strs[0]) * 8 + int.Parse(strs[1]);
+
+                switch (bitstr.Substring(0, 2))
+                {
+                    case "IX":
+                        IX[address] = on;
+                        break;
+                    case "MX":
+                        MX[address] = on;
+                        break;
+                    case "QX":
+                    case "QB":
+                        QX[address] = on;
+                        break;
+                }
+            }
+            catch
+            {
+                System.Diagnostics.Trace.WriteLine("DEBUG");
+            }
+        }
         public void SetMBit(int index, bool isone)
         {
             M[index] = isone;
@@ -850,7 +883,7 @@ namespace JetEazy.ControlSpace
             {
                 IsConnectionFail = true;
                 iCount = 0;
-                CommError();
+                CommError(Name);
             }
             else
             {
@@ -952,7 +985,7 @@ namespace JetEazy.ControlSpace
 
         public delegate void ConnectErrorHandler();
         public event ConnectErrorHandler ConnectErrorAction;
-        public void ConnectError()
+        protected void ConnectError()
         {
             if (ConnectErrorAction != null)
             {
@@ -962,7 +995,7 @@ namespace JetEazy.ControlSpace
 
         public delegate void CommErrorHandler();
         public event CommErrorHandler CommErrorAction;
-        public void CommError()
+        protected void CommError()
         {
             if (CommErrorAction != null)
             {
@@ -970,6 +1003,26 @@ namespace JetEazy.ControlSpace
             }
         }
 
+        public delegate void CommErrorStringHandler(string str);
+        public event CommErrorStringHandler CommErrorStringAction;
+        protected void CommError(string str)
+        {
+            if (CommErrorStringAction != null)
+            {
+                CommErrorStringAction(str);
+            }
+        }
+
+
+        /// <summary>
+        /// Client 端可以使用此 event 確認, IO點位的 cache data 已經被掃描更新.
+        /// <br/> LETIAN:20221021 
+        /// </summary>
+        public event EventHandler OnScanned;
+        protected void fireOnScanned()
+        {
+            OnScanned?.Invoke(this, EventArgs.Empty);
+        }
     }
    
 }

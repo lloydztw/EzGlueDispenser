@@ -1,13 +1,7 @@
 ﻿using Eazy_Project_III.ControlSpace.MachineSpace;
 using JetEazy;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Eazy_Project_III.UISpace.IOSpace
@@ -30,47 +24,41 @@ namespace Eazy_Project_III.UISpace.IOSpace
         string[] myText = new string[32]
         {
             "急停",
-"UV灯上",
-"UV灯下",
-"散热片上",
-"散热片下",
-"总真空表",
-"产品真空表",
-"料座真空表",
-"总气压表",
-"光幕",
-"速度",
-"速度",
-"手动/自动",
-"吸嘴/点胶",
-"按钮1",
-"按钮2",
-"按钮3",
-"按钮4",
-"按钮5",
-"按钮6",
-"按钮7",
-"按钮8",
-"按钮9",
-"按钮10",
-"按钮11",
-"按钮12",
-"镭射测距",
-"门禁",
-"POGO-ON",
-"POGO-OFF",
-"预留",
-"预留",
-
-
-
+            "UV灯上",
+            "UV灯下",
+            "散热片上",
+            "散热片下",
+            "总真空表",
+            "产品真空表",
+            "料座真空表",
+            "总气压表",
+            "光幕",
+            "速度",
+            "速度",
+            "手动/自动",
+            "吸嘴/点胶",
+            "按钮1",
+            "按钮2",
+            "按钮3",
+            "按钮4",
+            "按钮5",
+            "按钮6",
+            "按钮7",
+            "按钮8",
+            "按钮9",
+            "按钮10",
+            "按钮11",
+            "按钮12",
+            "镭射测距",
+            "门禁",
+            "POGO-ON",
+            "POGO-OFF",
+            "预留",
+            "预留",
         };
 
         void InitUI()
         {
-
-
-
             int i = 0;
             int j = 0;
             int k = 0;

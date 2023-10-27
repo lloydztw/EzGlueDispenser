@@ -101,6 +101,9 @@ namespace Eazy_Project_III.ProcessSpace
 
         public override void Tick()
         {
+            if (!IsValidPlcScanned())
+                return;
+
             var Process = this;
 
             if (Process.IsOn)
@@ -158,9 +161,12 @@ namespace Eazy_Project_III.ProcessSpace
 
                         if (bInitOK)
                         {
+                            Set_Cooling_Module(true);
                             Process.ID = 10;
                             CommonLogClass.Instance.LogMessage("拾取启动 Group Index=" + MainGroupIndex.ToString(), Color.Black);
                             GdxCore.Trace("MirrorPicker.Start", Process, m_PickMirrorIndex, MainGroupIndex);
+                            GdxCore.InitLaserCoordsTransform();
+                            FireMessage("Picker.Start");
                         }
                         else
                         {
@@ -388,7 +394,7 @@ namespace Eazy_Project_III.ProcessSpace
                         {
                             Process.NextDuriation = NextDurtimeTmp;
                             Process.ID = 4020;
-
+                            Set_Cooling_Module(false);
                             MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_PICK, 6);
                             //MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_DISPENSING, 6);
                             //MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_ADJUST, 6);
@@ -446,7 +452,7 @@ namespace Eazy_Project_III.ProcessSpace
                 double runheight = myPlane.GetZLocation(run);
 
                 //CommonLogClass.Instance.LogMessage("平面度测试正常", Color.Lime);
-                myHeightStr += runheight.ToString() + ",";
+                myHeightStr += runheight.ToString(" 0.000") + ",";
             }
             return myHeightStr;
         }

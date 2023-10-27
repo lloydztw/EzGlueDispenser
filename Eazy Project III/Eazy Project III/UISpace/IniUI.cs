@@ -1,18 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-
+﻿//using Allinone.UISpace;
+using Eazy_Project_III;
 using JetEazy;
 using JetEazy.BasicSpace;
-//using Allinone.UISpace;
-using JetEazy.ControlSpace;
-using Eazy_Project_III;
-using VsCommon.ControlSpace;
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace PhotoMachine.UISpace
 {
@@ -65,6 +57,8 @@ namespace PhotoMachine.UISpace
         public IniUI()
         {
             InitializeComponent();
+            SizeChanged += IniUI_SizeChanged;
+            INI.Instance.OnPropertyChanged += Ini_OnPropertyChanged;
         }
 
         public void Initial(string uipath,
@@ -112,12 +106,14 @@ namespace PhotoMachine.UISpace
             tpnlCover.TabIndex = 0;
             grpSetup.Controls.Add(tpnlCover);
             tpnlCover.BringToFront();
-
-
+            
             DBStatus = DBStatusEnum.NONE;
 
             FillDisplay();
         }
+
+        
+
         private void ADJUI_TriggerMoveScreen(string movestring)
         {
             //MoveString = movestring;
@@ -141,6 +137,19 @@ namespace PhotoMachine.UISpace
                     break;
             }
         }
+
+        private void Ini_OnPropertyChanged(object sender, string e)
+        {
+            if(InvokeRequired)
+            {
+                BeginInvoke(new Action(() => { FillDisplay(); }));
+            }
+            else
+            {
+                FillDisplay();
+            }
+        }
+
 
         #region Button Fuction
 
@@ -357,5 +366,48 @@ namespace PhotoMachine.UISpace
         {
             FillDisplay();
         }
+
+
+        #region AUTO_LAYOUT
+        void IniUI_SizeChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                _auto_layout();
+            }
+            catch
+            {
+            }
+        }
+
+        void _auto_layout()
+        {
+#if OPT_LETIAN_AUTO_LAYOUT
+            groupBox1.Dock = DockStyle.Top;
+            propertyGrid1.Dock = DockStyle.Fill;
+
+            var rcc = ClientRectangle;
+            int pad = 1;
+            int w = (rcc.Width - pad * 4) / 3;
+            int x = pad;
+
+            foreach (var c in new Control[] { button1, button4, button6 })
+            {
+                c.Top = rcc.Bottom - c.Height - pad * 2;
+                c.Left = x;
+                c.Width = w;
+                x += w + pad;
+            }
+
+            groupBox1.Height = button1.Top - pad * 2 - groupBox1.Top;
+
+            if (tpnlCover != null && PG != null)
+            {
+                tpnlCover.Location = PG.Location;
+                tpnlCover.Size = new Size(PG.Width - 15, PG.Height);
+            }
+#endif
+        }
+        #endregion
     }
 }

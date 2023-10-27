@@ -50,9 +50,10 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button1.Location = new System.Drawing.Point(6, 20);
+            this.button1.Location = new System.Drawing.Point(8, 25);
+            this.button1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(80, 80);
+            this.button1.Size = new System.Drawing.Size(107, 100);
             this.button1.TabIndex = 17;
             this.button1.Text = "組0";
             this.button1.UseVisualStyleBackColor = false;
@@ -63,9 +64,11 @@ namespace Eazy_Project_III.FormSpace
             this.groupBox1.Controls.Add(this.button3);
             this.groupBox1.Controls.Add(this.button2);
             this.groupBox1.Controls.Add(this.button1);
-            this.groupBox1.Location = new System.Drawing.Point(12, 78);
+            this.groupBox1.Location = new System.Drawing.Point(16, 98);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(178, 192);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBox1.Size = new System.Drawing.Size(237, 240);
             this.groupBox1.TabIndex = 18;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "拾取區(組)";
@@ -74,9 +77,10 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button4.Location = new System.Drawing.Point(92, 106);
+            this.button4.Location = new System.Drawing.Point(123, 132);
+            this.button4.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(80, 80);
+            this.button4.Size = new System.Drawing.Size(107, 100);
             this.button4.TabIndex = 20;
             this.button4.Text = "組3";
             this.button4.UseVisualStyleBackColor = false;
@@ -85,9 +89,10 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button3.Location = new System.Drawing.Point(6, 106);
+            this.button3.Location = new System.Drawing.Point(8, 132);
+            this.button3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(80, 80);
+            this.button3.Size = new System.Drawing.Size(107, 100);
             this.button3.TabIndex = 19;
             this.button3.Text = "組2";
             this.button3.UseVisualStyleBackColor = false;
@@ -96,9 +101,10 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button2.Location = new System.Drawing.Point(92, 20);
+            this.button2.Location = new System.Drawing.Point(123, 25);
+            this.button2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(80, 80);
+            this.button2.Size = new System.Drawing.Size(107, 100);
             this.button2.TabIndex = 18;
             this.button2.Text = "組1";
             this.button2.UseVisualStyleBackColor = false;
@@ -106,9 +112,10 @@ namespace Eazy_Project_III.FormSpace
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(10, 9);
+            this.label1.Location = new System.Drawing.Point(13, 11);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(83, 12);
+            this.label1.Size = new System.Drawing.Size(101, 15);
             this.label1.TabIndex = 19;
             this.label1.Text = "選擇信息顯示:";
             // 
@@ -118,9 +125,10 @@ namespace Eazy_Project_III.FormSpace
             this.label2.BackColor = System.Drawing.Color.Black;
             this.label2.Font = new System.Drawing.Font("宋体", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label2.ForeColor = System.Drawing.Color.Lime;
-            this.label2.Location = new System.Drawing.Point(12, 39);
+            this.label2.Location = new System.Drawing.Point(16, 49);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(42, 20);
+            this.label2.Size = new System.Drawing.Size(54, 25);
             this.label2.TabIndex = 20;
             this.label2.Text = "xxx";
             // 
@@ -129,9 +137,11 @@ namespace Eazy_Project_III.FormSpace
             this.groupBox2.Controls.Add(this.checkBox1);
             this.groupBox2.Controls.Add(this.button7);
             this.groupBox2.Controls.Add(this.button8);
-            this.groupBox2.Location = new System.Drawing.Point(196, 78);
+            this.groupBox2.Location = new System.Drawing.Point(261, 98);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(178, 192);
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.groupBox2.Size = new System.Drawing.Size(237, 240);
             this.groupBox2.TabIndex = 21;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "放料區(片)";
@@ -140,20 +150,23 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.checkBox1.AutoSize = true;
             this.checkBox1.BackColor = System.Drawing.Color.Red;
-            this.checkBox1.Location = new System.Drawing.Point(6, 139);
+            this.checkBox1.Location = new System.Drawing.Point(8, 174);
+            this.checkBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(168, 16);
+            this.checkBox1.Size = new System.Drawing.Size(203, 19);
             this.checkBox1.TabIndex = 19;
             this.checkBox1.Text = "勾選，單獨製作一個Mirror";
             this.checkBox1.UseVisualStyleBackColor = false;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
             // button7
             // 
             this.button7.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button7.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button7.Location = new System.Drawing.Point(92, 20);
+            this.button7.Location = new System.Drawing.Point(123, 25);
+            this.button7.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(80, 80);
+            this.button7.Size = new System.Drawing.Size(107, 100);
             this.button7.TabIndex = 18;
             this.button7.Text = "Mirror1\r\n(右邊)";
             this.button7.UseVisualStyleBackColor = false;
@@ -162,9 +175,10 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button8.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button8.Location = new System.Drawing.Point(6, 20);
+            this.button8.Location = new System.Drawing.Point(8, 25);
+            this.button8.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(80, 80);
+            this.button8.Size = new System.Drawing.Size(107, 100);
             this.button8.TabIndex = 17;
             this.button8.Text = "Mirror0\r\n(左邊)";
             this.button8.UseVisualStyleBackColor = false;
@@ -173,9 +187,10 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button5.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button5.Location = new System.Drawing.Point(159, 325);
+            this.button5.Location = new System.Drawing.Point(212, 406);
+            this.button5.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(105, 50);
+            this.button5.Size = new System.Drawing.Size(140, 62);
             this.button5.TabIndex = 22;
             this.button5.Text = "確定";
             this.button5.UseVisualStyleBackColor = false;
@@ -184,18 +199,19 @@ namespace Eazy_Project_III.FormSpace
             // 
             this.button6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
             this.button6.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button6.Location = new System.Drawing.Point(270, 325);
+            this.button6.Location = new System.Drawing.Point(360, 406);
+            this.button6.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(105, 50);
+            this.button6.Size = new System.Drawing.Size(140, 62);
             this.button6.TabIndex = 23;
             this.button6.Text = "取消";
             this.button6.UseVisualStyleBackColor = false;
             // 
             // frmUserSelect
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(387, 387);
+            this.ClientSize = new System.Drawing.Size(516, 484);
             this.Controls.Add(this.button5);
             this.Controls.Add(this.button6);
             this.Controls.Add(this.groupBox2);
@@ -203,6 +219,7 @@ namespace Eazy_Project_III.FormSpace
             this.Controls.Add(this.label1);
             this.Controls.Add(this.groupBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "frmUserSelect";

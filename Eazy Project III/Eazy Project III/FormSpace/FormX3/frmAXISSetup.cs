@@ -36,7 +36,8 @@ namespace Eazy_Project_III.FormSpace
         Button btnLEAttractMeasure;
         Button btnQCMoveToMeasurePos;
         Button btnQCLaserMeasure;
-
+        Button btnByPassDoor;
+        Button btnByPassScreen;
 
         #region 点胶模组操作
 
@@ -107,6 +108,8 @@ namespace Eazy_Project_III.FormSpace
             btnOnekeyDispensing = button8;
             btnQCMoveToMeasurePos = button9;
             btnQCLaserMeasure = button10;
+            btnByPassDoor = button11;
+            btnByPassScreen = button12;
 
             btnManualAuto.Click += BtnManualAuto_Click;
             btnLESnap.Click += BtnLESnap_Click;
@@ -119,6 +122,8 @@ namespace Eazy_Project_III.FormSpace
             btnDispeningHome.Click += BtnDispeningHome_Click;
             btnDispeningManual.Click += BtnDispeningManual_Click;
             btnOnekeyDispensing.Click += BtnOnekeyDispensing_Click;
+            btnByPassDoor.Click += BtnByPassDoor_Click;
+            btnByPassScreen.Click += BtnByPassScreen_Click;
 
             #region 位置设定控件
 
@@ -161,7 +166,15 @@ namespace Eazy_Project_III.FormSpace
             //LanguageExClass.Instance.EnumControls(this);
         }
 
-        
+        private void BtnByPassScreen_Click(object sender, EventArgs e)
+        {
+            MACHINE.PLCIO.ADR_BYPASS_SCREEN = !MACHINE.PLCIO.ADR_BYPASS_SCREEN;
+        }
+
+        private void BtnByPassDoor_Click(object sender, EventArgs e)
+        {
+            MACHINE.PLCIO.ADR_BYPASS_DOOR = !MACHINE.PLCIO.ADR_BYPASS_DOOR;
+        }
 
         int MainMirrorIndex = 0;//左邊還是右邊  0左邊 1右邊
 
@@ -207,7 +220,7 @@ namespace Eazy_Project_III.FormSpace
                 }
                 else
                 {
-                    qclasermeasureprocess.Stop();
+                    StopAllProcess("USERSTOP");
                 }
             }
         }
@@ -246,7 +259,7 @@ namespace Eazy_Project_III.FormSpace
                 if (!dispensingonekeyprocess.IsOn)
                     dispensingonekeyprocess.Start();
                 else
-                    dispensingonekeyprocess.Stop();
+                    StopAllProcess("USERSTOP");
             }
         }
 
@@ -266,23 +279,44 @@ namespace Eazy_Project_III.FormSpace
                 {
                     case 5:
 
-                        m_DispensingIndex = 0;
-                        m_DispensingRunList.Clear();
-
-                        //设定点胶时间&UV时间
-                        MACHINE.PLCIO.SetMWIndex(IOConstClass.MW1091, RecipeCHClass.Instance.DispensingTime);
-                        //MACHINE.PLCIO.SetMWIndex(IOConstClass.MW1092, RecipeCHClass.Instance.UVTime);
-
-                        foreach (string str in INI.Instance.MirrorTestDispensingPosList)
-                            m_DispensingRunList.Add(str);
-
-                        //點膠Z 下降位置
-                        MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 9, INI.Instance.sMirrorTestDispensingReady);
+                        dispensinghomeprocess.Start();
+                        CommonLogClass.Instance.LogMessage("一鍵測試點膠回待命 A", Color.Black);
 
                         Process.NextDuriation = m_NextTimeTemp;
-                        Process.ID = 10;
+                        Process.ID = 5010;
 
+                        break;
+                    case 5010:
+                        if (Process.IsTimeup)
+                        {
+                            if (!dispensinghomeprocess.IsOn)
+                            {
+                                Process.NextDuriation = m_NextTimeTemp;
+                                Process.ID = 5020;
 
+                                CommonLogClass.Instance.LogMessage("一鍵測試點膠回完成 A", Color.Black);
+                            }
+                        }
+                        break;
+                    case 5020:
+                        if (Process.IsTimeup)
+                        {
+                            m_DispensingIndex = 0;
+                            m_DispensingRunList.Clear();
+
+                            //设定点胶时间&UV时间
+                            MACHINE.PLCIO.SetMWIndex(IOConstClass.MW1091, RecipeCHClass.Instance.DispensingTime);
+                            //MACHINE.PLCIO.SetMWIndex(IOConstClass.MW1092, RecipeCHClass.Instance.UVTime);
+
+                            foreach (string str in INI.Instance.MirrorTestDispensingPosList)
+                                m_DispensingRunList.Add(str);
+
+                            //點膠Z 下降位置
+                            MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 9, INI.Instance.sMirrorTestDispensingReady);
+
+                            Process.NextDuriation = m_NextTimeTemp;
+                            Process.ID = 10;
+                        }
                         break;
                     case 10:
                         if (Process.IsTimeup)
@@ -296,7 +330,6 @@ namespace Eazy_Project_III.FormSpace
                             Process.ID = 20;
                         }
                         break;
-
                     case 20:
                         if (Process.IsTimeup)
                         {
@@ -346,6 +379,8 @@ namespace Eazy_Project_III.FormSpace
                                 Process.Stop();
 
                                 CommonLogClass.Instance.LogMessage("一鍵測試點膠回完成", Color.Black);
+                                string msg = "請取走點膠測試Pad";
+                                VsMSG.Instance.Info(msg);
                             }
                         }
                         break;
@@ -399,7 +434,7 @@ namespace Eazy_Project_III.FormSpace
                 if (!dispensinghomeprocess.IsOn)
                     dispensinghomeprocess.Start();
                 else
-                    dispensinghomeprocess.Stop();
+                    StopAllProcess("USERSTOP");
             }
         }
 
@@ -421,7 +456,7 @@ namespace Eazy_Project_III.FormSpace
                 if (!dispensinggoprocess.IsOn)
                     dispensinggoprocess.Start();
                 else
-                    dispensinggoprocess.Stop();
+                    StopAllProcess("USERSTOP");
             }
         }
 
@@ -441,7 +476,7 @@ namespace Eazy_Project_III.FormSpace
 
                         //寫入避光槽位置
                         MACHINE.PLCIO.ModulePositionSet(ModuleName.MODULE_DISPENSING, 7, INI.Instance.ShadowPos);
-
+                        CommonLogClass.Instance.LogMessage("寫入避光槽位置", Color.Black);
 
                         break;
                     case 10:
@@ -449,6 +484,7 @@ namespace Eazy_Project_III.FormSpace
                         {
 
                             MACHINE.PLCIO.ModulePositionGO(ModuleName.MODULE_DISPENSING, 7);
+                            CommonLogClass.Instance.LogMessage("點膠模組啓動", Color.Black);
 
                             Process.NextDuriation = 500;
                             Process.ID = 15;
@@ -459,6 +495,7 @@ namespace Eazy_Project_III.FormSpace
                         {
                             if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_DISPENSING, 7))
                             {
+                                CommonLogClass.Instance.LogMessage("點膠模組完成", Color.Black);
                                 Process.Stop();
                             }
                         }
@@ -477,17 +514,49 @@ namespace Eazy_Project_III.FormSpace
                 {
                     case 5:
 
-                        Process.NextDuriation = 1000;
+                        //復位前  先手動
+                        MACHINE.PLCIO.SetMWIndex(IOConstClass.MW1090, 1);
+                      
+                        Process.NextDuriation = 500;
                         Process.ID = 10;
-
-                        MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_DISPENSING, 6);
 
                         break;
                     case 10:
                         if(Process.IsTimeup)
                         {
+                            if (MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 1)
+                            {
+                                CommonLogClass.Instance.LogMessage("切換為自動模式", Color.Black);
+                                Process.NextDuriation = 1000;
+                                Process.ID = 20;
+
+                                MACHINE.PLCIO.ModulePositionReady(ModuleName.MODULE_DISPENSING, 6);
+                                CommonLogClass.Instance.LogMessage("點膠模組復位啓動", Color.Black);
+                            }
+                        }
+                        break;
+                    case 20:
+                        if (Process.IsTimeup)
+                        {
                             if (MACHINE.PLCIO.ModulePositionIsReadyComplete(ModuleName.MODULE_DISPENSING, 6) || Universal.IsNoUseIO)
                             {
+                                CommonLogClass.Instance.LogMessage("點膠模組復位完成", Color.Black);
+                                Process.Stop();
+
+                                ////復位后  切自動
+                                //MACHINE.PLCIO.SetMWIndex(IOConstClass.MW1090, 1);
+
+                                //Process.NextDuriation = 500;
+                                //Process.ID = 30;
+                            }
+                        }
+                        break;
+                    case 30:
+                        if (Process.IsTimeup)
+                        {
+                            if (MACHINE.PLCIO.GetMWIndex(IOConstClass.MW1090) == 1)
+                            {
+                                CommonLogClass.Instance.LogMessage("切換為自動模式", Color.Black);
                                 Process.Stop();
                             }
                         }
@@ -515,11 +584,12 @@ namespace Eazy_Project_III.FormSpace
                 if (!leattractprocess.IsOn)
                     leattractprocess.Start();
                 else
-                    leattractprocess.Stop();
+                    StopAllProcess("USERSTOP");
             }
         }
 
         bool IsEMCTriggered = false;
+        bool IsSCREENTriggered = false;
 
         private void MACHINE_TriggerAction(MachineEventEnum machineevent)
         {
@@ -535,6 +605,9 @@ namespace Eazy_Project_III.FormSpace
                     break;
                 case MachineEventEnum.EMC:
                     IsEMCTriggered = true;
+                    break;
+                case MachineEventEnum.CURTAIN:
+                    IsSCREENTriggered = true;
                     break;
             }
         }
@@ -557,7 +630,7 @@ namespace Eazy_Project_III.FormSpace
                 if (!m_PlaneHeightprocess.IsOn)
                     m_PlaneHeightprocess.Start();
                 else
-                    m_PlaneHeightprocess.Stop();
+                    StopAllProcess("USERSTOP");
             }
         }
 
@@ -1023,6 +1096,20 @@ namespace Eazy_Project_III.FormSpace
         {
             m_PlaneHeightprocess.Stop();
             qclasermeasureprocess.Stop();
+            leattractprocess.Stop();
+            dispensingonekeyprocess.Stop();
+            dispensinghomeprocess.Stop();
+            dispensinggoprocess.Stop();
+
+            switch (eStrMode)
+            {
+                case "INIT":
+                    MACHINE.PLCIO.CLEARALARMS = true;
+                    break;
+                case "USERSTOP":
+                    MACHINE.PLCIO.ADR_STOP_PLC_SIGN = true;
+                    break;
+            }
         }
 
         private void MMotorTimer_Tick(object sender, EventArgs e)
@@ -1035,6 +1122,15 @@ namespace Eazy_Project_III.FormSpace
 
                     IsEMCTriggered = false;
                     StopAllProcess();
+                    //OnTrigger(ActionEnum.ACT_ISEMC, "");
+                }
+                if (IsSCREENTriggered)
+                {
+                    //SetAbnormalLight();
+
+                    IsSCREENTriggered = false;
+                    if (!MACHINE.PLCIO.ADR_BYPASS_SCREEN)
+                        StopAllProcess();
                     //OnTrigger(ActionEnum.ACT_ISEMC, "");
                 }
             }
@@ -1058,7 +1154,10 @@ namespace Eazy_Project_III.FormSpace
 
             btnDispeningGo.BackColor = (dispensinggoprocess.IsOn ? Color.Red : Color.Lime);
             btnDispeningHome.BackColor = (dispensinghomeprocess.IsOn ? Color.Red : Color.Lime);
-            btnOnekeyDispensing.BackColor = (dispensinghomeprocess.IsOn ? Color.Red : Color.Lime);
+            btnOnekeyDispensing.BackColor = (dispensingonekeyprocess.IsOn ? Color.Red : Color.Lime);
+
+            btnByPassDoor.BackColor = (MACHINE.PLCIO.ADR_BYPASS_DOOR ? Color.Red : Color.Lime);
+            btnByPassScreen.BackColor = (MACHINE.PLCIO.ADR_BYPASS_SCREEN ? Color.Red : Color.Lime);
 
             btnCapturePlaneHeight.Text = LanguageExClass.Instance.ToTraditionalChinese(btnCapturePlaneHeight.Text);
             btnManualAuto.Text = LanguageExClass.Instance.ToTraditionalChinese(btnManualAuto.Text);

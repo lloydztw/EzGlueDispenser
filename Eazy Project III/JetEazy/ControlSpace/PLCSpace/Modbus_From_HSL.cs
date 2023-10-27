@@ -137,7 +137,8 @@ namespace JetEazy.ControlSpace.PLCSpace
                 bOK = true;
                 IsConnectionFail = false;
             }
-            else
+
+            if (bOK)
             {
                 if (m_Thread_Hsl == null)
                 {
@@ -193,6 +194,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                 if (IsSimulater)
                 {
                     System.Threading.Thread.Sleep(1);
+                    fireOnScanned();
                     continue;
                 }
                   
@@ -217,7 +219,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                         if (!m_error_comm)
                         {
                             m_error_comm = true;
-                            CommError();
+                            CommError(Name);
                         }
                     }
                     else
@@ -228,6 +230,7 @@ namespace JetEazy.ControlSpace.PLCSpace
 
                     if (m_error_comm)
                     {
+                        iCount = 0;//通訊中斷
                         System.Threading.Thread.Sleep(1);
                         continue;
                     }
@@ -450,9 +453,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                     //    }
                     //}
 
-
-
-
+                    fireOnScanned();
                 }
             }
         }

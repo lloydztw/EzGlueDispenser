@@ -1,10 +1,8 @@
 ﻿using Eazy_Project_III.ControlSpace.IOSpace;
 using Eazy_Project_III.OPSpace;
-using JetEazy.BasicSpace;
 using JetEazy.ControlSpace.MotionSpace;
 using JetEazy.GdxCore3;
 using JetEazy.GdxCore3.Model;
-using JetEazy.ProcessSpace;
 using JetEazy.QMath;
 using System;
 using System.Drawing;
@@ -75,9 +73,18 @@ namespace Eazy_Project_III.ProcessSpace
             }
             base.Start();
         }
+        public override void Stop()
+        {
+            if (m_phase3 != null)
+                m_phase3.IsUserStop = true;
+            base.Stop();
+        }
 
         public override void Tick()
         {
+            if (!IsValidPlcScanned())
+                return;
+
             var Process = this;
 
             if (Process.IsOn)
@@ -142,40 +149,57 @@ namespace Eazy_Project_III.ProcessSpace
                         {
                             //if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_PICK, 1))
                             {
-                                //到达位置 打开灯光 设定曝光
-                                //ICamForCali.SetExposure(RecipeCHClass.Instance.CaliCamExpo);
-                                //Process.NextDuriation = NextDurtimeTmp;
-                                //Process.ID = 20;
-                                int expo = RecipeCHClass.Instance.CaliCamExpo;
-                                _LOG("設定曝光時間", expo);
-                                ICamForCali.SetExposure(expo);
-                                SetNextState(15);
+                                var cam = GetCamera(0);
+                                Recipe.GetCameraExpoAndGain(0, m_mirrorIndex, out int expo, out float gain);
+                                _LOG("提前設定曝光時間與增益", expo, gain.ToString("0.0"));
+                                cam.SetExposure(expo);
+                                cam.SetGain(gain);
+                                SetNextState(15, RecipeCHClass.Instance.LightOnDelay1);
                             }
                         }
                         break;
                     case 15:
                         if (Process.IsTimeup)
                         {
+                            //(15) 拍照
                             _LOG(PHASE_1, "擷取影像");
-                            //(15.0) 拍照
-                            var cam = ICamForCali;
-                            using (Bitmap bmp = snapshot_image(cam, 0))
+                            var cam = GetCamera(0);
+
+                            //(15.0) 紅斑(mirror==0) or 綠斑(mirror==1)
+                            int compType = GdxCore.getProjCompType(m_mirrorIndex, out Color color);
+                            string mirrorTag = color == Color.DarkGreen ? "G" : "R";
+
+                            using (Bitmap bmp = snapshot_image(cam, $"{mirrorTag}_center", true))
                             {
-                                //(15.1) 通知 GUI 更新 Image
-                                // FireLiveImaging(bmp);
-                                //(15.2) 中光電 Go-NoGo
-                                bool go = GdxCore.CheckCompensate(bmp);
-                                FireLiveImaging(bmp);
+                                //(15.1) 中光電 Go-NoGo
+                                _LOG(PHASE_1, "Go/NoGo 檢查...");
+                                //int compType = GdxCore.getProjCompType(m_mirrorIndex, out Color color);
+                                bool go = GdxCore.CheckCenterCompensation(compType, bmp);
+
+                                //(15.2) 圖標結果
+                                var info = GdxCore.GetCenterCompensationInfo(compType);
+
+                                //(15.2) Fire Events to GUI
+                                //> FireLiveImaging(bmp);
+                                FireCompensatedInfo(PHASE_1, m_mirrorIndex, bmp, info);
+
                                 //(15.3) NO-GO
                                 if (!go)
                                 {
-                                    // 就地停止 Process
-                                    Terminate();
+                                    string errCalibMsg = PHASE_1 + ", 判定 NoGo!";
                                     // Log
-                                    _LOG(PHASE_1, "回報 No GO!");
-                                    FireMessage("NG. " + PHASE_1 + ", 回報 No GO!");
+                                    _LOG(errCalibMsg, Color.Red);
+                                    //>>> 就地停止 Process
+                                    //>>> Terminate();
+                                    // Events
+                                    FireNG(errCalibMsg);    //<<< 中光電 Center Comp 判定 NoGO!
+                                    // Soft-terminate (就地停止)
+                                    SetNextState(9999);
                                     return;
                                 }
+
+                                //(15.4) GO
+                                _LOG(PHASE_1, "判定 OK!", color);
                             }
                             //(15.4) 關燈
                             MACHINE.PLCIO.ADR_SMALL_LIGHT = false;
@@ -329,9 +353,9 @@ namespace Eazy_Project_III.ProcessSpace
                             }
                             else if (isReady)
                             {
-                                _LOG(phase.Name, "開始");
+                                _LOG(phase.Name, "開始線程");
+                                SetNextState(399, 500);//放置线程前面，防止卡在线程中无法终止
                                 start_scan_thread(phase);
-                                SetNextState(399, 500);
                             }
                         }
                         break;
@@ -413,7 +437,8 @@ namespace Eazy_Project_III.ProcessSpace
             //(0) Read Motors Current Position as InitPos
             m_showIDs = new int[] { 3, 4, 5 };
             m_initMotorPos = ax_read_current_pos();
-            ax_set_motor_speed(SpeedTypeEnum.GOSLOW);
+            ax_set_motor_speed(SpeedTypeEnum.GO);
+            InitCompensationSteps();
 
             //(1) Phase Run Context
             m_phase3.StepFunc = phase3_run_one_step;
@@ -428,10 +453,13 @@ namespace Eazy_Project_III.ProcessSpace
                 _LOG("中心偏移補償", "預計補償量", delta);
                 m_targetPos = m_initMotorPos + delta;
                 _clip_into_safe_box(m_targetPos);
+                _LOG("中心偏移補償", "初始位置", m_initMotorPos);
+                _LOG("中心偏移補償", "最終目標位置", m_targetPos);
+                _LOG("中心偏移補償", "修正後預計補償量", m_targetPos - m_initMotorPos);
             }
             else
             {
-                _LOG("中心偏移補償", "沒有建好雷射量測點", "忽略中...", Color.OrangeRed);
+                _LOG("中心偏移補償", "沒有建好雷射量測點", "忽略中...", Color.DarkRed);
                 m_targetPos = m_initMotorPos;
                 m_phase3.IsDebugMode = false;
                 return m_phase3;
@@ -453,13 +481,12 @@ namespace Eazy_Project_III.ProcessSpace
             #endregion
 
             // U compensation step
-            // COMP_STEP[3] = AxisUnitConvert.PERCISIONS[3] * 25;
-            double percA = AxisUnitConvert.PERCISIONS[5];
-            double stepA = Math.Round(RecipeCHClass.Instance.CompStepSizeAngle * percA, 4);
-            double stepU = Math.Round(RecipeCHClass.Instance.CompStepSize * 0.001, 4);
-            COMP_STEP = new QVector(stepU, stepU, stepU, stepU, stepA, stepA);
-            _LOG("單步最大補償量", COMP_STEP);
-
+            //////double percA = AxisUnitConvert.PERCISIONS[5];
+            //////double stepMaxA = Math.Round(RecipeCHClass.Instance.CompStepAngleMax * percA, 4);
+            //////double stepMaxU = Math.Round(RecipeCHClass.Instance.CompStepSize * 0.001, 4);
+            //////COMP_STEP = new QVector(stepMaxU, stepMaxU, stepMaxU, stepMaxU, stepMaxA, stepMaxA);
+            //////_LOG("單步最大補償量", COMP_STEP);
+            //////InitCompensationSteps();
 
             return m_phase3;
         }
@@ -505,7 +532,7 @@ namespace Eazy_Project_III.ProcessSpace
             //(8) 下指令
             log_motor_command(runCtrl, m_nextMotorPos, m_incr);
             ax_start_move(m_nextMotorPos);
-            System.Threading.Thread.Sleep(MOTOR_CMD_DELAY);
+            //System.Threading.Thread.Sleep(MOTOR_CMD_DELAY);
         }
         QVector phase3_calc_next_incr(XRunContext runCtrl, QVector cur, QVector target)
         {

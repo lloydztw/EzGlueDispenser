@@ -59,6 +59,7 @@ namespace PhotoMachine.UISpace
                             X3Ctrl.Location = new Point(0, 0);
                             this.Controls.Add(X3Ctrl);
                             X3Ctrl.Dock = DockStyle.Fill;
+                            X3Ctrl.BackColor = Color.Transparent;
                             break;
                       
                        

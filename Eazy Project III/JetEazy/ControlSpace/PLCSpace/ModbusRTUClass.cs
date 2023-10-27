@@ -1,4 +1,8 @@
-﻿using System;
+﻿
+#define OPT_USE_FATEK_FOR_LED
+
+#if OPT_USE_RTU_FOR_LED
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +11,7 @@ namespace JetEazy.ControlSpace.PLCSpace
 {
     public class ModbusRTUClass : COMClass
     {
-        #region PRIVATE DATA MEMBERS
+#region PRIVATE DATA MEMBERS
         private char STX = '\x02';
         private char ETX = '\x03';
 
@@ -19,11 +23,11 @@ namespace JetEazy.ControlSpace.PLCSpace
 
         int iCountTemp = 0;
         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-        #endregion
+#endregion
 
         public string Live = "●";
 
-        #region PROTECTED FUNTION 
+#region PROTECTED FUNTION 
         protected override void COMPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             try
@@ -221,7 +225,7 @@ namespace JetEazy.ControlSpace.PLCSpace
             byte[] lastCmd = StrToHexByte(Str);
             COMPort.Write(lastCmd, 0, lastCmd.Length);
         }
-        #endregion
+#endregion
 
         public bool GetX(int X_Index)
         {
@@ -248,7 +252,7 @@ namespace JetEazy.ControlSpace.PLCSpace
             SetData(IOName, data);
         }
 
-        #region PRIVATE FUNTION TOOLS
+#region PRIVATE FUNTION TOOLS
 
         /// <summary>
         /// CRC计算
@@ -335,7 +339,7 @@ namespace JetEazy.ControlSpace.PLCSpace
             return returnStr;
         }
 
-        #endregion
+#endregion
         public override void Tick()
         {
             base.Tick();
@@ -357,3 +361,328 @@ namespace JetEazy.ControlSpace.PLCSpace
         }
     }
 }
+#endif
+
+#if OPT_USE_FATEK_FOR_LED
+using JetEazy.ControlSpace;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Ports;
+using System.Linq;
+using System.Text;
+/*
+ * this is class name is not modifty.
+ * 
+ */
+public class ModbusRTUClass : COMClass
+{
+    private char STX = '\x02';
+    private char ETX = '\x03';
+
+    bool[] X = new bool[100];
+    bool[] Y = new bool[100];
+    bool[] M = new bool[1000];
+
+    bool[] A = new bool[500];
+    int[] R = new int[100];
+
+
+    public float PositionNow = 0;
+    public float PositionSet = 0;
+    public string CommandNowString = "";
+    public string AlarmString = "";
+
+    public string Live = "●";
+
+    public bool ROUTENABLE
+    {
+        get { return M[0]; }
+        set
+        {
+            SetIO(value, "M0000");
+        }
+    }
+    public bool GOUTENABLE
+    {
+        get { return M[1]; }
+        set
+        {
+            SetIO(value, "M0001");
+        }
+    }
+    public bool BOUTENABLE
+    {
+        get { return M[2]; }
+        set
+        {
+            SetIO(value, "M0002");
+        }
+    }
+
+
+    /// <summary>
+    /// R输出采样值
+    /// </summary>
+    public double R_out_sample
+    {
+        get { return R[0] * 0.001; }
+    }
+    /// <summary>
+    /// G输出采样值
+    /// </summary>
+    public double G_out_sample
+    {
+        get { return R[1] * 0.001; }
+    }
+    /// <summary>
+    /// B输出采样值
+    /// </summary>
+    public double B_out_sample
+    {
+        get { return R[2] * 0.001; }
+    }
+    /// <summary>
+    /// R输出实时电压
+    /// </summary>
+    public double R_out_vol
+    {
+        get { return R[10] * 0.001; }
+    }
+    /// <summary>
+    /// G输出实时电压
+    /// </summary>
+    public double G_out_vol
+    {
+        get { return R[11] * 0.001; }
+    }
+    /// <summary>
+    /// B输出实时电压
+    /// </summary>
+    public double B_out_vol
+    {
+        get { return R[12] * 0.001; }
+    }
+    /// <summary>
+    /// 风扇速度
+    /// </summary>
+    public int FanSpeed
+    {
+        get { return R[3]; }
+    }
+    /// <summary>
+    /// 温度
+    /// </summary>
+    public double Temp
+    {
+        get { return R[4] * 0.1; }
+    }
+    /// <summary>
+    /// LED输出比例
+    /// </summary>
+    public int LEDOUT_Ratio
+    {
+        get { return R[5]; }
+        set { SetValue("R00005", value); }
+    }
+    /// <summary>
+    /// 风扇输出比例
+    /// </summary>
+    public int FanRatio
+    {
+        get { return R[6]; }
+        set { SetValue("R00006", value); }
+    }
+
+
+    protected override void COMPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+    {
+        try
+        {
+            // 大略是這樣子用....有時指令不會一次傳完，因此要檢查最後回傳的檢查位元
+            BytesToRead = COMPort.BytesToRead;
+            COMPort.Read(ReadBuffer, ReadStart, BytesToRead);
+            ReadStart = ReadStart + BytesToRead;
+            //
+            if (Analyze(ReadStart - 1)) //此時 ReadBuffer裏有東西，利用 BytesToRead, ReadStart 及 ReadBuffer來取得所需要的資料
+            {
+                base.COMPort_DataReceived(sender, e);
+
+                if (Live == "●")
+                    Live = "○";
+                else
+                    Live = "●";
+            }
+        }
+        catch (Exception ex)
+        {
+            base.COMPort_DataReceived(sender, e);
+
+            if (Live == "●")
+                Live = "○";
+            else
+                Live = "●";
+        }
+    }
+    protected bool Analyze(int LastIndex)
+    {
+        bool ret = false;
+
+        if (ReadBuffer[LastIndex] != ETX)
+        {
+            return ret;
+        }
+        else
+            ret = true;
+
+        switch (LastCommad.GetName())
+        {
+            case "Get All M":
+                GetM();
+                break;
+            case "Get All R":
+                GetR();
+                break;
+            default:
+                break;
+        }
+
+        //if (IsWindowClose)
+        //{
+        //    if (CommandQueue.Count == 0)
+        //    {
+        //        Universal.IsWindowsClosing = false;
+        //        OnTrigger("CLOSE");
+        //    }
+        //}
+
+        return ret;
+    }
+
+    protected void GetR()
+    {
+        String Str = new string(ReadBuffer, 6, 4);
+
+        Int32 GetInt = HEX(Str);
+
+        int i = 0;
+        while (i < 15)
+        {
+            Str = new string(ReadBuffer, 6 + i * 4, 4);
+            GetInt = HEX(Str);
+            R[i] = GetInt;
+            i++;
+        }
+    }
+    protected void GetM()
+    {
+        //將資料填入 X 裏
+        String Str = new string(ReadBuffer, 6, 8);
+
+        Int32 GetInt = HEX(Str);
+        int i = 0;
+
+        while (i < 32)
+        {
+            M[i] = (GetInt & (1 << i)) == (1 << i);
+            i++;
+        }
+    }
+
+
+    protected void SetIO(bool IsOn, string IOName)
+    {
+        if (IsOn)
+            Command("Set Bit On", IOName);
+        else
+            Command("Set Bit Off", IOName);
+    }
+    public void SetValue(string addr, int position)
+    {
+        long SetInt = position;
+        string Str = ValueToHEX(SetInt, 4);
+
+        Command("Set Value", addr + Str);
+    }
+
+    protected override void WriteCommand()
+    {
+        try
+        {
+            string Str = LastCommad.GetSite() + Checksum(LastCommad.GetPLCCommad());
+            COMPort.Write(STX + Str + ETX);
+        }
+        catch(Exception ex)
+        {
+            if (!COMPort.IsOpen)
+                return;
+            else
+                throw ex;
+        }
+    }
+    protected override string Checksum(string OrgString)
+    {
+        int j = 0;
+        char[] Chars = OrgString.ToCharArray();
+
+        j = 99;
+        foreach (char ichar in Chars)
+            j = j + ichar;
+        return OrgString + ("00" + j.ToString("X")).Substring(("00" + j.ToString("X")).Length - 2, 2);
+    }
+
+    public void SetOnOff(string IOName, bool IsOn)
+    {
+        switch(IOName)
+        {
+            case "0000":
+                ROUTENABLE = IsOn;
+                break;
+            case "0001":
+                GOUTENABLE = IsOn;
+                break;
+            case "0002":
+                BOUTENABLE = IsOn;
+                break;
+            default:
+                SetIO(IsOn, IOName);
+                break;
+        }
+    }
+    public void WriteData(string IOName, int data)
+    {
+        switch(IOName)
+        {
+            case "0001":
+                LEDOUT_Ratio = data;
+                break;
+            default:
+                break;
+        }
+        //SetData(IOName, data);
+    }
+
+    public override void Tick()
+    {
+        base.Tick();
+    }
+    public override void Close()
+    {
+        base.Close();
+    }
+
+    //當有Input Trigger時，產生OnTrigger
+    public delegate void TriggerHandler(string TypeStr);
+    public event TriggerHandler TriggerAction;
+    public void OnTrigger(String TypeStr)
+    {
+        if (TriggerAction != null)
+        {
+            TriggerAction(TypeStr);
+        }
+    }
+}
+
+#endif
+
+

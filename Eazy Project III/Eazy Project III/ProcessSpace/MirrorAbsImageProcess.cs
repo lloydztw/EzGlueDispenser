@@ -1,5 +1,7 @@
-﻿using Eazy_Project_Interface;
+﻿using Eazy_Project_III.OPSpace;
+using Eazy_Project_Interface;
 using JetEazy.ControlSpace.MotionSpace;
+using JetEazy.GdxCore3;
 using JetEazy.GdxCore3.Model;
 using JetEazy.ProcessSpace;
 using JetEazy.QMath;
@@ -12,6 +14,11 @@ using System.Threading;
 
 namespace Eazy_Project_III.ProcessSpace
 {
+    #region S3_PROCESS_EVENT_ARGS
+
+    /// <summary>
+    /// 補償執行中的事件參數 (for 單步調試 使用)
+    /// </summary>
     public class CompensatingEventArgs : ProcessEventArgs
     {
         public string PhaseName;
@@ -24,19 +31,88 @@ namespace Eazy_Project_III.ProcessSpace
         public int[] ShowIDs = null;
     }
 
+    /// <summary>
+    /// 補償運算後事件參數 
+    /// </summary>
+    public class CompensatedInfoEventArgs : ProcessEventArgs
+    {
+        /// <summary>
+        /// CenterComp or ProjectionComp <br/>
+        /// (02中心補償 或 03光斑補償)
+        /// </summary>
+        public string Name;
+        /// <summary>
+        /// MirrorIndex
+        /// </summary>
+        public int MirrorIndex;
+        /// <summary>
+        /// Sender 負責 life cycle
+        /// </summary>
+        public Bitmap Image
+        {
+            get { return (Bitmap)Tag; }
+            set { Tag = value; }
+        }
+        /// <summary>
+        /// 中光電補償運算之總合結果 (含有許多圖標)
+        /// </summary>
+        public CoreCompInfo Info;
+
+        public CompensatedInfoEventArgs(string name, int mirrorIndex, Bitmap bmp, CoreCompInfo info)
+        {
+            this.Name = name;
+            this.MirrorIndex = mirrorIndex;
+            this.Image = bmp;
+            //this.Rects = new GdxCoreRect[rects.Length];
+            //Array.Copy(rects, this.Rects, rects.Length);
+            this.Info = info;
+        }
+    }
+
+    /// <summary>
+    /// 定位點設定 之 事件參數
+    /// </summary>
+    public class CoreMarkPointEventArgs : ProcessEventArgs
+    {
+        public string Name;
+        /// <summary>
+        /// Sender 負責 life cycle
+        /// </summary>
+        public Bitmap Image
+        {
+            get { return (Bitmap)Tag; }
+            set { Tag = value; }
+        }
+        public Point[] GoldenPts;
+        public Point[] AlgoPts;
+
+        public CoreMarkPointEventArgs(string name, Bitmap bmp, Point[] goldenPts, Point[] algoPts)
+        {
+            Name = name;
+            Image = bmp;
+            GoldenPts = new Point[goldenPts.Length];
+            Array.Copy(goldenPts, GoldenPts, GoldenPts.Length);
+            AlgoPts = new Point[algoPts.Length];
+            Array.Copy(algoPts, AlgoPts, AlgoPts.Length);
+        }
+    }
+
+    #endregion
+
 
 
     /// <summary>
     /// 像測補償抽象類別<br/>
-    /// --------------------------------------------
     /// @LETIAN: 20220624 refactor
     /// </summary>
     public abstract class MirrorAbsImageProcess : BaseProcess
     {
-        protected const string IMAGE_SAVE_PATH = @"D:\EVENTLOG\Nlogs\images";
+        #region CONFIGURATION_組態設定
+        protected static string IMAGE_SAVE_PATH { get { return Universal.LOG_IMG_PATH; } }
         protected static int MOTOR_TIMEOUT_WAIT_COUNT = 50000;
-        protected static int MOTOR_CMD_DELAY = 10;
-        protected static int MAX_RUN_COUNT = int.MaxValue;
+        protected static int MOTOR_CMD_DELAY = 300;
+        #endregion
+
 
         #region ACCESS_TO_OTHER_PROCESSES
         protected BaseProcess m_mainprocess
@@ -45,12 +121,22 @@ namespace Eazy_Project_III.ProcessSpace
         }
         #endregion
 
+
         public event EventHandler<ProcessEventArgs> OnLiveImage;
         public event EventHandler<CompensatingEventArgs> OnLiveCompensating;
+        public event EventHandler<CompensatedInfoEventArgs> OnCompensatedInfo;
+        public event EventHandler<CoreMarkPointEventArgs> OnMarkPointInfo;
+
 
         protected MirrorAbsImageProcess()
         {
             init_dirs();
+        }
+        public override void Start(params object[] args)
+        {
+            //>>> _initDelayAndTimeout();
+            base.Start(args);
+            _initDelayAndTimeout();
         }
         public override void Stop()
         {
@@ -59,15 +145,22 @@ namespace Eazy_Project_III.ProcessSpace
         }
         public void Terminate()
         {
+            Set_Cooling_Module(false);
             m_mainprocess.Stop();
             this.Stop();
             ax_set_motor_speed(SpeedTypeEnum.GO);
+
+            // 利用 OnNG event 讓 GUI 顯示 報警視窗.
+            if (LastNG != null)
+                FireNG(LastNG);
         }
 
 
         #region PRIVATE_THREAD_FUNCTIONS
         private Thread _thread = null;
         private bool _runFlag = false;
+        private bool _isThreadStopping = false;
+
         protected bool is_thread_running()
         {
             return _runFlag || _thread != null;
@@ -78,6 +171,7 @@ namespace Eazy_Project_III.ProcessSpace
             {
                 _runFlag = true;
                 _thread = new Thread(thread_func);
+                _thread.Name = this.Name;
                 _thread.Start(phase);
             }
             else
@@ -90,16 +184,29 @@ namespace Eazy_Project_III.ProcessSpace
             if (is_thread_running())
             {
                 _runFlag = false;
-                try
+                var stopFunc = new Action<int>((tmout) =>
                 {
-                    if (!_thread.Join(timeout))
-                        _thread.Abort();
-                    _thread = null;
-                }
-                catch (Exception ex)
-                {
-                    GdxGlobal.LOG.Warn(ex, "無法終止 Thread!");
-                }
+                    if (!_isThreadStopping)
+                    {
+                        _isThreadStopping = true;
+                        try
+                        {
+                            var t = _thread;
+                            if (t != null)
+                            {
+                                if (!t.Join(tmout))
+                                    t.Abort();
+                                _thread = null;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            GdxGlobal.LOG.Warn(ex, "Thread 終止異常!");
+                        }
+                        _isThreadStopping = false;
+                    }
+                });
+                stopFunc.BeginInvoke(timeout, null, null);
             }
         }
         private void thread_func(object arg)
@@ -110,7 +217,12 @@ namespace Eazy_Project_III.ProcessSpace
             {
                 try
                 {
-                    Thread.Sleep(1);
+                    //>>> 確保 PLC 有效 scanned 出現 2次 以上
+                    if (!IsValidPlcScanned(2))
+                    {
+                        Thread.Sleep(2);
+                        continue;
+                    }
 
                     phase.StepFunc(phase);
 
@@ -159,13 +271,18 @@ namespace Eazy_Project_III.ProcessSpace
 
             int nextState = phase.ExitCode;
             SetNextState(nextState);
+            base.IsOn = true;
         }
         #endregion
 
+
         #region PROTECTED_DATA
-        protected int[] m_showIDs = new int[] { 3, 4, 5 };
+        protected int[] m_showIDs = new int[] { 3, 4, 5 };  //<<< RESERVED
+        string m_imageDumpStemName = "image";
         #endregion
 
+
+        #region PROTECTED_EVENT_LAUNCHERS
         void init_dirs()
         {
             if (!System.IO.Directory.Exists(IMAGE_SAVE_PATH))
@@ -178,8 +295,18 @@ namespace Eazy_Project_III.ProcessSpace
         }
         protected void FireLiveImaging(Bitmap bmp)
         {
-            var e = new ProcessEventArgs("live.image", bmp);
-            OnLiveImage?.Invoke(this, e);
+            try
+            {
+                OnLiveImage?.Invoke(this, new ProcessEventArgs("live.image", bmp));
+            }
+            catch (Exception ex)
+            {
+                _LOG(ex, "FireLiveImaging 異常!");
+            }
+        }
+        protected void FireCompensationStart()
+        {
+            FireMessage("Comp.Start");
         }
         protected bool FireCompensating(XRunContext phase, QVector target, QVector cur, QVector delta, out bool isMotorPosChangedByClient)
         {
@@ -223,7 +350,48 @@ namespace Eazy_Project_III.ProcessSpace
 
             return phase.Go;
         }
+        protected void FireCompensatedInfo(string name, int mirrorIdx, Bitmap bmp, CoreCompInfo info)
+        {
+            try
+            {
+                if (OnCompensatedInfo != null)
+                {
+                    var e = (name == null) ? null : new CompensatedInfoEventArgs(name, mirrorIdx, bmp, info);
+                    OnCompensatedInfo(this, e);
+                }
+                else
+                {
+                    FireLiveImaging(bmp);
+                }
+            }
+            catch (Exception ex)
+            {
+                _LOG(ex, "FireCompensatedInfo 異常!");
+            }
+        }
+        protected void FireMarkPointInfo(string name, Bitmap bmp, Point[] goldenPts, Point[] algoPts)
+        {
+            try
+            {
+                if (OnMarkPointInfo != null)
+                {
+                    var e = (name == null) ? null : new CoreMarkPointEventArgs(name, bmp, goldenPts, algoPts);
+                    OnMarkPointInfo(this, e);
+                }
+                else
+                {
+                    FireLiveImaging(bmp);
+                }
+            }
+            catch (Exception ex)
+            {
+                _LOG(ex, "FireCompensatedInfo 異常!");
+            }
+        }
+        #endregion
 
+
+        #region PROTECTED_補償設定_與_馬達控制
 
         /// <summary>
         /// 補償控制, 所有可能用到的馬達軸編號 <br/>
@@ -299,15 +467,54 @@ namespace Eazy_Project_III.ProcessSpace
                 return yes;
             }
         }
-        protected static QVector MAX_DELTA = new QVector(0.25, 0.25, 0.25, 0.25, 2.0, 2.0);
-        protected static QVector MIN_DELTA = new QVector(AxisUnitConvert.PERCISIONS);
-        protected static QVector COMP_STEP = new QVector(AxisUnitConvert.PERCISIONS) * 5;
-        //protected static double STEP_XYZU = MAX_DELTA[0] * 0.2;
-        //protected static double STEP_A = Math.Round(AxisUnitConvert.PERCISIONS[5] * 5, 4);
+        protected QVector MAX_DELTA = new QVector(0.5, 0.5, 0.5, 0.5, 2.0, 2.0);
+        protected QVector MIN_DELTA = new QVector(AxisUnitConvert.PERCISIONS);
+        protected QVector COMP_STEP = new QVector(AxisUnitConvert.PERCISIONS) * 5;
 
+        protected void InitCompensationSteps()
+        {
+            //>>> _initDelayAndTimeout();
+
+            double totalMaxA = Math.Round((double)RecipeCHClass.Instance.CompStepAngleTotalMax, 4);
+            double totalMaxU = Math.Round(RecipeCHClass.Instance.CompStepSizeTotalMax * 0.001, 4);
+            MAX_DELTA = new QVector(totalMaxU, totalMaxU, totalMaxU, totalMaxU, totalMaxA, totalMaxA);
+            _LOG("累積最大補償量", MAX_DELTA);
+
+            double percA = AxisUnitConvert.PERCISIONS[5];
+            double stepMaxA = Math.Round(RecipeCHClass.Instance.CompStepAngleMax * percA, 4);
+            double stepMaxU = Math.Round(RecipeCHClass.Instance.CompStepSize * 0.001, 4);
+            COMP_STEP = new QVector(stepMaxU, stepMaxU, stepMaxU, stepMaxU, stepMaxA, stepMaxA);
+            _LOG("單步最大補償量", COMP_STEP);
+        }
+        private void _initDelayAndTimeout()
+        {
+            //@LETIAN: 2022/10/22 啟用
+            //base.InitDefaultDelay();
+
+            MOTOR_CMD_DELAY = RecipeCHClass.Instance.CompMotorDelay;
+            int moTimeout = RecipeCHClass.Instance.CompMotorTimeout * 1000;
+            _LOG("補償馬達 Delay(ms)", MOTOR_CMD_DELAY, "Timeout(ms)", moTimeout);
+
+            int i = 0;
+            foreach (var motor in BlackBoxMotors)
+            {
+                motor.Timeout = moTimeout;
+                motor.InPosPercision = AxisUnitConvert.PERCISIONS[i] / 2;
+                i++;
+            }
+
+#if (OPT_SIM && false)
+            // 加快模擬速度
+            MOTOR_CMD_DELAY = 10;
+#endif
+        }
+
+        #region PRIVATE_MOTOR_DATA
         volatile int m_motorWaitCount = 0;
-        IAxis[] _blackboxMotors = null;
-        protected IAxis[] BlackBoxMotors
+        private EzAxis[] _blackboxMotors = null;
+        #endregion
+
+        internal EzAxis[] BlackBoxMotors
         {
             get
             {
@@ -315,27 +522,16 @@ namespace Eazy_Project_III.ProcessSpace
                 {
                     // X, Y, Z, U, theta_y, theta_z
                     var indexes = COMP_MOTORS_IDS;
-                    _blackboxMotors = new IAxis[indexes.Length];
+                    _blackboxMotors = new EzAxis[indexes.Length];
                     int i = 0;
                     foreach (int idx in indexes)
-                        _blackboxMotors[i++] = GetAxis(idx);
+                    {
+                        _blackboxMotors[i++] = new EzAxis(GetAxis(idx), idx);
+                    }
                 }
                 return _blackboxMotors;
             }
         }
-
-#if(false)
-        protected QVector ax_convert_to_physical_unit(QVector pos)
-        {
-            pos[4] = pos[4];
-            return pos;
-        }
-        protected QVector ax_convert_to_plc_unit(QVector pos)
-        {
-            var u = AxisUnitConvert.ToAxis(pos);
-            return u;
-        }
-#endif
 
         /// <summary>
         /// X, Y, Z, U, θy, θz
@@ -357,7 +553,7 @@ namespace Eazy_Project_III.ProcessSpace
             {
                 for (int i = 0; i < N_MOTORS; i++)
                 {
-                    //BlackBoxMotors[i].Go(plcPos[i], 0);
+                    //>>> BlackBoxMotors[i].Go(plcPos[i], 0);
                     int axisID = COMP_MOTORS_IDS[i];
                     GdxGlobal.IO.sim_axis_to_pos(axisID, ax_pos[i]);
                 }
@@ -369,6 +565,9 @@ namespace Eazy_Project_III.ProcessSpace
                     BlackBoxMotors[i].Go(ax_pos[i], 0);
                 }
             }
+
+            InvalidatePlcScanned();
+            Thread.Sleep(MOTOR_CMD_DELAY);
         }
         protected void ax_set_motor_speed(SpeedTypeEnum mode)
         {
@@ -380,10 +579,23 @@ namespace Eazy_Project_III.ProcessSpace
         }
         protected bool ax_is_wait_ready_timeout()
         {
+#if (OPT_OLD_MOTOR_READY)
             return m_motorWaitCount > MOTOR_TIMEOUT_WAIT_COUNT;
+#else
+            foreach (var motor in BlackBoxMotors)
+            {
+                if (motor.IsTimeout())
+                {
+                    _LOG($"馬達 [{motor.ID} 軸] Timeout!", Color.Red);
+                    return true;
+                }
+            }
+            return false;
+#endif
         }
-        protected bool ax_is_ready()
+        protected bool ax_is_ready(out int errAxisID)
         {
+#if (OPT_OLD_MOTOR_READY)
             for (int i = 0; i < N_MOTORS; i++)
             {
                 if (!BlackBoxMotors[i].IsOK)
@@ -394,14 +606,31 @@ namespace Eazy_Project_III.ProcessSpace
             }
             Interlocked.Exchange(ref m_motorWaitCount, 0);
             return true;
+#else
+            foreach (var motor in BlackBoxMotors)
+            {
+                if (!motor.SmartCheckReady())
+                {
+                    errAxisID = motor.ID;
+                    return false;
+                }
+            }
+
+            errAxisID = -1;
+            return true;
+#endif
         }
-        protected bool ax_is_error()
+        protected bool ax_is_error(out int errAxisID)
         {
             for (int i = 0; i < N_MOTORS; i++)
             {
                 if (BlackBoxMotors[i].IsError)
+                {
+                    errAxisID = BlackBoxMotors[i].ID;
                     return true;
+                }
             }
+            errAxisID = -1;
             return false;
         }
 
@@ -423,11 +652,13 @@ namespace Eazy_Project_III.ProcessSpace
             public bool Go;
             public bool IsCompleted;
             public bool IsDebugMode;
+            public bool IsUserStop;
             public int ExitCode;
             public QVector InitMotorPos;
             public Action<XRunContext> StepFunc;
             public void Reset()
             {
+                IsUserStop = false;
                 IsCompleted = false;
                 RunCount = 0;
                 Go = true;
@@ -442,20 +673,28 @@ namespace Eazy_Project_III.ProcessSpace
         /// <returns>go/no go</returns>
         protected bool check_motor_ready(XRunContext runCtrl, out bool isError)
         {
-            if (ax_is_error())
+            int errAxisID;
+            if (ax_is_error(out errAxisID))
             {
-                _LOG(runCtrl.Name, "馬達異常", Color.Red);
-                isError = true;
+                if (!runCtrl.IsUserStop)
+                {
+                    _LOG(runCtrl.Name, LastNG = $"馬達 [index={errAxisID}軸] 異常", Color.Red);
+                    isError = true;
+                }
+                else
+                {
+                    isError = false;
+                }
                 return (runCtrl.Go = false);
             }
 
-            bool isReady = ax_is_ready();
+            bool isReady = ax_is_ready(out errAxisID);
 
             if (!isReady)
             {
                 if (ax_is_wait_ready_timeout())
                 {
-                    _LOG(runCtrl.Name, "馬達等不到 Ready", Color.Red);
+                    _LOG(runCtrl.Name, LastNG = $"馬達 [{errAxisID}軸] 等不到 Ready!", Color.Red);
                     isError = true;
                     return (runCtrl.Go = false);
                 }
@@ -464,15 +703,29 @@ namespace Eazy_Project_III.ProcessSpace
             isError = false;
             return isReady;
         }
-        protected bool check_max_run_count(XRunContext runCtrl)
+        protected bool check_max_run_count(XRunContext runCtrl, int maxRunCount = 0)
         {
+            if (maxRunCount <= 0)
+                maxRunCount = int.MaxValue;
+
             int count = Interlocked.Increment(ref runCtrl.RunCount);
-            if (count > MAX_RUN_COUNT)
+
+            if (count > maxRunCount)
             {
-                _LOG(runCtrl.Name, "補償次數超過上限", MAX_RUN_COUNT, Color.Red);
+                string errMaxRunCountMsg = $"{runCtrl.Name}, 補償次數超過上限 {maxRunCount} !";
+                _LOG(errMaxRunCountMsg, Color.Red);
+
+                // Events
+                FireNG(errMaxRunCountMsg);  //<<< 補償次數超過上限
+
+                // Soft-Terminate
                 SetNextState(9999);
-                return runCtrl.Go = false;
+
+                // go flags 
+                runCtrl.Go = false;
+                return false;
             }
+
             return runCtrl.Go;
         }
         protected bool check_debug_mode(XRunContext runCtrl, QVector targetMotorPos, QVector curMotorPos, QVector incr)
@@ -506,7 +759,7 @@ namespace Eazy_Project_III.ProcessSpace
         {
             if (runCtrl.IsCompleted)
             {
-                return ax_is_ready();
+                return ax_is_ready(out int errAxisID);
             }
             return false;
         }
@@ -549,38 +802,78 @@ namespace Eazy_Project_III.ProcessSpace
             }
             return true;
         }
-        protected bool _is_zero(int[] motorParams)
+        protected bool _is_completed(bool[] coreCompFlags, int[] motorParams)
         {
             bool yes = true;
-            for (int i = 0; i < motorParams.Length; i++)
-                yes &= (motorParams[i] == 0);
+            for (int i = 0; i < coreCompFlags.Length; i++)
+            {
+                bool completed = coreCompFlags[i] || (motorParams[i] == 0);
+                yes &= completed;
+            }
             return yes;
         }
 
+        #endregion
+
+
+        #region 影像擷取與存檔
+
+        public string ImageDumpStemName
+        {
+            get
+            {
+                return m_imageDumpStemName;
+            }
+            set
+            {
+                m_imageDumpStemName = value;
+            }
+        }
 
         /// <summary>
         /// The caller must maintain the life-cycle of the return Bitmap.
         /// </summary>
-        protected Bitmap snapshot_image(ICam cam, int runCount)
+        protected Bitmap snapshot_image(ICam cam, string tag = null, bool dump = true)
         {
             try
             {
                 cam.Snap();
-                using (Bitmap bmp0 = cam.GetSnap())
+                Bitmap bmp = cam.GetSnap();
+
+                // snap 兩次 (temporally trial)
+                if (false)
                 {
-                    Bitmap bmp = new Bitmap(bmp0);
+                    bmp.Dispose();
+                    Thread.Sleep(100);
+                    cam.Snap();
+                    bmp = cam.GetSnap();
+                }
+
+                if (dump)
+                {
                     #region ASYNC_DUMP_IMAGE
-                    var dump_func = new Action<Bitmap, int>((bmp2, i) =>
+                    var dump_func = new Action<Bitmap, string>((bmp2, t) =>
                     {
-                        string fileName = string.Format("image_{0}_{1:yyyyMMdd_HHmmss}.jpg", Name, DateTime.Now);
-                        fileName = System.IO.Path.Combine(IMAGE_SAVE_PATH, fileName);
-                        bmp2.Save(fileName, ImageFormat.Bmp);
+                        //>>> string path = System.IO.Path.Combine(IMAGE_SAVE_PATH, DateTime.Now.ToString("yyyyMMdd"));
+                        string path = System.IO.Path.Combine(IMAGE_SAVE_PATH, "_tmp");
+
+                        if (!System.IO.Directory.Exists(path))
+                            System.IO.Directory.CreateDirectory(path);
+
+                        string fileName = tag != null ?
+                            string.Format("{0}_{1}_{2:yyyyMMdd_HHmmss}.png", m_imageDumpStemName, tag, DateTime.Now) :
+                            string.Format("{0}_{1:yyyyMMdd_HHmmss}.png", m_imageDumpStemName, DateTime.Now);
+
+                        fileName = System.IO.Path.Combine(path, fileName);
+
+                        bmp2.Save(fileName, ImageFormat.Png);
                         bmp2.Dispose();
                     });
-                    dump_func.BeginInvoke((Bitmap)bmp.Clone(), runCount, null, null);
+                    dump_func.BeginInvoke((Bitmap)bmp.Clone(), tag, null, null);
                     #endregion
-                    return bmp;
                 }
+
+                return bmp;
             }
             catch (Exception ex)
             {
@@ -588,5 +881,7 @@ namespace Eazy_Project_III.ProcessSpace
                 return new Bitmap(1, 1);
             }
         }
+
+        #endregion
     }
 }

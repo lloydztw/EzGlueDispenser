@@ -5,6 +5,7 @@ using JetEazy;
 using JetEazy.CCDSpace;
 using JetEazy.ControlSpace;
 using JetEazy.DBSpace;
+using System.IO;
 //using PhotoMachine.ControlSpace.MachineSpace;
 using VsCommon.ControlSpace;
 using VsCommon.ControlSpace.MachineSpace;
@@ -13,11 +14,19 @@ namespace Eazy_Project_III
 {
     public class Universal : JetEazy.Universal
     {
+#if (OPT_SIM)
+        public static bool IsNoUseCCD = false;      //<<< 無效改由 ICam.ISim() 判斷
+        public static bool IsNoUseIO = true;
+        public static bool IsNoUseMotor = true;
+        public static bool IsSilentMode = true;     //抑制 Buzzer
+#else
         public static bool IsNoUseCCD = false;      //<<< 無效改由 ICam.ISim() 判斷
         public static bool IsNoUseIO = false;
         public static bool IsNoUseMotor = false;
+        public static bool IsSilentMode = false;     //抑制 Buzzer
+#endif
 
-        public static string VersionDate = "2022/06/21";
+        public static string VersionDate = "2023/08/23";
 
         public static VersionEnum VERSION = VersionEnum.PROJECT;
         public static OptionEnum OPTION = OptionEnum.DISPENSING;
@@ -44,11 +53,61 @@ namespace Eazy_Project_III
         public static string RCPPATH = MAINPATH + @"\PIC";
         public static string UIPATH = CODEPATH + @"\" + VERSION.ToString() + "UI";
 
+        /// <summary>
+        /// LOG 磁碟 T: D: or C:
+        /// </summary>
+        private static string _logDrive = null;
+        public static string LOG_ROOT
+        {
+            get
+            {
+                #region 自動選擇 T: D: C: 碟
+                if (_logDrive == null)
+                {
+                    string[] drives = new string[] { "T:\\", "D:\\", "C:\\" };
+                    foreach (var drive in drives)
+                        if (System.IO.Directory.Exists(drive))
+                        {
+                            _logDrive = drive;
+                            break;
+                        }
+                }
+                #endregion
+
+                switch (OPTION)
+                {
+                    case OptionEnum.DISPENSING:
+                        return Path.Combine(_logDrive, "EVENTLOG", "S3");
+                    case OptionEnum.DISPENSINGX1:
+                        return Path.Combine(_logDrive, "EVENTLOG", "S1");
+                    case OptionEnum.DISPENSINGX2:
+                        return Path.Combine(_logDrive, "EVENTLOG", "S2");
+                    case OptionEnum.DISPENSINGX4:
+                        return Path.Combine(_logDrive, "EVENTLOG", "S4");
+                    default:
+                        return Path.Combine(_logDrive, "EVENTLOG", OPTION.ToString());
+                }
+            }
+        }
+        public static string LOG_TXT_PATH
+        {
+            get { return System.IO.Path.Combine(LOG_ROOT, "Logs"); }
+        }
+        public static string LOG_IMG_PATH
+        {
+            get { return System.IO.Path.Combine(LOG_ROOT, "Images"); }
+        }
+        public static string LOG_ALARM_EVENT_PATH
+        {
+            get { return System.IO.Path.Combine(LOG_ROOT, "Alarms"); }
+        }
+        public static string OUTPUT_PATH
+        {
+            get { return System.IO.Path.Combine(LOG_ROOT, "Outputs"); }
+        }
 
         public static string COLLECT = @"D:\JETEAZY\" + VEROPT + @"\COLLECT";
-        public static string LOGDBPATH = @"D:\JETEAZY\" + VEROPT + @"\LOGDB";
         public static string BACKUPDBPATH = @"D:\JETEAZY\" + VEROPT + @"\BACKUPDB";
-        public static string LOGTXTPATH = @"D:\JETEAZY\" + VEROPT + @"\LOGTXT";
         public static string WORKPATH = @"D:\JETEAZY\" + VEROPT + @"\WORK";
         public static string DEBUGRAWPATH = @"D:\JETEAZY\" + VEROPT + @"\ORG";              //偵錯儲存的原圖位置
         public static string DEBUGRESULTPATH = @"D:\JETEAZY\" + VEROPT + @"\DEBUG";         //偵錯結果圖位置
@@ -56,6 +115,7 @@ namespace Eazy_Project_III
         public static string DEBUGSRCPATH = @"D:\JETEAZY\" + VEROPT + @"\SRCDEBUG";         //離線測試用的原圖位置
         public static string OCRIMAGEPATH = @"D:\LOA\OCR\";                                 //保存的OCR测试图位置  
         public static string BarcodeIMAGEPATH = @"D:\LOA\Barcode\";                         //保存的OCR测试图位置  
+
         /// <summary>
         /// 跑线时读到SN.txt里的东西
         /// </summary>
@@ -113,7 +173,6 @@ namespace Eazy_Project_III
             //初始化语言
             JetEazy.BasicSpace.LanguageExClass.Instance.Load(WORKPATH);
             JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = 1;
-
 
 
             switch (Universal.OPTION)
@@ -209,7 +268,7 @@ namespace Eazy_Project_III
                     {
                         case OptionEnum.DISPENSING:
 
-                            #region 点胶第三站 
+#region 点胶第三站 
 
                             opstr += "1,";  //1個 PLC  
                             opstr += "9,";   //9個軸
@@ -258,7 +317,7 @@ namespace Eazy_Project_III
                                 i++;
                             }
 
-                            #endregion
+#endregion
 
 
 
@@ -266,7 +325,7 @@ namespace Eazy_Project_III
                             break;
                         case OptionEnum.DISPENSINGX1:
 
-                            #region 点胶第一站 
+#region 点胶第一站 
 
                             opstr += "1,";  //1個 PLC  
                             opstr += "5,";   //9個軸
@@ -276,7 +335,6 @@ namespace Eazy_Project_III
 
                             MACHINECollection = new MachineCollectionClass();
                             MACHINECollection.Intial(VERSION, OPTION, machineX1);
-
 
                             if (ret)
                             {
@@ -349,7 +407,7 @@ namespace Eazy_Project_III
                                 i++;
                             }
 
-                            #endregion
+#endregion
 
                             break;
                     }
@@ -508,7 +566,5 @@ namespace Eazy_Project_III
             
 
         }
-
-
     }
 }

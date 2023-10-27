@@ -26,6 +26,7 @@ using Eazy_Project_Measure;
 using Eazy_Project_III.FormSpace;
 using Eazy_Project_III.UISpace;
 using JetEazy.GdxCore3;
+using Eazy_Project_III.ProcessSpace;
 
 namespace Eazy_Project_III
 {
@@ -108,6 +109,11 @@ namespace Eazy_Project_III
             }
         }
 
+        BaseProcess m_resetprocess
+        {
+            get { return ResetProcess.Instance; }
+        }
+
         public MainForm()
         {
             InitializeComponent();
@@ -132,9 +138,11 @@ namespace Eazy_Project_III
 
             Universal.MainFormLocation = new Point(this.Location.X, this.Location.Y);
 
-#if OPT_LETIAN_DEBUG
+#if OPT_LETIAN_AUTO_LAYOUT
             // To fit into my screen for debug.
+#if DEBUG
             this.FormBorderStyle = FormBorderStyle.Sizable;
+#endif
             this.WindowState = FormWindowState.Maximized;
 #endif
 
@@ -142,11 +150,21 @@ namespace Eazy_Project_III
         }
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            //@LETIAN:
-            //  最後補漏:
-            //  有時候程式退出時
-            //      ESSStatusEnum.EXIT 不會被觸發!
-            GdxCore.Dispose();
+            switch(VERSION)
+            {
+                case VersionEnum.PROJECT:
+                    switch(OPTION)
+                    {
+                        case OptionEnum.DISPENSING:
+                            //@LETIAN:
+                            //  最後補漏:
+                            //  有時候程式退出時
+                            //      ESSStatusEnum.EXIT 不會被觸發!
+                            GdxCore.Dispose();
+                            break;
+                    }
+                    break;
+            }
         }
         private void MainForm_SizeChanged(object sender, EventArgs e)
         {
@@ -183,6 +201,7 @@ namespace Eazy_Project_III
                     break;
             }
 
+            CommonLogClass.Instance.LogPath = Universal.LOG_TXT_PATH;
             INI.Instance.Initial();
             Universal.Initial(0);
 
@@ -212,7 +231,7 @@ namespace Eazy_Project_III
             mMainTick.Enabled = true;
             mMainTick.Tick += MMainTick_Tick;
 
-#if !OPT_LETIAN_DEBUG
+#if !OPT_LETIAN_AUTO_LAYOUT
             // 很慢
             LanguageExClass.Instance.EnumControls(this);
 #endif
@@ -224,9 +243,85 @@ namespace Eazy_Project_III
             //ESSUI.Set111(Universal.WORKPATH + "\\111.BMP");
             ESSUI.SetRecipeCombo(RCPDB.GetRecipeStringList());
             ESSUI.TriggerAction += new EssUI.TriggerHandler(ESSUI_TriggerAction);
+            m_resetprocess.OnCompleted += M_resetprocess_OnCompleted;
 
             ESSUI.SetMainStatus(ESSStatusEnum.RUN);
         }
+
+        private bool check_coretronic_version()
+        {
+            // 檢查中光電 Version and UpdateParams
+            // 將來看, 此檢查 是否歸屬於 ResetProcess
+            // 再將此段程序 移入.
+            // 用 event 通知 GUI 顯示異常.
+            string version = GdxCore.GetDllVersion();
+            CommonLogClass.Instance.LogMessage("中光電 DLL Version = " + version, Color.Blue);
+
+            bool ok = GdxCore.UpdateParams();
+            string msg = "中光電 DLL UpdateParams() = " + ok;
+            CommonLogClass.Instance.LogMessage(msg, ok ? Color.Green : Color.Red);
+
+            if (!ok)
+            {
+                VsMSG.Instance.Warning(msg.Replace("=", "\n\r"));
+            }
+            return ok;
+        }
+        DispensingMachineClass MACHINE
+        {
+            get { return (DispensingMachineClass)Universal.MACHINECollection.MACHINE; }
+        }
+        private bool check_have_mirror()
+        {
+            // 檢查復位完成是否有鏡片 點擊確定按鈕 清除警報
+            // 將來看, 此檢查 是否歸屬於 ResetProcess
+            // 再將此段程序 移入.
+            // 用 event 通知 GUI 顯示異常.
+            bool ok = MACHINE.PLCIO.ADR_ISRESETCOOMPLETE_HAVE_MIRROR;
+            if (ok)
+            {
+                string msg = "吸嘴有鏡片，請取出后，點擊確定";
+                //CommonLogClass.Instance.LogMessage(msg, Color.Red);
+                VsMSG.Instance.Warning(msg);
+                MACHINE.PLCIO.CLEARALARMS = true;
+                //DialogResult dialogResult = VsMSG.Instance.Question(msg);
+                //if(dialogResult == DialogResult.OK)
+                //{
+                //    MACHINE.PLCIO.CLEARALARMS = true;
+                //}
+            }
+            return ok;
+        }
+        private void M_resetprocess_OnCompleted(object sender, JetEazy.ProcessSpace.ProcessEventArgs e)
+        {
+            if (m_resetprocess.RelateString != "CloseWindows")
+                return;
+
+            if (sender == m_resetprocess)
+            {
+                if (!check_coretronic_version())
+                {
+                    return;
+                }
+                if (check_have_mirror())
+                {
+                    return;
+                }
+            }
+
+            try
+            {
+                // Do whatever message you want to show to the operators.
+                string msg = $"程序 {((BaseProcess)sender).Name}, 已完成!\n";
+                CommonLogClass.Instance.LogMessage(msg, Color.Black);
+            }
+            catch
+            {
+            }
+
+            _closeWindows();
+        }
+
         void InitialRUNUI()
         {
             RUNUI.Initial(Universal.UIPATH, INI.Instance.LANGUAGE, Universal.VERSION, Universal.OPTION);
@@ -260,15 +355,36 @@ namespace Eazy_Project_III
             MAINUI.Initial(VERSION, OPTION, MACHINECollection.MACHINE);
         }
 
+        void _closeWindows()
+        {
+            MAINUI.Close();
+            Universal.Close();
+            this.Close();
+        }
         void ESSUI_TriggerAction(ESSStatusEnum status)
         {
             switch (status)
             {
                 case ESSStatusEnum.EXIT:
 
-                    MAINUI.Close();
-                    Universal.Close();
-                    this.Close();
+                    string msg = "是否要執行復位流程？";
+
+                    if (VsMSG.Instance.Question(msg) == DialogResult.OK)
+                    {
+                        MACHINE.PLCIO.SetMWIndex(IOConstClass.MW1090, 0);
+                        if (!m_resetprocess.IsOn)
+                        {
+                            m_resetprocess.Start("CloseWindows");
+                        }
+                        else
+                        {
+                            m_resetprocess.Stop();
+                        }
+                    }
+                    else
+                    {
+                        _closeWindows();
+                    }
 
                     break;
                 case ESSStatusEnum.RUN:
@@ -470,11 +586,14 @@ namespace Eazy_Project_III
         }
         private void _auto_layout()
         {
-#if OPT_LETIAN_DEBUG
-            // 暫時, 自動調整 layout
-            // To be continued.
+            if (WindowState == FormWindowState.Minimized)
+                return;
+
+#if OPT_LETIAN_AUTO_LAYOUT
+            //@LETIAN: 自動調整 layout
+            int panelWidth = 380;
             var rcc = ClientRectangle;
-            mainControlUI1.Width = rcc.Width - essUI1.Width - 2;
+            mainControlUI1.Width = rcc.Width - panelWidth - 2;
             mainControlUI1.Height = rcc.Height;
             ctrlUI1.Height = rcc.Bottom - ctrlUI1.Top;
             var panels = new Control[]
@@ -487,7 +606,9 @@ namespace Eazy_Project_III
             };
             foreach (var panel in panels)
             {
+                panel.Width = panelWidth;
                 panel.Left = rcc.Width - panel.Width;
+                panel.Padding = new Padding(5, 5, 5, 5);
             }
 #endif
         }

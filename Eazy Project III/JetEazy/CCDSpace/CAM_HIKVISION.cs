@@ -5,19 +5,52 @@
 using MvCamCtrl.NET;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace JetEazy.ControlSpace
 {
+    public class CameraPara
+    {
+        public int Index { get; set; } = 0;
+        public string SerialNumber { get; set; } = string.Empty;
+
+        public bool IsDebug { get; set; } = false;
+        public int Rotate { get; set; } = 0;
+        public string CfgPath { get; set; } = "WORK";
+        public string ToCameraString()
+        {
+            string str = "";
+
+            str += Index + "@";
+            str += SerialNumber + "@";
+            str += (IsDebug ? "1" : "0") + "@";
+            str += Rotate + "@";
+            str += CfgPath + "@";
+
+            return str;
+        }
+        public void FromCameraString(string eStr)
+        {
+            string[] strs = eStr.Split('@').ToArray();
+            Index = int.Parse(strs[0]);
+            SerialNumber = strs[1];
+            IsDebug = strs[2] == "1";
+            Rotate = int.Parse(strs[3]);
+            CfgPath = strs[4];
+        }
+    }
     public class CAM_HIKVISION
     {
-
+        #region DEFINE MEMBERS
         MyCamera.MV_CC_DEVICE_INFO_LIST m_stDeviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
         private MyCamera m_MyCamera = new MyCamera();
         bool m_bGrabbing = false;
@@ -37,21 +70,53 @@ namespace JetEazy.ControlSpace
         private bool m_triggerModeOn = false;
         private PictureBox picForMyCameraHandle;// = new PictureBox();
         private int m_number_no = 0;
-        private bool m_SanpOK = false;//Get Image OK Sign
+        //private bool m_GetImageOK = false;
+
+
+        //public uint m_nBufSizeForSaveImage;
+        private byte[] m_pBufForSaveImage;         // 用于保存图像的缓存
+        private bool m_GetImageOK;
+        private Bitmap m_bmpCurrent;
+
+        MyCamera.cbOutputdelegate cbImage;
+        /// <summary>
+        /// 相机帧数
+        /// </summary>
+        int m_nFrames = 0;
+
+        private CameraPara m_CameraPara = null;
+        #endregion
+
+        //public event EventHandler<string> OnError;
 
         public CAM_HIKVISION(PictureBox pbx, int icam_no)
         {
             picForMyCameraHandle = pbx;
             m_number_no = icam_no;
         }
-        public void Init(string eCameraSerialNumber)
+        public void Init(CameraPara eCameraPara)
         {
-            m_cam_serialnumber = eCameraSerialNumber;
+            m_CameraPara = eCameraPara;
+            m_cam_serialnumber = m_CameraPara.SerialNumber;
             m_bGrabbing = false;
+            cbImage = new MyCamera.cbOutputdelegate(_mvsCallback);
+            m_pBufForSaveImage = new byte[3072 * 2048 * 3 * 3 + 2048];
+
             DeviceListAcq();
             OpenDevice();
             StartGrab();
         }
+        //public void Init(string eCameraSerialNumber)
+        //{
+        //    m_cam_serialnumber = eCameraSerialNumber;
+        //    m_bGrabbing = false;
+        //    cbImage = new MyCamera.cbOutputdelegate(_mvsCallback);
+        //    m_pBufForSaveImage = new byte[3072 * 2048 * 3 * 3 + 2048];
+
+        //    DeviceListAcq();
+        //    OpenDevice();
+        //    StartGrab();
+        //}
         public void Dispose()
         {
             StopGrab();
@@ -112,7 +177,8 @@ namespace JetEazy.ControlSpace
         }
         public void TriggerSoftwareX()
         {
-            m_SanpOK = false;//Get Image Start.
+            m_GetImageOK = false;
+            //m_GetImageOK = false;
             // ch:触发命令 | en:Trigger command
             int nRet = m_MyCamera.MV_CC_SetCommandValue_NET("TriggerSoftware");
             if (MyCamera.MV_OK != nRet)
@@ -122,11 +188,11 @@ namespace JetEazy.ControlSpace
         }
         public Bitmap CaptureBmp(int roattion)
         {
-            if(false == m_SanpOK)
-            {
-                ShowErrorMsg("Get Image Error", 0);
-                return null;
-            }
+            //if (false == m_GetImageOK)
+            //{
+            //    ShowErrorMsg("GetImage Error", 0);
+            //    return null;
+            //}
             if (false == m_bGrabbing)
             {
                 ShowErrorMsg("Not Start Grabbing", 0);
@@ -265,11 +331,30 @@ namespace JetEazy.ControlSpace
                     }
                 }
             }
-      
+
             //ShowErrorMsg("Save Succeed!", 0);
             return null;
         }
+        public Bitmap GetImageNow()
+        {
+            TriggerSoftwareX();
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            for (; ; )
+            {
+                if (m_GetImageOK)
+                {
+                    if (m_bmpCurrent == null)
+                        return null;
+                    return m_bmpCurrent.Clone() as Bitmap;
+                }
+                if (watch.ElapsedMilliseconds > 1000)
+                    break;
+            }
+            return null;
+        }
 
+        #region PRIVATE FUNTION
 
         /// <summary>
         /// 连续采集模式
@@ -342,6 +427,15 @@ namespace JetEazy.ControlSpace
                 return;
             }
 
+            string _featureFilenamePath = m_CameraPara.CfgPath + "\\" + m_CameraPara.SerialNumber + ".mfs";
+            nRet = m_MyCamera.MV_CC_FeatureLoad_NET(_featureFilenamePath);
+
+            if (MyCamera.MV_OK != nRet)
+            {
+                ShowErrorMsg("FeatureLoad fail!", nRet);
+                //return;
+            }
+
             // ch:探测网络最佳包大小(只对GigE相机有效) | en:Detection network optimal package size(It only works for the GigE camera)
             if (device.nTLayerType == MyCamera.MV_GIGE_DEVICE)
             {
@@ -360,14 +454,32 @@ namespace JetEazy.ControlSpace
                 }
             }
 
+            m_MyCamera.MV_CC_RegisterImageCallBack_NET(cbImage, (IntPtr)device_index);
+
             // ch:设置采集连续模式 | en:Set Continues Aquisition Mode
             //m_MyCamera.MV_CC_SetEnumValue_NET("AcquisitionMode", (uint)MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
             //m_MyCamera.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF);
-
+            //set triggerSource = software
+            TriggerSource(MyCamera.MV_CAM_TRIGGER_SOURCE.MV_TRIGGER_SOURCE_SOFTWARE);
             AcquisitionMode(MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
             TriggerMode2(MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_ON);
-            TriggerSource(MyCamera.MV_CAM_TRIGGER_SOURCE.MV_TRIGGER_SOURCE_SOFTWARE);
+            //close Balance White Auto
+            nRet = m_MyCamera.MV_CC_SetEnumValue_NET("BalanceWhiteAuto", 0);
+            if (nRet != MyCamera.MV_OK)
+            {
+                ShowErrorMsg("Set BalanceWhiteAuto Fail!", nRet);
+            }
+            //From MVS Setting
+            //MyCamera.MVCC_ENUMVALUE mVCC_ENUMVALUE = new MyCamera.MVCC_ENUMVALUE();
+            //m_MyCamera.MV_CC_GetEnumValue_NET("PixelFormat", ref mVCC_ENUMVALUE);
 
+            ////设置Enum型参数-相机图像格式
+            ////注意点1：相机图像格式设置时，只有在MV_CC_Startgrab接口调用前才能设置,取流过程中，不能修改图像格式
+            //nRet = m_MyCamera.MV_CC_SetEnumValue_NET("PixelFormat", (uint)MyCamera.MvGvspPixelType.PixelType_Gvsp_BayerRG8);
+            //if (nRet != MyCamera.MV_OK)
+            //{
+            //    ShowErrorMsg("Set PixelFormat fail!", nRet);
+            //}
             //bnGetParam_Click(null, null);// ch:获取参数 | en:Get parameters
 
             //// ch:控件操作 | en:Control operation
@@ -383,7 +495,7 @@ namespace JetEazy.ControlSpace
             if (m_bGrabbing == true)
             {
                 m_bGrabbing = false;
-                m_hReceiveThread.Join();
+                //m_hReceiveThread.Join();
             }
 
             if (m_BufForDriver != IntPtr.Zero)
@@ -407,8 +519,8 @@ namespace JetEazy.ControlSpace
             // ch:标志位置位true | en:Set position bit true
             m_bGrabbing = true;
 
-            m_hReceiveThread = new Thread(ReceiveThreadProcess);
-            m_hReceiveThread.Start();
+            //m_hReceiveThread = new Thread(ReceiveThreadProcess);
+            //m_hReceiveThread.Start();
 
             m_stFrameInfo.nFrameLen = 0;//取流之前先清除帧长度
             m_stFrameInfo.enPixelType = MyCamera.MvGvspPixelType.PixelType_Gvsp_Undefined;
@@ -417,7 +529,7 @@ namespace JetEazy.ControlSpace
             if (MyCamera.MV_OK != nRet)
             {
                 m_bGrabbing = false;
-                m_hReceiveThread.Join();
+                //m_hReceiveThread.Join();
                 ShowErrorMsg("Start Grabbing Fail!", nRet);
                 return;
             }
@@ -429,7 +541,7 @@ namespace JetEazy.ControlSpace
         {
             // ch:标志位设为false | en:Set flag bit false
             m_bGrabbing = false;
-            m_hReceiveThread.Join();
+            //m_hReceiveThread.Join();
 
             // ch:停止采集 | en:Stop Grabbing
             int nRet = m_MyCamera.MV_CC_StopGrabbing_NET();
@@ -441,6 +553,10 @@ namespace JetEazy.ControlSpace
             // ch:控件操作 | en:Control Operation
             //SetCtrlWhenStopGrab();
         }
+
+        public int iCount = 0;
+        int iCountTemp = 0;
+        System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
 
         private void ReceiveThreadProcess()
         {
@@ -475,11 +591,22 @@ namespace JetEazy.ControlSpace
             {
                 lock (BufForDriverLock)
                 {
-                    nRet = m_MyCamera.MV_CC_GetOneFrameTimeout_NET(m_BufForDriver, nPayloadSize, ref stFrameInfo, 1);
+                    nRet = m_MyCamera.MV_CC_GetOneFrameTimeout_NET(m_BufForDriver, nPayloadSize, ref stFrameInfo, 1000);
                     if (nRet == MyCamera.MV_OK)
                     {
                         m_stFrameInfo = stFrameInfo;
-                        m_SanpOK = true;//Get Image Complete.
+                        //m_GetImageOK = true;
+
+                        if (!watch.IsRunning)
+                            watch.Start();
+                        if (watch.ElapsedMilliseconds > 1000)
+                        {
+                            watch.Reset();
+                            iCount = iCountTemp;
+                            iCountTemp = 0;
+                        }
+                        else
+                            iCountTemp++;
                     }
                 }
 
@@ -499,10 +626,10 @@ namespace JetEazy.ControlSpace
                 }
                 else
                 {
-                    if (m_triggerModeOn)
-                    {
-                        Thread.Sleep(5);
-                    }
+                    //if (m_triggerModeOn)
+                    //{
+                    //    Thread.Sleep(5);
+                    //}
                 }
             }
         }
@@ -641,6 +768,8 @@ namespace JetEazy.ControlSpace
             }
 
             //MessageBox.Show(errorMsg, "PROMPT");
+            //if (OnError != null)
+            //    OnError(this, errorMsg);
         }
 
         private Boolean IsMonoData(MyCamera.MvGvspPixelType enGvspPixelType)
@@ -712,6 +841,453 @@ namespace JetEazy.ControlSpace
             }
         }
 
+        private void _mvsCallback(IntPtr pData, ref MyCamera.MV_FRAME_OUT_INFO pFrameInfo, IntPtr pUser)
+        {
+            int nIndex = (int)pUser;
+
+            // ch:抓取的帧数 | en:Aquired Frame Number
+            ++m_nFrames;
+
+            _mvsGetImageNow(pData, pFrameInfo, nIndex);
+
+            //_mvsCallbackTest(pData, pFrameInfo, IntPtr.Zero);
+        }
+        /// <summary>
+        /// 获取图片
+        /// </summary>
+        /// <param name="pData"></param>
+        /// <param name="stFrameInfo"></param>
+        /// <param name="nIndex"></param>
+        private void _mvsGetImageNow(IntPtr pData, MyCamera.MV_FRAME_OUT_INFO stFrameInfo, int nIndex)
+        {
+            string[] path = { "image1.bmp", "image2.bmp", "image3.bmp", "image4.bmp" };
+            int nRet;
+
+            if ((3 * stFrameInfo.nFrameLen + 2048) > m_nBufSizeForSaveImage)
+            {
+                m_nBufSizeForSaveImage = 3 * stFrameInfo.nFrameLen + 2048;
+                m_pBufForSaveImage = new byte[m_nBufSizeForSaveImage];
+            }
+
+            #region MV Rotate
+            //IntPtr pImage0 = Marshal.UnsafeAddrOfPinnedArrayElement(m_pBufForSaveImage, 0);
+            //MyCamera.MV_CC_ROTATE_IMAGE_PARAM mV_CC_ROTATE_IMAGE_PARAM
+            //        = new MyCamera.MV_CC_ROTATE_IMAGE_PARAM();
+            //MyCamera.MV_IMG_ROTATION_ANGLE mV_IMG_ROTATION_ANGLE
+            //    = new MyCamera.MV_IMG_ROTATION_ANGLE();
+            //switch (m_CameraPara.Rotate)
+            //{
+            //    case 0:
+            //        break;
+            //    case 90:
+            //        mV_IMG_ROTATION_ANGLE = MyCamera.MV_IMG_ROTATION_ANGLE.MV_IMAGE_ROTATE_90;
+            //        break;
+            //    case 180:
+            //        mV_IMG_ROTATION_ANGLE = MyCamera.MV_IMG_ROTATION_ANGLE.MV_IMAGE_ROTATE_180;
+            //        break;
+            //    case 270:
+            //        mV_IMG_ROTATION_ANGLE = MyCamera.MV_IMG_ROTATION_ANGLE.MV_IMAGE_ROTATE_270;
+            //        break;
+            //}
+            //mV_CC_ROTATE_IMAGE_PARAM.enPixelType = stFrameInfo.enPixelType;
+            //mV_CC_ROTATE_IMAGE_PARAM.nWidth = stFrameInfo.nWidth;
+            //mV_CC_ROTATE_IMAGE_PARAM.nHeight = stFrameInfo.nHeight;
+            //mV_CC_ROTATE_IMAGE_PARAM.pSrcData = pData;
+            //mV_CC_ROTATE_IMAGE_PARAM.nSrcDataLen = stFrameInfo.nFrameLen;
+            //mV_CC_ROTATE_IMAGE_PARAM.pDstBuf = pImage0;
+            //mV_CC_ROTATE_IMAGE_PARAM.nDstBufLen = stFrameInfo.nFrameLen;
+            //mV_CC_ROTATE_IMAGE_PARAM.nDstBufSize = m_nBufSizeForSaveImage;
+            //mV_CC_ROTATE_IMAGE_PARAM.enRotationAngle = mV_IMG_ROTATION_ANGLE;
+            //nRet = m_MyCamera.MV_CC_RotateImage_NET(ref mV_CC_ROTATE_IMAGE_PARAM);
+            //if (MyCamera.MV_OK != nRet)
+            //{
+
+            //}
+
+            #endregion
+
+            IntPtr pImage = Marshal.UnsafeAddrOfPinnedArrayElement(m_pBufForSaveImage, 0);
+            MyCamera.MV_SAVE_IMAGE_PARAM_EX stSaveParam = new MyCamera.MV_SAVE_IMAGE_PARAM_EX();
+            stSaveParam.enImageType = MyCamera.MV_SAVE_IAMGE_TYPE.MV_Image_Bmp;
+            stSaveParam.enPixelType = stFrameInfo.enPixelType;
+            stSaveParam.pData = pData;
+            stSaveParam.nDataLen = stFrameInfo.nFrameLen;
+            stSaveParam.nHeight = stFrameInfo.nHeight;
+            stSaveParam.nWidth = stFrameInfo.nWidth;
+            stSaveParam.pImageBuffer = pImage;
+            stSaveParam.nBufferSize = m_nBufSizeForSaveImage;
+            stSaveParam.nJpgQuality = 80;
+            nRet = m_MyCamera.MV_CC_SaveImageEx_NET(ref stSaveParam);
+            if (MyCamera.MV_OK != nRet)
+            {
+            }
+            else
+            {
+                MemoryStream memory = new MemoryStream(m_pBufForSaveImage);
+                Bitmap bmp = (Bitmap)Image.FromStream(memory, true, true);
+                memory.Close();
+
+                //switch (90)
+                //{
+                //    case 90:
+                //        bmp.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                //        break;
+                //    case 270:
+                //        bmp.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                //        break;
+                //    case 180:
+                //        bmp.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                //        break;
+                //}
+
+
+                m_bmpCurrent = bmp;
+
+                //m_bmpCurrent = rotate(bmp, 90);
+                //bmp.Dispose();
+
+                //if (INIClass.BitRotateFlipType != RotateFlipType.RotateNoneFlipNone)
+                //    m_pMyCamera[nIndex].Bmp.RotateFlip(INIClass.BitRotateFlipType);
+
+                m_GetImageOK = true;
+
+                //FileStream file = new FileStream(path[nIndex], FileMode.Create, FileAccess.Write);
+                //file.Write(m_pMyCamera[nIndex].m_pBufForSaveImage, 0, (int)stSaveParam.nImageLen);
+                //file.Close();
+                //string temp = "No." + (nIndex + 1).ToString() + "Device Save Succeed!";
+                //ShowErrorMsg(temp,0);
+            }
+        }
+
+        #endregion
+
+        #region TEST_ROTATION
+#if (true)
+        Bitmap m_bmpTestBuf = null;
+        private void _mvsCallbackTest(IntPtr pDataCB, MyCamera.MV_FRAME_OUT_INFO stFrameInfo, IntPtr pUser)
+        {
+            //var pData = _get_buffer_ptr(pDataCB, ref stFrameInfo);
+            IntPtr pData = pDataCB;
+
+            int width = stFrameInfo.nWidth;
+            int height = stFrameInfo.nHeight;
+            int bytesPerPixel;
+
+            if (IsMonoData(stFrameInfo.enPixelType))
+                bytesPerPixel = 1;
+            else if (IsColorData(stFrameInfo.enPixelType))
+                bytesPerPixel = 3;
+            else
+                bytesPerPixel = 0;
+
+            if (bytesPerPixel > 0)
+            {
+                int dstW = (RotateAngle == 90 || RotateAngle == 270) ? height : width;
+                int dstH = (RotateAngle == 90 || RotateAngle == 270) ? width : height;
+                if (m_bmpTestBuf == null)
+                    m_bmpTestBuf = new Bitmap(dstW, dstH, PixelFormat.Format24bppRgb);
+
+                var bmp = m_bmpTestBuf;
+                BitmapData bmpd = bmp.LockBits(new Rectangle(0, 0, dstW, dstH), ImageLockMode.ReadWrite, bmp.PixelFormat);
+                switch (RotateAngle)
+                {
+                    case 90:
+                        copy_bits_090(pData, bmpd.Scan0, width, height, width * 1, 1, bmpd.Stride, 3);
+                        break;
+                    case 180:
+                        copy_bits_180(pData, bmpd.Scan0, width, height, width * 1, 1, bmpd.Stride, 3);
+                        break;
+                    case 270:
+                        copy_bits_270(pData, bmpd.Scan0, width, height, width * 1, 1, bmpd.Stride, 3); break;
+                    //case 0:
+                    default:
+                        copy_bits_000(pData, bmpd.Scan0, width, height, width * 1, 1, bmpd.Stride, 3);
+                        break;
+                }
+                bmp.UnlockBits(bmpd);
+                m_bmpCurrent = bmp;
+                m_GetImageOK = true;
+            }
+            else
+            {
+                // the format is not supported yet !!!
+                //m_bmpCurrent = bmp;
+                //m_GetImageOK = true;
+            }
+        }
+        private IntPtr _get_buffer_ptr(IntPtr pSrcData, ref MyCamera.MV_FRAME_OUT_INFO stFrameInfo)
+        {
+            
+
+            // Input:
+            //  (1) m_stFrameInfo
+            //  (2) m_BufForDriver
+            //  (3) m_BufForSaveImage
+            //  (4) m_nBufSizeForSaveImage
+
+            IntPtr pResult;
+
+            if (stFrameInfo.enPixelType == MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8 ||
+                stFrameInfo.enPixelType == MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed ||
+                stFrameInfo.enPixelType == MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed)
+            {
+                pResult = pSrcData;
+            }
+            else
+            {
+                MyCamera.MvGvspPixelType enDstPixelType = MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed;
+                UInt32 nSaveImageNeedSize = 0;
+                MyCamera.MV_PIXEL_CONVERT_PARAM stConverPixelParam = new MyCamera.MV_PIXEL_CONVERT_PARAM();
+                //lock (BufForDriverLock)
+                {
+                    if (stFrameInfo.nFrameLen == 0)
+                    {
+                        ShowErrorMsg("Save Bmp Fail!", 0);
+                        return IntPtr.Zero;
+                    }
+
+                    if (IsMonoData(stFrameInfo.enPixelType))
+                    {
+                        //enDstPixelType = MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8;
+                        nSaveImageNeedSize = (uint)stFrameInfo.nWidth * stFrameInfo.nHeight;
+                    }
+                    else if (IsColorData(stFrameInfo.enPixelType))
+                    {
+                        //enDstPixelType = MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed;
+                        nSaveImageNeedSize = (uint)stFrameInfo.nWidth * stFrameInfo.nHeight * 3;
+                    }
+                    else
+                    {
+                        ShowErrorMsg("No such pixel type!", 0);
+                        return IntPtr.Zero;
+                    }
+
+                    if (m_nBufSizeForSaveImage < nSaveImageNeedSize)
+                    {
+                        if (m_BufForSaveImage != IntPtr.Zero)
+                        {
+                            Marshal.Release(m_BufForSaveImage);
+                        }
+                        m_nBufSizeForSaveImage = nSaveImageNeedSize;
+                        m_BufForSaveImage = Marshal.AllocHGlobal((Int32)m_nBufSizeForSaveImage);
+                    }
+
+                    stConverPixelParam.nWidth = stFrameInfo.nWidth;
+                    stConverPixelParam.nHeight = stFrameInfo.nHeight;
+                    stConverPixelParam.pSrcData = pSrcData;
+                    stConverPixelParam.nSrcDataLen = stFrameInfo.nFrameLen;
+                    stConverPixelParam.enSrcPixelType = stFrameInfo.enPixelType;
+                    stConverPixelParam.enDstPixelType = enDstPixelType;
+
+                    // using member data  m_BufForSaveImage
+                    stConverPixelParam.pDstBuffer = m_BufForSaveImage;
+                    stConverPixelParam.nDstBufferSize = m_nBufSizeForSaveImage;
+
+                    int nRet = m_MyCamera.MV_CC_ConvertPixelType_NET(ref stConverPixelParam);
+                    if (MyCamera.MV_OK != nRet)
+                    {
+                        ShowErrorMsg("Convert Pixel Type Fail!", nRet);
+                        return IntPtr.Zero;
+                    }
+
+                    pResult = m_BufForSaveImage;
+                }
+            }
+            return pResult;
+        }
+
+        private Bitmap rotate(Bitmap srcBmp, int angle)
+        {
+            int bytesPerPixel = 0;
+
+            switch(srcBmp.PixelFormat)
+            {
+                case PixelFormat.Format24bppRgb:
+                    bytesPerPixel = 3;
+                    break;
+                case PixelFormat.Format8bppIndexed:
+                    bytesPerPixel = 1;
+                    break;
+            }
+
+            //if (bmpSrc.PixelFormat== PixelFormat.Format24bppRgb)
+            //    bytesPerPixel = 3;
+            //else if (IsColorData(stFrameInfo.enPixelType))
+            //    bytesPerPixel = 3;
+            //else
+            //    bytesPerPixel = 0;
+
+            if (bytesPerPixel > 0)
+            {
+                int width = srcBmp.Width;
+                int height = srcBmp.Height;
+                int dstW = width;
+                int dstH = height;
+                if (angle == 90 || angle == 270)
+                {
+                    dstW = height;
+                    dstH = width;
+                }
+
+                if (m_bmpTestBuf == null)
+                {
+                    m_bmpTestBuf = new Bitmap(dstW, dstH, PixelFormat.Format24bppRgb);
+                }
+                var dstBmp = m_bmpTestBuf;
+
+                BitmapData srcBmpd = srcBmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, srcBmp.PixelFormat);
+                BitmapData dstBmpd = dstBmp.LockBits(new Rectangle(0, 0, dstW, dstH), ImageLockMode.ReadWrite, dstBmp.PixelFormat);
+
+                switch (angle)
+                {
+                    case 90:
+                        copy_bits_090(srcBmpd.Scan0, dstBmpd.Scan0, width, height, width * 1, 1, dstBmpd.Stride, 3);
+                        break;
+                    case 180:
+                        copy_bits_180(srcBmpd.Scan0, dstBmpd.Scan0, width, height, width * 1, 1, dstBmpd.Stride, 3);
+                        break;
+                    case 270:
+                        copy_bits_270(srcBmpd.Scan0, dstBmpd.Scan0, width, height, width * 1, 1, dstBmpd.Stride, 3); break;
+                    //case 0:
+                    default:
+                        copy_bits_000(srcBmpd.Scan0, dstBmpd.Scan0, width, height, width * 1, 1, dstBmpd.Stride, 3);
+                        break;
+                }
+                dstBmp.UnlockBits(dstBmpd);
+                srcBmp.UnlockBits(srcBmpd);
+                return dstBmp;
+            }
+            else
+            {
+                // the format is not supported yet !!!
+                //m_bmpCurrent = bmp;
+                //m_GetImageOK = true;
+                return null;
+            }
+        }
+
+        private void copy_bits_000(IntPtr srcPtr, IntPtr dstPtr, int width, int height,
+                                        int srcStride, int srcBytesPerPixel,
+                                        int dstStride, int dstBytesPerPixel
+                                    )
+        {
+            int N = width * height;
+            unsafe
+            {
+                Parallel.For(0, N, (n) =>
+                {
+                    int y = n / width;
+                    int x = n % width;
+
+                    byte* pSrc = (byte*)srcPtr;
+                    byte* pDst = (byte*)dstPtr;
+                    int j = (x * srcBytesPerPixel) + y * srcStride;
+                    int k = (x * dstBytesPerPixel) + y * dstStride;
+
+                    convert_pixel_color(pSrc + j, pDst + k, srcBytesPerPixel);
+                });
+            }
+        }
+
+        private void copy_bits_090(IntPtr srcPtr, IntPtr dstPtr, int width, int height,
+                                        int srcStride, int srcBytesPerPixel,
+                                        int dstStride, int dstBytesPerPixel
+                                    )
+        {
+            //int N = width * height;
+            unsafe
+            {
+                Parallel.For(0, height, (y) =>
+                {
+                    int x2 = y;
+                    byte* pSrc = (byte*)srcPtr + y * srcStride;
+                    byte* pDst = (byte*)dstPtr + x2 * dstBytesPerPixel;
+                    for (int x = 0; x < width; x++)
+                    {
+                        //int y2 = x
+                        //int j = (x * srcBytesPerPixel) + y * srcStride;
+                        //int k = (x2 * dstBytesPerPixel) + y2 * dstStride;
+
+                        convert_pixel_color(pSrc, pDst, srcBytesPerPixel);
+
+                        pSrc = pSrc + srcBytesPerPixel;
+                        pDst = pDst + dstStride;
+                    }
+                });
+            }
+        }
+        private void copy_bits_180(IntPtr srcPtr, IntPtr dstPtr, int width, int height,
+                                        int srcStride, int srcBytesPerPixel,
+                                        int dstStride, int dstBytesPerPixel
+                                    )
+        {
+            int N = width * height;
+            unsafe
+            {
+                Parallel.For(0, N, (n) =>
+                {
+                    int y = n / width;
+                    int x = n % width;
+                    int x2 = x;
+                    int y2 = width - 1 - y;
+
+                    byte* pSrc = (byte*)srcPtr;
+                    byte* pDst = (byte*)dstPtr;
+                    int j = (x * srcBytesPerPixel) + y * srcStride;
+                    int k = (x2 * dstBytesPerPixel) + y2 * dstStride;
+
+                    convert_pixel_color(pSrc + j, pDst + k, srcBytesPerPixel);
+                });
+            }
+        }
+        private void copy_bits_270(IntPtr srcPtr, IntPtr dstPtr, int width, int height,
+                                        int srcStride, int srcBytesPerPixel,
+                                        int dstStride, int dstBytesPerPixel
+                                    )
+        {
+            int N = width * height;
+            unsafe
+            {
+                Parallel.For(0, N, (n) =>
+                {
+                    int y = n / width;
+                    int x = n % width;
+                    int x2 = height - 1 - x;
+                    int y2 = width - 1 - y;
+
+                    byte* pSrc = (byte*)srcPtr;
+                    byte* pDst = (byte*)dstPtr;
+                    int j = (x * srcBytesPerPixel) + y * srcStride;
+                    int k = (x2 * dstBytesPerPixel) + y2 * dstStride;
+
+                    convert_pixel_color(pSrc + j, pDst + k, srcBytesPerPixel);
+                });
+            }
+        }
+        private unsafe void convert_pixel_color(byte* src, byte* dst, int srcBytesPerPixel)
+        {
+            if (srcBytesPerPixel == 1)
+            {
+                dst[0] = src[0];
+                dst[1] = src[0];
+                dst[2] = src[0];
+            }
+            else if(srcBytesPerPixel == 3)
+            {
+                dst[0] = src[0];
+                dst[1] = src[1];
+                dst[2] = src[2];
+            }
+        }
+#endif
+        #endregion
+
+
+        public int RotateAngle
+        {
+            get;
+            set;
+        } = 0;
     }
 }
 #endif

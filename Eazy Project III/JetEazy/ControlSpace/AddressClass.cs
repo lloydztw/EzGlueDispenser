@@ -62,6 +62,7 @@ namespace JetEazy.ControlSpace
 
             switch (str.Substring(0, 2))
             {
+                case "MX":
                 case "IX":
                 case "QX":
                 case "QB":
