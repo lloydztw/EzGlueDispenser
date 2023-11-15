@@ -26,7 +26,7 @@ namespace Eazy_Project_III
         public static bool IsSilentMode = false;     //抑制 Buzzer
 #endif
 
-        public static string VersionDate = "2023/08/23";
+        public static string VersionDate = "2023/11/15";
 
         public static VersionEnum VERSION = VersionEnum.PROJECT;
         public static OptionEnum OPTION = OptionEnum.DISPENSING;

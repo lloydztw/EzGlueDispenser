@@ -204,7 +204,19 @@ namespace Eazy_Project_III.ProcessSpace
                             //> CommonLogClass.Instance.LogMessage("启动 Index" + m_PlaneIndex.ToString(), Color.Black);
 
                             Process.NextDuriation = NextDurtimeTmp;
-                            Process.ID = 30;
+                            Process.ID = 2010;
+                        }
+                        break;
+                    case 2010:
+                        if (Process.IsTimeup)
+                        {
+                            if (MACHINE.PLCIO.ModulePositionIsComplete(ModuleName.MODULE_PICK, 1))
+                            {
+                                //定位完成 延迟一段时间 读取laser的值
+                                //BM 20231113 提出
+                                Process.NextDuriation = INI.Instance.ReadLaserDelaytime;
+                                Process.ID = 30;
+                            }
                         }
                         break;
                     case 30:

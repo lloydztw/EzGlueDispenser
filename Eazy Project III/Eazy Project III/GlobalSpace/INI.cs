@@ -570,6 +570,12 @@ namespace Eazy_Project_III
         [Browsable(X3Visable)]
         public int DispensingUpDelayTime { get; set; } = 50;
 
+        [CategoryAttribute(Cat6), DescriptionAttribute("读取laser延时 单位(ms)")]
+        //[Editor(typeof(GetFilePathPropertyEditor), typeof(UITypeEditor))]
+        [DisplayName("04.读取laser延时")]
+        [Browsable(X3Visable)]
+        public int ReadLaserDelaytime { get; set; } = 200;
+
         #endregion
 
         #endregion
@@ -645,6 +651,7 @@ namespace Eazy_Project_III
             IsUseMeasureHeight = ReadINIValue("Other", "IsUseMeasureHeight", (IsUseMeasureHeight ? "1" : "0"), INIFILE) == "1";
             DispensingMsTime = int.Parse(ReadINIValue("Other", "DispensingMsTime", DispensingMsTime.ToString(), INIFILE));
             DispensingUpDelayTime = int.Parse(ReadINIValue("Other", "DispensingUpDelayTime", DispensingUpDelayTime.ToString(), INIFILE));
+            ReadLaserDelaytime = int.Parse(ReadINIValue("Other", "ReadLaserDelaytime", ReadLaserDelaytime.ToString(), INIFILE));
 
             sMirrorAdjDeep1Length = int.Parse(ReadINIValue("Basic", "sMirrorAdjDeepLength", sMirrorAdjDeep1Length.ToString(), INIFILE));
             sMirrorAdjDeep2Length = int.Parse(ReadINIValue("Basic", "sMirrorAdjDeep2Length", sMirrorAdjDeep2Length.ToString(), INIFILE));
@@ -730,6 +737,7 @@ namespace Eazy_Project_III
             WriteINIValue("Other", "IsUseMeasureHeight", (IsUseMeasureHeight ? "1" : "0"), INIFILE);
             WriteINIValue("Other", "DispensingMsTime", DispensingMsTime.ToString(), INIFILE);
             WriteINIValue("Other", "DispensingUpDelayTime", DispensingUpDelayTime.ToString(), INIFILE);
+            WriteINIValue("Other", "ReadLaserDelaytime", ReadLaserDelaytime.ToString(), INIFILE);
 
             WriteINIValue("Basic", "sMirrorAdjDeepLength", sMirrorAdjDeep1Length.ToString(), INIFILE);
             WriteINIValue("Basic", "sMirrorAdjDeep2Length", sMirrorAdjDeep2Length.ToString(), INIFILE);

@@ -429,9 +429,57 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
         #region Alarms Define
 
 
+        //bool AlarmSeriousTrigered = false;
+        //bool AlarmSeriousnow = false;
+        //public bool IsAlarmSerious
+        //{
+        //    get
+        //    {
+        //        return AlarmSeriousnow;
+        //    }
+        //    set
+        //    {
+        //        if (AlarmSeriousnow != value)
+        //        {
+        //            if (value)
+        //                AlarmSeriousTrigered = true;
+        //            else
+        //                AlarmSeriousTrigered = false;
+
+        //            AlarmSeriousnow = value;
+        //        }
+        //        else
+        //            AlarmSeriousTrigered = false;
+        //    }
+        //}
+
+        //bool AlarmCommonTrigered = false;
+        //bool AlarmCommonnow = false;
+        //public bool IsAlarmCommon
+        //{
+        //    get
+        //    {
+        //        return AlarmCommonnow;
+        //    }
+        //    set
+        //    {
+        //        if (AlarmCommonnow != value)
+        //        {
+        //            if (value)
+        //                AlarmCommonTrigered = true;
+        //            else
+        //                AlarmCommonTrigered = false;
+
+        //            AlarmCommonnow = value;
+        //        }
+        //        else
+        //            AlarmCommonTrigered = false;
+        //    }
+        //}
+
         bool AlarmSeriousTrigered = false;
-        bool AlarmSeriousnow = false;
-        public bool IsAlarmSerious
+        int AlarmSeriousnow = 0;
+        public int IsAlarmSerious
         {
             get
             {
@@ -441,7 +489,7 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
             {
                 if (AlarmSeriousnow != value)
                 {
-                    if (value)
+                    if (value != 0)
                         AlarmSeriousTrigered = true;
                     else
                         AlarmSeriousTrigered = false;
@@ -454,8 +502,8 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
         }
 
         bool AlarmCommonTrigered = false;
-        bool AlarmCommonnow = false;
-        public bool IsAlarmCommon
+        int AlarmCommonnow = 0;
+        public int IsAlarmCommon
         {
             get
             {
@@ -465,7 +513,7 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
             {
                 if (AlarmCommonnow != value)
                 {
-                    if (value)
+                    if (value != 0)
                         AlarmCommonTrigered = true;
                     else
                         AlarmCommonTrigered = false;
@@ -525,17 +573,37 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
             }
         }
 
-
+        public bool IsClearAlarmCache
+        {
+            get { return m_ClearAlarming; }
+        }
+        bool m_ClearAlarming = false;
         public bool ClearAlarm
         {
             set
             {
                 if (value)
                 {
-                    AlarmSeriousnow = false;
-                    AlarmCommonnow = false;
+                    //AlarmSeriousnow = false;
+                    //AlarmCommonnow = false;
+                    AlarmSeriousnow = 0;
+                    AlarmCommonnow = 0;
+                    m_ClearAlarming = true;
                 }
-                PLCIO.CLEARALARMS = value;
+                //PLCIO.CLEARALARMS = value;
+
+                Task task = new Task(() =>
+                {
+                    while (m_ClearAlarming)
+                    {
+                        PLCIO.CLEARALARMS = true;
+                        System.Threading.Thread.Sleep(500);
+                        PLCIO.CLEARALARMS = false;
+
+                        m_ClearAlarming = false;
+                    }
+                });
+                task.Start();
             }
         }
 
@@ -543,13 +611,18 @@ namespace Eazy_Project_III.ControlSpace.MachineSpace
 
         public override void CheckEvent()
         {
-            IsAlarmSerious = PLCIO.IsAlarmsSerious;
+            if (m_ClearAlarming)
+                return;
+
+            IsAlarmSerious = PLCIO.IntAlarmsSerious;
+            //IsAlarmSerious = PLCIO.IsAlarmsSerious;
             if (AlarmSeriousTrigered)
             {
                 OnTrigger(MachineEventEnum.ALARM_SERIOUS);
             }
 
-            IsAlarmCommon = PLCIO.IsAlarmsCommon;
+            IsAlarmCommon = PLCIO.IntAlarmsCommon;
+            //IsAlarmCommon = PLCIO.IsAlarmsCommon;
             if (AlarmCommonTrigered)
             {
                 OnTrigger(MachineEventEnum.ALARM_COMMON);

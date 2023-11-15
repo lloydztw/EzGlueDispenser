@@ -589,7 +589,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
             bool bOK = int.TryParse(_plcIndex, out index);
             string _errorStr = "plc通訊中斷!!!\r\n(編號Index=" + index.ToString() + ")\r\n是否重連?";
             //先停掉流程
-            StopAllProcesses();
+            StopAllProcesses("PlcCommError");
             if (!m_plcCommError[index])
             {
                 m_plcCommError[index] = true;
@@ -671,9 +671,9 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 SetAbnormalLight();
 
                 IsAlarmsSeriousX = false;
-                StopAllProcesses();
+                StopAllProcesses("ALM.S");
                 //SetSeriousAlarms0();
-                SetSeriousAlarms1();
+                //SetSeriousAlarms1();
 
                 //StopAllProcess();
             }
@@ -683,8 +683,8 @@ namespace Eazy_Project_III.UISpace.MainSpace
                 SetAbnormalLight();
 
                 IsAlarmsCommonX = false;
-                StopAllProcesses();
-                SetCommonAlarms();
+                StopAllProcesses("ALM.C");
+                //SetCommonAlarms();
 
             }
 
@@ -695,7 +695,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
                     SetAbnormalLight();
 
                     IsEMCTriggered = false;
-                    StopAllProcesses();
+                    StopAllProcesses("EMC");
                     //OnTrigger(ActionEnum.ACT_ISEMC, "");
                 }
                 if (IsSCREENTriggered)
@@ -704,7 +704,7 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
                     IsSCREENTriggered = false;
                     if (!MACHINE.PLCIO.ADR_BYPASS_SCREEN)
-                        StopAllProcesses();
+                        StopAllProcesses("SCREEN");
                     //OnTrigger(ActionEnum.ACT_ISEMC, "");
                 }
             }
@@ -804,8 +804,23 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
             //if (m_TestProcess.IsOn)
             //    lblState.Text = "执行-测试区取像中 " + m_TestProcess.ID.ToString();
-
-            if (m_dispensingprocess.IsOn)
+            if (MACHINE.PLCIO.IntAlarmsCommon != 0 || MACHINE.PLCIO.IntAlarmsSerious != 0)
+            {
+                lblState.Text = $"报警中 [{MACHINE.PLCIO.IntAlarmsCommon}]" +
+                    $" [{MACHINE.PLCIO.IntAlarmsSerious}]";
+                if (MACHINE.IsClearAlarmCache)
+                    return;
+                if (MACHINE.PLCIO.IntAlarmsCommon != 0)
+                {
+                    SetCommonAlarms();
+                }
+                if (MACHINE.PLCIO.IntAlarmsSerious != 0)
+                {
+                    //lblState.Text = "严重报警中";
+                    SetSeriousAlarms1();
+                }
+            }
+            else if (m_dispensingprocess.IsOn)
                 lblState.Text = "执行-点胶中 " + m_dispensingprocess.ID.ToString();
             else if (m_blackboxprocess.IsOn)
             {
@@ -1010,6 +1025,8 @@ namespace Eazy_Project_III.UISpace.MainSpace
 
             set_cooling_module(false);
             close_projector_light();
+
+            CommonLogClass.Instance.LogMessage($"Mode:{reason}", Color.Black);
         }
         void InitAllProcesses()
         {

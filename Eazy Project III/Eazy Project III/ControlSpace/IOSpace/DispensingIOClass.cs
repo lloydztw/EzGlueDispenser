@@ -212,24 +212,43 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
 
         }
 
-        public bool IsAlarmsSerious
+        public int IntAlarmsSerious
         {
             get
             {
                 AddressClass address = new AddressClass("0:MW0003");
-                return PLC[address.SiteNo].IOData.GetMW(address.Address0) > 0;
+                return PLC[address.SiteNo].IOData.GetMW(address.Address0);
             }
         }
-        public bool IsAlarmsCommon
+        //public bool IsAlarmsSerious
+        //{
+        //    get
+        //    {
+        //        AddressClass address = new AddressClass("0:MW0003");
+        //        return PLC[address.SiteNo].IOData.GetMW(address.Address0) > 0;
+        //    }
+        //}
+        public int IntAlarmsCommon
         {
             get
             {
                 AddressClass address = new AddressClass("0:MW0000,MW0001");
                 AddressClass address1 = new AddressClass("0:MW0002");
-                return PLC[address.SiteNo].IOData.GetMW(address.Address0) > 0 || PLC[address.SiteNo].IOData.GetMW(address.Address1) > 0
-                            || PLC[address1.SiteNo].IOData.GetMW(address1.Address0) > 0;
+                return PLC[address.SiteNo].IOData.GetMW(address.Address0) +
+                          PLC[address.SiteNo].IOData.GetMW(address.Address1) +
+                          PLC[address1.SiteNo].IOData.GetMW(address1.Address0);
             }
         }
+        //public bool IsAlarmsCommon
+        //{
+        //    get
+        //    {
+        //        AddressClass address = new AddressClass("0:MW0000,MW0001");
+        //        AddressClass address1 = new AddressClass("0:MW0002");
+        //        return PLC[address.SiteNo].IOData.GetMW(address.Address0) > 0 || PLC[address.SiteNo].IOData.GetMW(address.Address1) > 0
+        //                    || PLC[address1.SiteNo].IOData.GetMW(address1.Address0) > 0;
+        //    }
+        //}
 
         public bool CLEARALARMS
         {
@@ -287,8 +306,11 @@ namespace Eazy_Project_III.ControlSpace.IOSpace
             AddressClass address = ADDRESSARRAY[eindex];
             
             // 避免離線模擬崩潰
-            if (Universal.IsNoUseIO && address.SiteNo < 0)
+            if (address.SiteNo < 0)
                 return false;
+            //// 避免離線模擬崩潰
+            //if (Universal.IsNoUseIO && address.SiteNo < 0)
+            //    return false;
 
             return PLC[address.SiteNo].IOData.GetBit(address.Address0);
 
