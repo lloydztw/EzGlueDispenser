@@ -40,17 +40,22 @@ namespace Eazy_Project_III.ProcessSpace
             }
         }
 
+        /// <summary>
+        /// The running index of m_PlaneRunList
+        /// </summary>
         int m_PlaneIndex = 0;
+        
         /// <summary>
         /// 缓存平面度需要到达的位置 <br/>
         /// (will be load from INI)
         /// </summary>
         List<string> m_PlaneRunList = new List<string>();
+
         /// <summary>
-        /// 缓存平面度量测的高度 <br/>
-        /// (z coordinate will be measured by laser)
+        /// 有效Laser量測的點位數據 <br/>
+        /// The collection of those well laser-measured points
         /// </summary>
-        List<string> m_PlaneRunDataList = new List<string>();
+        List<QPoint3D> m_wellLaserMeasuredList = new List<QPoint3D>();
 
         /// <summary>
         /// 记录拾取第几组
@@ -114,10 +119,10 @@ namespace Eazy_Project_III.ProcessSpace
                         #region INIT_START
 
                         Process.NextDuriation = NextDurtimeTmp;
-                        m_PlaneRunDataList.Clear();
+                        m_wellLaserMeasuredList.Clear();
                         m_PlaneIndex = 0;
                         m_PlaneRunList.Clear();
-
+                        
                         bool bInitOK = true;
 
                         // 指定 m_PlaneRunList 是來自 INI.Instance.Mirror<i+1>PlanePosList
@@ -136,7 +141,6 @@ namespace Eazy_Project_III.ProcessSpace
                                 {
                                     bInitOK = false;
                                 }
-
                                 break;
                             case "1":
                                 m_PickMirrorIndex = 1;
@@ -166,6 +170,7 @@ namespace Eazy_Project_III.ProcessSpace
                             CommonLogClass.Instance.LogMessage("拾取启动 Group Index=" + MainGroupIndex.ToString(), Color.Black);
                             GdxCore.Trace("MirrorPicker.Start", Process, m_PickMirrorIndex, MainGroupIndex);
                             GdxCore.InitLaserCoordsTransform();
+                            GdxCore.ResetLaserPts(m_PickMirrorIndex);
                             FireMessage("Picker.Start");
                         }
                         else
@@ -227,21 +232,42 @@ namespace Eazy_Project_III.ProcessSpace
                                 //读数据 
                                 //@LETIAN: 雷射讀值 (命名 laserZ 以防與 馬達 XYZ 搞混)
                                 double laserZ = ax_read_laser();
-                                if(Math.Abs(laserZ) < 0.0001)
+                                bool isLaserNG = (Math.Abs(laserZ) < 0.0001);
+
+                                if (isLaserNG)
                                 {
                                     var cur = ax_read_current_motor_pos();
-                                    _LOG("雷射讀值異常", laserZ, "@XYZ", cur, Color.Red);
-                                    Process.NextDuriation = NextDurtimeTmp;
-                                    Process.ID = 3020;
-                                    return;
+
+                                    if (m_PlaneIndex >= m_PlaneRunList.Count - 1)
+                                    {
+                                        _LOG("雷射讀值異常 (已用完INI設定點位)", laserZ, "@XYZ", cur, Color.Red);
+                                        Process.NextDuriation = NextDurtimeTmp;
+                                        Process.ID = 3020;
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        //@LETIAN: 跳選下一個雷射測點
+                                        _LOG("雷射讀值不佳 (準備使用下一個合適點位)", laserZ, "@XYZ", cur, Color.Black);
+
+                                        GdxCore.Trace("MirrorPicker.LaserSkip", Process);
+                                        m_PlaneIndex++;
+
+                                        Process.NextDuriation = NextDurtimeTmp;
+                                        Process.ID = 10;
+                                        return;
+                                    }
                                 }
 
                                 //读数据的xyz位置 提取yz 作为平面度的xy
                                 string[] plane_xyz = m_PlaneRunList[m_PlaneIndex].Split(',').ToArray();
 
                                 //组合新位置 用于计算平面度
-                                string planeNew_xyz = plane_xyz[1] + "," + plane_xyz[2] + "," + laserZ.ToString("0.000");
-                                m_PlaneRunDataList.Add(planeNew_xyz);
+                                //>>> string planeNew_xyz = plane_xyz[1] + "," + plane_xyz[2] + "," + laserZ.ToString("0.000");
+                                var x = double.Parse(plane_xyz[1]);
+                                var y = double.Parse(plane_xyz[2]);
+                                var measuredPoint = new QPoint3D(x, y, laserZ);
+                                m_wellLaserMeasuredList.Add(measuredPoint);
 
                                 //> CommonLogClass.Instance.LogMessage("Index=" + m_PlaneIndex.ToString() + ":" + planeNew_xyz, Color.Black);
 
@@ -278,14 +304,26 @@ namespace Eazy_Project_III.ProcessSpace
                     case 40:
                         if (Process.IsTimeup)
                         {
-                            //读取数据完成
-                            if (m_PlaneIndex < m_PlaneRunList.Count)
+                            //---------------------------------------------------
+                            //@LETIAN: 2023-12-17 BM提議後修改的規則:
+                            //   嘗試跑完 INI所設定的 所有點位後,
+                            //   只要其中有 "3個" 正常的雷射量測點,
+                            //   就可進行平面計算.
+                            // PS:
+                            //   m_PlaneRunDataList 只收集好的laser量測點
+                            //---------------------------------------------------
+                            bool hasEnoughPoints =
+                                    m_PlaneIndex >= m_PlaneRunList.Count &&
+                                    m_wellLaserMeasuredList.Count >= 3;
+
+                            if (!hasEnoughPoints)
                             {
                                 Process.NextDuriation = NextDurtimeTmp;
                                 Process.ID = 10;
                             }
                             else
                             {
+                                //读取数据完成
                                 //计算平面度
                                 bool bOK = true;
 
@@ -293,12 +331,14 @@ namespace Eazy_Project_III.ProcessSpace
                                 if (INI.Instance.Mirror0PlaneHeightPosList.Count >= 3)
                                 {
                                     //@LETIAN: 告知 GdxCore 模組, 已經標測完雷射點位.
-                                    GdxCore.BuildLaserCoordsTransform(m_PickMirrorIndex, INI.Instance.Mirror0PlaneHeightPosList);
+                                    GdxCore.BuildLaserCoordsTransform(m_PickMirrorIndex);
 
                                     //@GAARA: 平面度計算
                                     string myHeightStr = ga_calculate_planeness();
 
-                                    //@LETIAN: ? 算完之後, 只顯示於LOG, 沒有其他判定 for Pass/NG ?
+                                    //@LETIAN: 原有的代碼, 計算平面度之後,
+                                    //         得到 myHeightStr 只顯示於LOG,
+                                    //         卻沒有 判定 Pass 或 NG ?
                                     CommonLogClass.Instance.LogMessage(myHeightStr, Color.Black);
                                     bOK = true;
                                 }
@@ -436,11 +476,11 @@ namespace Eazy_Project_III.ProcessSpace
 
 
         /// <summary>
-        /// 平面度計算 <br/>
-        /// 將 gaara 的源碼搬移至此, 以方便閱讀
+        /// 平面度計算 (I) <br/>
+        /// 從 INI 的設定, 計算出 基準 平面
+        /// (將 gaara 的源碼整理, 以方便閱讀)
         /// </summary>
-        /// <returns></returns>
-        private string ga_calculate_planeness()
+        private QPlane ga_get_reference_plane_from_ini()
         {
             QPoint3D[] _planeheight = new QPoint3D[INI.Instance.Mirror0PlaneHeightPosList.Count];
             int i = 0;
@@ -451,17 +491,27 @@ namespace Eazy_Project_III.ProcessSpace
                 _planeheight[i] = new QPoint3D(double.Parse(_strxyz[0]), double.Parse(_strxyz[1]), double.Parse(_strxyz[2]));
                 i++;
             }
-
             QPlane myPlane = new QPlane();
             myPlane.LeastSquareFit(_planeheight);
+            return myPlane;
+        }
 
+        /// <summary>
+        /// 平面度計算 (II) <br/>
+        /// 計算 laser 量測平面, 與 INI 基準平面 的差異.
+        /// (將 gaara 的源碼整理, 以方便閱讀)
+        /// </summary>
+        private string ga_calculate_planeness()
+        {
+            var myPlane = ga_get_reference_plane_from_ini();
             string myHeightStr = string.Empty;
 
-            foreach (string str in m_PlaneRunDataList)
+            foreach (var measuredPoint in m_wellLaserMeasuredList)
             {
-                string[] runStrPlane = str.Split(',').ToArray();
-                QPoint3D run = new QPoint3D(double.Parse(runStrPlane[0]), double.Parse(runStrPlane[1]), double.Parse(runStrPlane[2]));
-                double runheight = myPlane.GetZLocation(run);
+                //string[] runStrPlane = str.Split(',').ToArray();
+                //QPoint3D run = new QPoint3D(double.Parse(runStrPlane[0]), double.Parse(runStrPlane[1]), double.Parse(runStrPlane[2]));
+
+                double runheight = myPlane.GetZLocation(measuredPoint);
 
                 //CommonLogClass.Instance.LogMessage("平面度测试正常", Color.Lime);
                 myHeightStr += runheight.ToString(" 0.000") + ",";

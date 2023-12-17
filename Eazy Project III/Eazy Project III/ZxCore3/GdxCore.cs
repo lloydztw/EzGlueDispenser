@@ -392,6 +392,12 @@ namespace JetEazy.GdxCore3
         public static void InitLaserCoordsTransform()
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
+            trf.Init();
+        }
+        public static void ResetLaserPts(int mirrorIdx)
+        {
+            var trf = GdxGlobal.Facade.LaserCoordsTransform;
+            trf.ResetLaserPtsOnMirror(mirrorIdx);
         }
         public static void CollectLaserPt(int mirrorIdx, int pointIdx, double laserDist, string ga_motorPt)
         {
@@ -399,17 +405,21 @@ namespace JetEazy.GdxCore3
             
             // (X,Y,Z,L)
             var motorPosL = QVector.Parse(ga_motorPt + "," + laserDist);
-            
-            if (pointIdx == 0)
-                trf.ResetLaserPtsOnMirror(mirrorIdx);
+
+            //@LETIAN: 2023-12-17 改版後
+            //  第一個有效 laser 量測的點位, 其 pointIdx 並不一定是從 0 開始, 而且會跳號!
+            //  Caller 必須自行明確調用  ResetLaserPts(mirrorIdx) 來進行初始化.
+            //  本函式不再依賴 pointIdx.
+
+            //>>> if (pointIdx == 0)
+            //>>>    trf.ResetLaserPtsOnMirror(mirrorIdx);
 
             trf.AddLaserPtOnMirror(mirrorIdx, motorPosL);
-
 
             GdxGlobal.LOG.Trace("MirrorPicker.CollectLaserPos, mirror={0}, @{1}, laser={2:0.0000}, motorPos={3}",
                                     mirrorIdx, pointIdx, laserDist, motorPosL );
         }
-        public static void BuildLaserCoordsTransform(int mirrorIdx, List<string> ga_strs)
+        public static void BuildLaserCoordsTransform(int mirrorIdx, object dummy_ga_strs = null)
         {
             var trf = GdxGlobal.Facade.LaserCoordsTransform;
             trf.BuildMirrorPlaneTransform(mirrorIdx);
