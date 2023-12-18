@@ -305,16 +305,14 @@ namespace Eazy_Project_III.ProcessSpace
                         if (Process.IsTimeup)
                         {
                             //---------------------------------------------------
-                            //@LETIAN: 2023-12-17 BM提議後修改的規則:
-                            //   嘗試跑完 INI所設定的 所有點位後,
-                            //   只要其中有 "3個" 正常的雷射量測點,
+                            //@LETIAN: 2023-12-18 BM提議後修改的規則:
+                            //   嘗試跑完 INI所設定的 點位過程中,
+                            //   只要累積有 "3個" 正常的雷射量測點,
                             //   就可進行平面計算.
                             // PS:
                             //   m_PlaneRunDataList 只收集好的laser量測點
                             //---------------------------------------------------
-                            bool hasEnoughPoints =
-                                    m_PlaneIndex >= m_PlaneRunList.Count &&
-                                    m_wellLaserMeasuredList.Count >= 3;
+                            bool hasEnoughPoints = m_wellLaserMeasuredList.Count >= 3;
 
                             if (!hasEnoughPoints)
                             {
